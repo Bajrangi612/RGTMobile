@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  CUSTOMER
+  STAFF
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PROFIT
+  REFERRAL
+  REWARD
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// ─── User ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String    @unique
+  password     String
+  role         Role      @default(CUSTOMER)
+  
+  // KYC & Profile
+  kycStatus    KycStatus @default(PENDING)
+  aadharNo     String?
+  panNo        String?
+  address      String?
+  photo        String?
+  dob          DateTime?
+  
+  // Relations
+  wallet       Wallet?
+  referrals    User[]    @relation("ReferralRelation")
+  referredBy   User?     @relation("ReferralRelation", fields: [referrerId], references: [id])
+  referrerId   String?
+  
+  assignedStaff User?     @relation("StaffRelation", fields: [staffId], references: [id])
+  staffId      String?
+  customers    User[]    @relation("StaffRelation")
+  
+  transactions Transaction[]
+  orders       Order[]
+  auditLogs    AuditLog[]
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([phone])
+  @@index([role])
+}
+
+// ─── Wallet ─────────────────────────────────────────────────────────────────
+
+model Wallet {
+  id                String  @id @default(cuid())
+  userId            String  @unique
+  user              User    @relation(fields: [userId], references: [id])
+  
+  balance           Decimal @default(0) @db.Decimal(15, 2)
+  goldAdvance       Decimal @default(0) @db.Decimal(15, 2)
+  referralRewards   Decimal @default(0) @db.Decimal(15, 2)
+  
+  updatedAt         DateTime @updatedAt
+}
+
+// ─── Transaction ────────────────────────────────────────────────────────────
+
+model Transaction {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  type        TransactionType
+  amount      Decimal         @db.Decimal(15, 2)
+  description String?
+  status      String          @default("COMPLETED") // COMPLETED, PENDING, FAILED
+  
+  createdAt   DateTime        @default(now())
+
+  @@index([userId])
+  @@index([type])
+}
+
+// ─── Gold Price ─────────────────────────────────────────────────────────────
+
+model GoldPrice {
+  id        String   @id @default(cuid())
+  sellPrice Decimal  @db.Decimal(15, 2) // Per gram
+  buyPrice  Decimal  @db.Decimal(15, 2)
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+}
+
+// ─── Products ───────────────────────────────────────────────────────────────
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  weight      Decimal  @db.Decimal(10, 3) // In grams
+  purity      String   @default("24K")
+  imageUrl    String?
+  stock       Int      @default(0)
+  isActive    Boolean  @default(true)
+  
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  
+  orders      Order[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([categoryId])
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  imageUrl  String?
+  isActive  Boolean   @default(true)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+// ─── Orders ─────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  productId       String
+  product         Product     @relation(fields: [productId], references: [id])
+  
+  quantity        Int         @default(1)
+  weight          Decimal?    @db.Decimal(10, 3) // Unit weight at time of order
+  amount          Decimal     @db.Decimal(15, 2) // Price per unit at time of order
+  gst             Decimal     @db.Decimal(15, 2)
+  total           Decimal     @db.Decimal(15, 2)
+  
+  status          OrderStatus @default(PENDING)
+  paymentId       String?     @unique // Cashfree Order ID
+  paymentStatus   String?     // Cashfree status
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ─── OTP ────────────────────────────────────────────────────────────────────
+
+model Otp {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  code      String
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// ─── Audit Log ──────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String
+  details     Json?
+  ipAddress   String?
+  
+  createdAt   DateTime @default(now())
+}

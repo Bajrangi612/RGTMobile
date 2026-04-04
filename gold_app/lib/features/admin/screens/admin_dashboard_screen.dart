@@ -1,0 +1,503 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:fl_chart/fl_chart.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../widgets/gold_card.dart';
+import '../providers/admin_provider.dart';
+import '../../home/providers/home_provider.dart';
+import 'admin_product_manager.dart';
+import 'admin_category_manager.dart';
+import 'admin_user_manager.dart';
+import 'admin_order_manager.dart';
+import 'admin_config_screen.dart';
+import 'admin_reports_screen.dart';
+
+class AdminDashboardScreen extends ConsumerStatefulWidget {
+  const AdminDashboardScreen({super.key});
+
+  @override
+  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(adminProvider.notifier).loadInitialData();
+      ref.read(homeProvider.notifier).loadDashboard(); 
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final adminState = ref.watch(adminProvider);
+    final homeState = ref.watch(homeProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.deepBlack,
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        child: adminState.isLoading
+            ? Center(child: CircularProgressIndicator(color: AppColors.royalGold))
+            : SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// 👑 Institutional Market Ticker
+                      _MarketTicker(
+                        price: homeState.goldPrice,
+                        change: homeState.priceChange,
+                      ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.2),
+
+                      const SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'GLOBAL COMMAND',
+                                style: AppTextStyles.labelLarge.copyWith(
+                                  color: AppColors.royalGold,
+                                  letterSpacing: 2,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'System Integrity: Stable',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.success.withOpacity(0.7)),
+                              ),
+                            ],
+                          ),
+                          _HeaderActions(onRefresh: () {
+                            ref.read(adminProvider.notifier).loadInitialData();
+                            ref.read(homeProvider.notifier).loadDashboard();
+                          }),
+                        ],
+                      ).animate().fadeIn(delay: 200.ms),
+
+                      const SizedBox(height: 24),
+
+                      /// 📈 Interactive Revenue Analysis
+                      _RevenueAnalysisChart(totalRevenue: adminState.totalRevenue)
+                          .animate()
+                          .fadeIn(delay: 400.ms)
+                          .scale(begin: const Offset(0.95, 0.95)),
+
+                      const SizedBox(height: 24),
+
+                      /// 📊 Core Analytics Grid
+                      GridView.count(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        crossAxisCount: 2,
+                        childAspectRatio: 1.3,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        children: [
+                          _EliteStatCard(
+                            label: 'REVENUE',
+                            value: '₹${adminState.totalRevenue.toStringAsFixed(0)}',
+                            icon: Icons.account_balance_wallet_outlined,
+                            color: AppColors.royalGold,
+                            sparkData: _generateRelativeSpark(adminState.totalRevenue),
+                          ),
+                          _EliteStatCard(
+                            label: 'GOLD SOLD',
+                            value: '${adminState.totalWeight.toStringAsFixed(1)}g',
+                            icon: Icons.auto_graph,
+                            color: AppColors.success,
+                            sparkData: _generateRelativeSpark(adminState.totalWeight),
+                          ),
+                          _EliteStatCard(
+                            label: 'INVESTORS',
+                            value: '${adminState.users.length}',
+                            icon: Icons.group_outlined,
+                            color: Colors.blueAccent,
+                            sparkData: _generateRelativeSpark(adminState.users.length.toDouble()),
+                          ),
+                          _EliteStatCard(
+                            label: 'PENDING',
+                            value: '${adminState.pendingOrdersCount}',
+                            icon: Icons.pending_actions,
+                            color: AppColors.warning,
+                            sparkData: _generateRelativeSpark(adminState.pendingOrdersCount.toDouble()),
+                          ),
+                        ],
+                      ).animate().fadeIn(delay: 600.ms),
+
+                      const SizedBox(height: 32),
+
+                      /// 🛠 Management Suite [High Density]
+                      _ManagementGrid(),
+
+                      const SizedBox(height: 32),
+                      
+                      /// 📋 Operation Logs
+                      _OperationLogs(orders: adminState.allOrders),
+
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _MarketTicker extends StatelessWidget {
+  final double price;
+  final double change;
+  const _MarketTicker({required this.price, required this.change});
+
+  @override
+  Widget build(BuildContext context) {
+    final isUp = change >= 0;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.royalGold.withOpacity(0.1)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.royalGold.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.public, color: AppColors.royalGold, size: 14),
+          ),
+          const SizedBox(width: 12),
+          Text('LIVE GOLD', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1)),
+          const Spacer(),
+          Text(
+            '₹${price.toStringAsFixed(2)}',
+            style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(width: 8),
+          Icon(
+            isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+            color: isUp ? AppColors.success : AppColors.error,
+          ),
+          Text(
+            '${isUp ? '+' : ''}${change.toStringAsFixed(2)}%',
+            style: AppTextStyles.caption.copyWith(
+              color: isUp ? AppColors.success : AppColors.error,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RevenueAnalysisChart extends StatelessWidget {
+  final double totalRevenue;
+  const _RevenueAnalysisChart({required this.totalRevenue});
+
+  @override
+  Widget build(BuildContext context) {
+    return GoldCard(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('WEEKLY REVENUE', style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold)),
+                  const SizedBox(height: 4),
+                  Text('₹${totalRevenue.toStringAsFixed(0)}', style: AppTextStyles.h4),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('+12.5%', style: AppTextStyles.caption.copyWith(color: AppColors.success)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 30),
+          SizedBox(
+            height: 140,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(show: false),
+                titlesData: FlTitlesData(show: false),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: [
+                      FlSpot(0, totalRevenue * 0.2),
+                      FlSpot(1, totalRevenue * 0.1),
+                      FlSpot(2, totalRevenue * 0.3),
+                      FlSpot(3, totalRevenue * 0.15),
+                      FlSpot(4, totalRevenue * 0.25),
+                      FlSpot(5, totalRevenue * 0.2),
+                      FlSpot(6, totalRevenue * 0.4),
+                    ],
+                    isCurved: true,
+                    color: AppColors.royalGold,
+                    barWidth: 3,
+                    isStrokeCapRound: true,
+                    dotData: FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.royalGold.withOpacity(0.1),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EliteStatCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final List<double> sparkData;
+
+  const _EliteStatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.sparkData,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GoldCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, color: color, size: 18),
+              SizedBox(
+                width: 40,
+                height: 15,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(show: false),
+                    titlesData: FlTitlesData(show: false),
+                    borderData: FlBorderData(show: false),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: List.generate(sparkData.length, (i) => FlSpot(i.toDouble(), sparkData[i])),
+                        isCurved: true,
+                        color: color,
+                        barWidth: 1.5,
+                        dotData: FlDotData(show: false),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white38, fontSize: 8, letterSpacing: 1)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ManagementGrid extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1.1,
+      children: [
+        _CompactTool(
+          icon: Icons.inventory_2_outlined,
+          label: 'Products',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminProductManager())),
+        ),
+        _CompactTool(
+          icon: Icons.category_outlined,
+          label: 'Categories',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminCategoryManager())),
+        ),
+        _CompactTool(
+          icon: Icons.verified_user_outlined,
+          label: 'Compliance',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager())),
+        ),
+        _CompactTool(
+          icon: Icons.local_shipping_outlined,
+          label: 'Logistics',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager())),
+        ),
+        _CompactTool(
+          icon: Icons.settings_outlined,
+          label: 'System',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminConfigScreen())),
+        ),
+        _CompactTool(
+          icon: Icons.analytics_outlined,
+          label: 'Reports',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminReportsScreen())),
+        ),
+      ],
+    );
+  }
+}
+
+class _CompactTool extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _CompactTool({required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: GoldCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppColors.royalGold, size: 24),
+            const SizedBox(height: 8),
+            Text(label, style: AppTextStyles.caption.copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderActions extends StatelessWidget {
+  final VoidCallback onRefresh;
+  const _HeaderActions({required this.onRefresh});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(icon: const Icon(Icons.refresh, size: 20), onPressed: onRefresh),
+        IconButton(
+          icon: const Icon(Icons.logout, size: 20),
+          onPressed: () {
+            ProviderScope.containerOf(context).read(adminProvider.notifier).logout();
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _OperationLogs extends StatelessWidget {
+  final List<dynamic> orders;
+  const _OperationLogs({required this.orders});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('OPERATIONAL LOGS', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.2)),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager())),
+              child: Text('VIEW ALL', style: AppTextStyles.caption.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ...orders.take(3).map((order) => Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: GoldCard(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
+                  child: Icon(Icons.receipt_long_outlined, size: 18, color: AppColors.royalGold),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Order #${order['id']?.substring(0, 8)}...', style: AppTextStyles.labelSmall),
+                      Text('${order['product']?['name'] ?? 'Gold Asset'}', style: AppTextStyles.caption.copyWith(color: Colors.white38)),
+                    ],
+                  ),
+                ),
+                _EliteStatusPill(status: order['status']),
+              ],
+            ),
+          ),
+        )).toList(),
+      ],
+    );
+  }
+}
+
+class _EliteStatusPill extends StatelessWidget {
+  final String? status;
+  const _EliteStatusPill({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final statusStr = status?.toLowerCase() ?? 'pending';
+    Color color = AppColors.warning;
+    if (statusStr == 'paid' || statusStr == 'delivered') color = AppColors.success;
+    if (statusStr == 'cancelled' || statusStr == 'failed') color = AppColors.error;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Text(
+        statusStr.toUpperCase(),
+        style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 1),
+      ),
+    );
+  }
+}

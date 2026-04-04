@@ -1,0 +1,328 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/formatters.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../widgets/gold_button.dart';
+import '../../../widgets/gold_card.dart';
+import '../../../widgets/gold_app_bar.dart';
+import '../../../widgets/gold_text_field.dart';
+import '../data/models/product_model.dart';
+import '../presentation/widgets/checkout_sheet.dart';
+import '../../../core/services/invoice_service.dart';
+
+class ProductDetailScreen extends ConsumerStatefulWidget {
+  final ProductModel product;
+
+  ProductDetailScreen({super.key, required this.product}) ;
+
+  @override
+  ConsumerState<ProductDetailScreen> createState() => _ProductDetailScreenState();
+}
+
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
+  int _quantity = 1;
+  final _referralController = TextEditingController();
+
+  @override
+  void dispose() {
+    _referralController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final product = widget.product;
+    final invoiceDetails = InvoiceService.calculateInvoiceDetails(
+      basePrice: product.price,
+      weight: product.weight * _quantity,
+    );
+    final subtotal = invoiceDetails['subtotal'] as double;
+    final gstAmount = invoiceDetails['gstAmount'] as double;
+    final totalAmount = invoiceDetails['totalAmount'] as double;
+
+    return Scaffold(
+      backgroundColor: AppColors.deepBlack,
+      appBar:  GoldAppBar(title: 'Product Details'),
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Product Image (Single)
+                    Center(
+                      child: Container(
+                        width: 250,
+                        height: 250,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              AppColors.royalGold.withOpacity(0.15),
+                              AppColors.cardDark,
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.royalGold.withOpacity(0.1),
+                              blurRadius: 40,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: ClipOval(
+                            child: Image.asset(
+                              product.images.first,
+                              height: 180,
+                              width: 180,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                Icons.monetization_on_rounded,
+                                size: 80,
+                                color: AppColors.royalGold.withOpacity(0.9),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ).animate(onPlay: (controller) => controller.repeat(reverse: true))
+                      .slideY(
+                        begin: -0.03,
+                        end: 0.03,
+                        duration: 2000.ms,
+                        curve: Curves.easeInOutSine,
+                      ),
+
+                    SizedBox(height: 32),
+
+                    // Product Name
+                    Text(product.name, style: AppTextStyles.h2)
+                        .animate().fadeIn(delay: 200.ms).slideX(begin: -0.05),
+
+                    SizedBox(height: 16),
+
+                    // Specs Row
+                    Row(
+                      children: [
+                        _SpecChip(label: product.purity, icon: Icons.verified),
+                        SizedBox(width: 8),
+                        _SpecChip(label: 'Fine ${product.fineness}', icon: Icons.diamond),
+                        SizedBox(width: 8),
+                        _SpecChip(label: 'BIS', icon: Icons.shield),
+                      ],
+                    ).animate(delay: 300.ms).fadeIn(duration: 400.ms),
+
+                    SizedBox(height: 24),
+
+                    // Price Card
+                     GoldCard(
+                      hasGoldBorder: true,
+                      hasGlow: true,
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Price per unit', style: AppTextStyles.bodyMedium),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: [
+                                  if (product.oldPrice != null) ...[
+                                    Text(
+                                      Formatters.currency(product.oldPrice!),
+                                      style: AppTextStyles.caption.copyWith(
+                                        decoration: TextDecoration.lineThrough,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    SizedBox(width: 8),
+                                  ],
+                                  Text(
+                                    Formatters.currency(product.price),
+                                    style: AppTextStyles.priceTag,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 16),
+                          // Exclusivity Badge
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.royalGold.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.stars_rounded, color: AppColors.royalGold, size: 20),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('Limited Edition Release', style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold)),
+                                      Text('Maximum 1 unit per customer for luxury integrity.', style: AppTextStyles.caption),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Subtotal', style: AppTextStyles.bodyMedium),
+                              Text(Formatters.currency(subtotal), style: AppTextStyles.bodyMedium),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('GST (3%)', style: AppTextStyles.bodyMedium),
+                              Text(Formatters.currency(gstAmount), style: AppTextStyles.bodyMedium),
+                            ],
+                          ),
+                          Divider(height: 32, color: AppColors.darkGrey),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Total Payable', style: AppTextStyles.h4),
+                              Text(
+                                Formatters.currency(totalAmount),
+                                style: AppTextStyles.goldPrice.copyWith(fontSize: 28),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ).animate(delay: 400.ms).fadeIn(duration: 500.ms),
+
+                    SizedBox(height: 16),
+
+                    // Referral Code
+                    GoldCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.card_giftcard, color: AppColors.royalGold, size: 20),
+                              SizedBox(width: 8),
+                              Text('Referral Code', style: AppTextStyles.labelLarge),
+                              SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.success.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  'Optional',
+                                  style: AppTextStyles.caption.copyWith(color: AppColors.success),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          GoldTextField(
+                            controller: _referralController,
+                            label: 'Enter referral code',
+                            hint: 'e.g., RGXK7M2N',
+                            textCapitalization: TextCapitalization.characters,
+                            prefixIcon: Icon(Icons.confirmation_number_outlined, color: AppColors.grey),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Apply a referral code to earn ₹${AppConstants.referralCommission.toInt()} commission',
+                            style: AppTextStyles.caption,
+                          ),
+                        ],
+                      ),
+                    ).animate(delay: 500.ms).fadeIn(duration: 400.ms),
+
+                    SizedBox(height: 24),
+
+                    // Description
+                    Text('About this coin', style: AppTextStyles.labelLarge),
+                    SizedBox(height: 8),
+                    Text(product.description ?? 'A premium gold coin for pure investment.', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey, height: 1.6)),
+
+                    SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+
+            // Bottom CTA
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.charcoal.withOpacity(0.95),
+                border: Border(top: BorderSide(color: AppColors.glassBorder)),
+              ),
+              child: SafeArea(
+                child: GoldButton(
+                  text: 'Proceed to Checkout',
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => CheckoutSheet(product: product),
+                    );
+                  },
+                  icon: Icons.shopping_cart_checkout,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SpecChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+
+  const _SpecChip({required this.label, required this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.royalGold.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppColors.royalGold, size: 14),
+          SizedBox(width: 4),
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.royalGold,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
