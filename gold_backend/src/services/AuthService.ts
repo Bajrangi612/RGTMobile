@@ -8,7 +8,7 @@ export class AuthService {
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
 
-    await prisma.otp.upsert({
+    await prisma.Otp.upsert({
       where: { phone },
       update: { code, expiresAt, verified: false },
       create: { phone, code, expiresAt },
@@ -20,18 +20,18 @@ export class AuthService {
 
   static async verifyOtp(rawPhone: string, code: string) {
     const phone = normalizeMobile(rawPhone);
-    const otpRecord = await prisma.otp.findUnique({ where: { phone } });
+    const otpRecord = await prisma.Otp.findUnique({ where: { phone } });
 
     if (!otpRecord || otpRecord.code !== code || otpRecord.expiresAt < new Date()) {
       throw new Error('Invalid or expired OTP');
     }
 
-    await prisma.otp.update({
+    await prisma.Otp.update({
       where: { phone },
       data: { verified: true },
     });
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.User.findUnique({
       where: { phone },
       include: { wallet: true },
     });

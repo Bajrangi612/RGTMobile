@@ -5,7 +5,7 @@ class CategoryService {
    * Get all active categories
    */
   async getAllCategories() {
-    return await prisma.category.findMany({
+    return await prisma.Category.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
     });
@@ -15,7 +15,7 @@ class CategoryService {
    * Get category by ID
    */
   async getCategoryById(id: string) {
-    return await prisma.category.findUnique({
+    return await prisma.Category.findUnique({
       where: { id },
     });
   }
@@ -24,7 +24,7 @@ class CategoryService {
    * Create a new category (Admin)
    */
   async createCategory(data: { name: string; slug: string; imageUrl?: string }) {
-    return await prisma.category.create({
+    return await prisma.Category.create({
       data,
     });
   }
@@ -33,7 +33,7 @@ class CategoryService {
    * Delete a category
    */
   async deleteCategory(id: string) {
-    return await prisma.category.update({
+    return await prisma.Category.update({
       where: { id },
       data: { isActive: false },
     });

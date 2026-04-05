@@ -8,7 +8,7 @@ export class UserController {
    */
   static async listAllUsers(req: Request, res: Response, next: NextFunction) {
     try {
-      const users = await prisma.user.findMany({
+      const users = await prisma.User.findMany({
         select: {
           id: true,
           name: true,
@@ -33,14 +33,14 @@ export class UserController {
   static async getStats(req: Request, res: Response, next: NextFunction) {
     try {
       const [userCount, orderCount, totalSales, pendingOrders, totalWeight] = await Promise.all([
-        prisma.user.count(),
-        prisma.order.count(),
-        prisma.order.aggregate({
+        prisma.User.count(),
+        prisma.Order.count(),
+        prisma.Order.aggregate({
           _sum: { total: true },
           where: { status: "PAID" }
         }),
-        prisma.order.count({ where: { status: "PENDING" } }),
-        prisma.order.aggregate({
+        prisma.Order.count({ where: { status: "PENDING" } }),
+        prisma.Order.aggregate({
           _sum: { weight: true },
           where: { status: "PAID" }
         })
@@ -70,7 +70,7 @@ export class UserController {
         return errorResponse(res, "A valid 12-digit Aadhaar number is required", 400);
       }
 
-      const user = await prisma.user.update({
+      const user = await prisma.User.update({
         where: { id: userId },
         data: { 
           aadharNo: aadhaarNo,
@@ -96,9 +96,9 @@ export class UserController {
         return errorResponse(res, "Invalid KYC status", 400);
       }
 
-      const user = await prisma.user.update({
+      const user = await prisma.User.update({
         where: { id },
-        data: { kycStatus: status as any },
+        data: { kycStatus: status.toUpperCase() as any },
       });
 
       return successResponse(res, { user }, `KYC status updated to ${status}`);
@@ -115,7 +115,7 @@ export class UserController {
       const userId = req.user.id;
       const { name, email } = req.body;
 
-      const user = await prisma.user.update({
+      const user = await prisma.User.update({
         where: { id: userId },
         data: { name, email },
       });

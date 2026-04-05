@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ProductController } from "../controllers/ProductController";
 import { authenticate, authorize } from "../middleware/auth";
-import { Role } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 
 const router = Router();
 
@@ -13,21 +13,21 @@ router.get("/:id", ProductController.getProduct);
 router.post(
   "/",
   authenticate,
-  authorize([Role.ADMIN]),
+  authorize([UserRole.ADMIN]),
   ProductController.createProduct
 );
 
 router.patch(
   "/:id",
   authenticate,
-  authorize([Role.ADMIN]),
+  authorize([UserRole.ADMIN]),
   ProductController.updateProduct
 );
 
 router.delete(
   "/:id",
   authenticate,
-  authorize([Role.ADMIN]),
+  authorize([UserRole.ADMIN]),
   ProductController.deleteProduct
 );
 

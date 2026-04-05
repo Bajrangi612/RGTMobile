@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { BankController } from "../controllers/BankController";
 import { authenticate, authorize } from "../middleware/auth";
-import { Role } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 
 const router = Router();
 
@@ -10,6 +10,6 @@ router.get("/my", authenticate, BankController.getBankDetails);
 router.post("/submit", authenticate, BankController.submitBankDetails);
 
 // Admin routes
-router.patch("/:userId/status", authenticate, authorize([Role.ADMIN]), BankController.updateBankStatus);
+router.patch("/:userId/status", authenticate, authorize([UserRole.ADMIN]), BankController.updateBankStatus);
 
 export default router;
