@@ -14,6 +14,9 @@ import 'admin_user_manager.dart';
 import 'admin_order_manager.dart';
 import 'admin_config_screen.dart';
 import 'admin_reports_screen.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../auth/screens/login_screen.dart';
+import '../../home/screens/home_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -41,10 +44,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     final bool isDesktop = size.width > 1000;
 
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       drawer: isDesktop ? null : _buildMobileDrawer(context),
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        decoration: BoxDecoration(color: AppColors.background),
         child: adminState.isLoading
             ? Center(child: CircularProgressIndicator(color: AppColors.royalGold))
             : Row(
@@ -91,18 +94,39 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                         const SizedBox(width: 8),
                                         Text(
                                           'SYSTEM OPERATIONAL · STABLE',
-                                          style: AppTextStyles.caption.copyWith(color: Colors.white38, letterSpacing: 1),
+                                          style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.4), letterSpacing: 1),
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
-                                if (!isDesktop)
-                                  Builder(
-                                    builder: (context) => IconButton(
-                                      icon: Icon(Icons.menu, color: AppColors.royalGold),
-                                      onPressed: () => Scaffold.of(context).openDrawer(),
-                                    ),
+                                 if (!isDesktop)
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.refresh, size: 20, color: Colors.white),
+                                        onPressed: () {
+                                          ref.read(adminProvider.notifier).loadInitialData();
+                                          ref.read(homeProvider.notifier).loadDashboard();
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.logout, size: 20, color: AppColors.error),
+                                        onPressed: () {
+                                          ref.read(authProvider.notifier).logout();
+                                          Navigator.of(context).pushAndRemoveUntil(
+                                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                            (route) => false,
+                                          );
+                                        },
+                                      ),
+                                      Builder(
+                                        builder: (context) => IconButton(
+                                          icon: Icon(Icons.menu, color: AppColors.royalGold),
+                                          onPressed: () => Scaffold.of(context).openDrawer(),
+                                        ),
+                                      ),
+                                    ],
                                   )
                                 else
                                   _HeaderActions(onRefresh: () {
@@ -170,7 +194,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                             const SizedBox(height: 32),
 
                             /// 🛠 Management Suite
-                            Text('MANAGEMENT MODULES', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, color: Colors.white24)),
+                            Text('MANAGEMENT MODULES', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, color: AppColors.pureWhite.withOpacity(0.3))),
                             const SizedBox(height: 16),
                             _ManagementGrid(),
 
@@ -195,7 +219,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
     return Container(
       width: 260,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
+        color: AppColors.surface,
         border: Border(right: BorderSide(color: AppColors.royalGold.withOpacity(0.1))),
       ),
       child: Column(
@@ -214,11 +238,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text('ROYAL GOLD', style: AppTextStyles.h4),
-                Text('ADMIN TERMINAL', style: AppTextStyles.caption.copyWith(letterSpacing: 2, color: Colors.white38)),
+                Text('ADMIN TERMINAL', style: AppTextStyles.caption.copyWith(letterSpacing: 2, color: AppColors.pureWhite.withOpacity(0.4))),
               ],
             ),
           ),
-          const Divider(color: Colors.white10, indent: 20, endIndent: 20),
+          Divider(color: AppColors.pureWhite.withOpacity(0.1), indent: 20, endIndent: 20),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -236,20 +260,24 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             padding: const EdgeInsets.all(24),
             child: InkWell(
               onTap: () {
-                ref.read(adminProvider.notifier).logout();
-                Navigator.of(context).pop();
+                ref.read(authProvider.notifier).logout();
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
               },
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: AppColors.error.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.error.withOpacity(0.1)),
                 ),
                 child: Row(
                   children: [
                     Icon(Icons.logout, color: AppColors.error, size: 20),
                     const SizedBox(width: 12),
-                    Text('DISCONNECT', style: AppTextStyles.labelSmall.copyWith(color: AppColors.error, fontWeight: FontWeight.bold)),
+                    Text('LOGOUT', style: AppTextStyles.labelSmall.copyWith(color: AppColors.error, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
@@ -262,7 +290,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
 
   Widget _buildMobileDrawer(BuildContext context) {
     return Drawer(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       child: _buildSidebar(context),
     );
   }
@@ -313,14 +341,14 @@ class _SidebarItem extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: isSelected ? AppColors.royalGold : Colors.white54,
+                color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withOpacity(0.5),
                 size: 20,
               ),
               const SizedBox(width: 12),
               Text(
                 label,
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: isSelected ? AppColors.royalGold : Colors.white54,
+                  color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withOpacity(0.5),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -503,7 +531,7 @@ class _EliteStatCard extends StatelessWidget {
           ),
           const Spacer(),
           Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(label, style: AppTextStyles.caption.copyWith(color: Colors.white38, fontSize: 8, letterSpacing: 1)),
+          Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.4), fontSize: 8, letterSpacing: 1)),
         ],
       ),
     );
@@ -513,10 +541,11 @@ class _EliteStatCard extends StatelessWidget {
 class _ManagementGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
+      crossAxisCount: width > 400 ? 3 : 2,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
       childAspectRatio: 1.1,
@@ -590,13 +619,33 @@ class _HeaderActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconButton(icon: const Icon(Icons.refresh, size: 20), onPressed: onRefresh),
         IconButton(
-          icon: const Icon(Icons.logout, size: 20),
+          icon: const Icon(Icons.refresh, size: 20, color: Colors.white70),
+          onPressed: onRefresh,
+        ),
+        const SizedBox(width: 8),
+        TextButton.icon(
           onPressed: () {
-            ProviderScope.containerOf(context).read(adminProvider.notifier).logout();
-            Navigator.of(context).pop();
+            ProviderScope.containerOf(context).read(authProvider.notifier).logout();
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+              (route) => false,
+            );
           },
+          icon: const Icon(Icons.logout, size: 18, color: AppColors.error),
+          label: Text(
+            'LOGOUT',
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.error,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            backgroundColor: AppColors.error.withOpacity(0.05),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
         ),
       ],
     );
@@ -640,7 +689,7 @@ class _OperationLogs extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Order #${order['id']?.substring(0, 8)}...', style: AppTextStyles.labelSmall),
-                      Text('${order['product']?['name'] ?? 'Gold Asset'}', style: AppTextStyles.caption.copyWith(color: Colors.white38)),
+                      Text('${order['product']?['name'] ?? 'Gold Asset'}', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.4))),
                     ],
                   ),
                 ),

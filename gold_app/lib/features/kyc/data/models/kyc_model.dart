@@ -46,12 +46,12 @@ class BankModel {
 
   factory BankModel.fromJson(Map<String, dynamic> json) {
     return BankModel(
-      accountNumber: json['accountNumber'] ?? '',
-      ifscCode: json['ifscCode'] ?? '',
-      accountHolderName: json['accountHolderName'] ?? '',
+      accountNumber: json['bankAccountNo'] ?? '',
+      ifscCode: json['bankIfsc'] ?? '',
+      accountHolderName: json['bankHolderName'] ?? '',
       bankName: json['bankName'],
-      status: json['status'] ?? 'pending',
-      submittedAt: json['submittedAt'] != null ? DateTime.parse(json['submittedAt']) : null,
+      status: (json['bankStatus'] as String?)?.toLowerCase() ?? 'pending',
+      submittedAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     );
   }
 

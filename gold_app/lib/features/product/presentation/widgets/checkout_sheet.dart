@@ -4,6 +4,7 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../providers/product_providers.dart';
 import '../../data/models/product_model.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class CheckoutSheet extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -77,7 +78,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
 
       try {
         var options = {
-          'key': 'rzp_test_SUR1HJFojazFPc', // Razorpay Test Key
+          'key': AppConstants.razorpayKeyId,
           'amount': (purchaseData['amount'] * 100).round(), // amount in paise
           'name': 'Royal Gold',
           'description': '${_quantity}x ${widget.product.name}',
@@ -100,6 +101,18 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
     if (pricing == null) return const SizedBox.shrink();
 
     final totalAmount = pricing.total * _quantity;
+
+    // Listen for errors and show snackbar
+    ref.listen(purchaseProvider, (previous, next) {
+      if (next.error != null && next.error != previous?.error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${next.error}'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    });
 
     return Container(
       padding: const EdgeInsets.all(24),

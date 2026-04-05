@@ -61,7 +61,7 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('System Configuration', style: AppTextStyles.h4),
         backgroundColor: Colors.transparent,
@@ -70,7 +70,7 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
         iconTheme: IconThemeData(color: AppColors.royalGold),
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        decoration: BoxDecoration(color: AppColors.background),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(

@@ -89,6 +89,10 @@ class ApiService {
     );
   }
 
+  Future<Response> getGoldPrice() async {
+    return await _dio.get('/products/price');
+  }
+
   Future<Response> getCategories() async {
     return await _dio.get('/categories');
   }
@@ -121,12 +125,34 @@ class ApiService {
     return await _dio.patch('/users/$userId/kyc', data: {'status': status});
   }
 
+  Future<Response> updateUserBank(String userId, String status) async {
+    return await _dio.patch('/users/$userId/bank-status', data: {'status': status});
+  }
+
+  Future<Response> updateProfile(Map<String, dynamic> data) async {
+    return await _dio.patch('/users/profile', data: data);
+  }
+
   Future<Response> getAdminStats() async {
     return await _dio.get('/users/stats');
   }
 
   Future<Response> getAdminConfigs() async {
     return await _dio.get('/configs');
+  }
+
+  // ─── Bank & KYC ─────────────────────────────────────────────────────────
+
+  Future<Response> submitBankDetails(Map<String, dynamic> data) async {
+    return await _dio.post('/bank/submit', data: data);
+  }
+
+  Future<Response> getBankDetails() async {
+    return await _dio.get('/bank/my');
+  }
+
+  Future<Response> getKycStatus() async {
+    return await _dio.get('/users/kyc/status'); // Verify if this and /auth/me is enough
   }
 
   Future<Response> createCategory(Map<String, dynamic> data) async {

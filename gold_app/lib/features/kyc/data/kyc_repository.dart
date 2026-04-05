@@ -32,14 +32,15 @@ class KycRepository {
 
   // Get KYC Status
   Future<KycModel?> getKycStatus() async {
-    await MockDataService.simulateDelay(AppConstants.apiDelayShort);
-    return KycModel(
-      aadhaarNumber: '123456789012',
-      status: 'verified',
-      name: 'Rahul Sharma',
-      submittedAt: DateTime.now().subtract(Duration(days: 5)),
-      verifiedAt: DateTime.now().subtract(Duration(days: 4)),
-    );
+    try {
+      final response = await _apiService.get('/auth/me');
+      if (response.statusCode == 200) {
+        return KycModel.fromJson(response.data['data']['user']);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   // Submit Bank Details
@@ -47,29 +48,34 @@ class KycRepository {
     required String accountNumber,
     required String ifscCode,
     required String accountHolderName,
+    String? bankName,
   }) async {
-    await MockDataService.simulateDelay(AppConstants.apiDelayLong);
-    return BankModel(
-      accountNumber: accountNumber,
-      ifscCode: ifscCode,
-      accountHolderName: accountHolderName,
-      bankName: 'State Bank of India',
-      status: 'verified',
-      submittedAt: DateTime.now(),
-    );
+    final response = await _apiService.submitBankDetails({
+      'accountNumber': accountNumber,
+      'ifscCode': ifscCode,
+      'accountHolderName': accountHolderName,
+      'bankName': bankName,
+    });
+
+    if (response.statusCode == 200) {
+      return BankModel.fromJson(response.data['data']['user']);
+    }
+    throw Exception('Failed to submit bank details');
   }
 
   // Get Bank Status
   Future<BankModel?> getBankStatus() async {
-    await MockDataService.simulateDelay(AppConstants.apiDelayShort);
-    return BankModel(
-      accountNumber: '1234567890',
-      ifscCode: 'SBIN0001234',
-      accountHolderName: 'Rahul Sharma',
-      bankName: 'State Bank of India',
-      status: 'verified',
-      submittedAt: DateTime.now().subtract(Duration(days: 5)),
-    );
+    try {
+      final response = await _apiService.getBankDetails();
+      if (response.statusCode == 200) {
+        final bankData = response.data['data']['bank'];
+        if (bankData == null) return null;
+        return BankModel.fromJson(bankData);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
   // IFSC Lookup (mock)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
@@ -13,11 +14,10 @@ import '../../notifications/screens/transactions_screen.dart';
 import 'settings_screen.dart';
 import 'passkey_setup_screen.dart';
 import 'legal_policy_screen.dart';
-import '../../../core/providers/theme_provider.dart';
 import '../../admin/screens/admin_login_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
-  ProfileScreen({super.key}) ;
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -145,6 +145,84 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                 ),
               ).animate(delay: 300.ms).fadeIn(duration: 400.ms),
+
+              SizedBox(height: 16),
+
+              // Referral Program
+              GoldCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Referral Program', style: AppTextStyles.labelLarge),
+                        Icon(Icons.share_arrival_time_outlined, color: AppColors.royalGold.withOpacity(0.5), size: 18),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.royalGold.withOpacity(0.1)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('My Referral Code', style: AppTextStyles.caption),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    user?.referralCode ?? '---',
+                                    style: AppTextStyles.h3.copyWith(color: AppColors.royalGold, letterSpacing: 2),
+                                  ),
+                                ],
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.copy_rounded, color: AppColors.royalGold),
+                                onPressed: () {
+                                  if (user?.referralCode != null) {
+                                    Clipboard.setData(ClipboardData(text: user!.referralCode));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Referral code copied!'),
+                                        behavior: SnackBarBehavior.floating,
+                                        backgroundColor: AppColors.royalGold,
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          Divider(height: 24, color: Colors.white10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Total Rewards', style: AppTextStyles.bodySmall),
+                              Text(
+                                Formatters.currency(user?.wallet?.referralRewards ?? 0),
+                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Earn ₹500 for every successful referral who makes their first purchase.',
+                      style: AppTextStyles.caption.copyWith(color: Colors.white.withOpacity(0.4)),
+                    ),
+                  ],
+                ),
+              ).animate(delay: 350.ms).fadeIn(duration: 400.ms),
 
               SizedBox(height: 16),
 

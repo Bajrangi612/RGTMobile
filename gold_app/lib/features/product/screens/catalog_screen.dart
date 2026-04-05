@@ -6,7 +6,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../product/presentation/providers/product_providers.dart';
 import '../../product/data/models/product_model.dart';
-import '../../product/data/models/category_model.dart';
 import '../../product/presentation/widgets/checkout_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../admin/screens/admin_product_manager.dart';
@@ -45,10 +44,10 @@ class CatalogScreen extends ConsumerWidget {
             color: AppColors.royalGold,
             child: GridView.builder(
               padding: const EdgeInsets.all(20),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.65,
-                mainAxisSpacing: 20,
+                childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.72 : 0.58,
+                mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
               ),
               itemCount: products.length,
@@ -220,66 +219,56 @@ class _CatalogProductCard extends ConsumerWidget {
 
           // Info Section
           Expanded(
-            flex: 4,
+            flex: 5,
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Purity: ${product.purity}',
-                        style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
-                      ),
-                    ],
+                  Text(
+                    product.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '₹${pricing?.total ?? "---"}',
-                        style: const TextStyle(
-                          color: Color(0xFFFFD700),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Purity: ${product.purity}',
+                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
+                  ),
+                  const Spacer(), // Pushes pricing downwards
+                  Text(
+                    '₹${pricing?.total ?? "---"}',
+                    style: const TextStyle(
+                      color: Color(0xFFFFD700),
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 34,
+                    child: ElevatedButton(
+                      onPressed: () => _showPurchaseSheet(context, product),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.royalGold,
+                        foregroundColor: Colors.black,
+                        elevation: 0,
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 36,
-                        child: ElevatedButton(
-                          onPressed: () => _showPurchaseSheet(context, product),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.royalGold,
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: const Text(
-                            'BUY',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                          ),
-                        ),
+                      child: const Text(
+                        'BUY NOW',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:lottie/lottie.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/extensions.dart';
@@ -10,7 +9,7 @@ import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 
 class PasskeySetupScreen extends ConsumerStatefulWidget {
-  PasskeySetupScreen({super.key});
+  const PasskeySetupScreen({super.key});
 
   @override
   ConsumerState<PasskeySetupScreen> createState() => _PasskeySetupScreenState();

@@ -146,7 +146,7 @@ class _HomeDashboard extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: _PortfolioCard(
-                  holdings: 0.0000, // Placeholder
+                  holdings: (authState.user?.totalInvestment ?? 0.0) / (homeState.goldPrice > 0 ? homeState.goldPrice : 7000.0),
                   value: authState.user?.totalInvestment ?? 0.0,
                   isLoading: homeState.isLoading,
                 ),
@@ -332,9 +332,9 @@ class _HomeDashboard extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               sliver: homeState.isLoading
                   ? SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.72,
+                        childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.75 : 0.68,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
                       ),
@@ -344,9 +344,9 @@ class _HomeDashboard extends ConsumerWidget {
                       ),
                     )
                   : SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.72,
+                        childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.75 : 0.68,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
                       ),
@@ -468,9 +468,12 @@ class _PortfolioCard extends StatelessWidget {
 
 
 // Asset Allocation Card (Modern Donul)
-class _AssetAllocationCard extends StatelessWidget {
+class _AssetAllocationCard extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).user;
+    final total = user?.totalInvestment ?? 0.0;
+    
     return GoldCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -496,16 +499,24 @@ class _AssetAllocationCard extends StatelessWidget {
                        AppColors.royalGold.withOpacity(0.3),
                        AppColors.royalGold,
                      ],
-                     stops: const [0.0, 0.65, 1.0],
+                     stops: const [0.0, 0.7, 1.0],
                    ),
                  ),
               ),
             ),
           ),
           const SizedBox(height: 16),
-          _AllocationLabel(label: 'Physical Gold', value: '65%', color: AppColors.royalGold),
+          _AllocationLabel(
+            label: 'Physical Gold', 
+            value: total > 0 ? '70%' : '0%', 
+            color: AppColors.royalGold
+          ),
           const SizedBox(height: 4),
-          _AllocationLabel(label: 'Digital Gold', value: '35%', color: AppColors.royalGold.withOpacity(0.3)),
+          _AllocationLabel(
+            label: 'Digital Gold', 
+            value: total > 0 ? '30%' : '0%', 
+            color: AppColors.royalGold.withOpacity(0.3)
+          ),
         ],
       ),
     );

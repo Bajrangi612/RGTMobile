@@ -59,12 +59,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       child: Scaffold(
         body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFFFFDF5), Color(0xFFFFFFFF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+          decoration: BoxDecoration(
+            color: AppColors.background,
           ),
           child: Stack(
             children: [
@@ -125,7 +121,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Text(
                         'Buy • Sell • Invest in Gold Coins',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.grey,
+                          color: AppColors.pureWhite.withOpacity(0.6),
                           letterSpacing: 1.1,
                         ),
                       ).animate().fadeIn(delay: 400.ms),
@@ -157,20 +153,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 inputFormatters: [
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
-                                style: AppTextStyles.h4.copyWith(
+                                style: AppTextStyles.h4.scaled(context).copyWith(
                                   color: AppColors.pureWhite,
                                   fontWeight: FontWeight.w700,
-                                  letterSpacing: 2,
+                                  letterSpacing: 1,
                                 ),
                                 cursorColor: AppColors.royalGold,
                                 decoration: InputDecoration(
                                   labelText: 'Mobile Number',
                                   labelStyle: TextStyle(color: AppColors.grey),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                                   prefixIcon: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
                                     child: Text(
                                       '🇮🇳 +91',
-                                      style: AppTextStyles.labelLarge.copyWith(
+                                      style: AppTextStyles.labelLarge.scaled(context).copyWith(
                                         color: AppColors.pureWhite,
                                         fontWeight: FontWeight.w800,
                                       ),

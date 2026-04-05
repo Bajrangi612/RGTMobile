@@ -15,7 +15,7 @@ class AdminCategoryManager extends ConsumerWidget {
     final categories = adminState.categories;
 
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Category Management', style: AppTextStyles.h4),
         backgroundColor: Colors.transparent,
@@ -29,7 +29,7 @@ class AdminCategoryManager extends ConsumerWidget {
         child: const Icon(Icons.add, color: Colors.black),
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        decoration: BoxDecoration(color: AppColors.background),
         child: categories.isEmpty
             ? _EmptyState()
             : ListView.builder(
@@ -86,7 +86,7 @@ class AdminCategoryManager extends ConsumerWidget {
           bottom: MediaQuery.of(context).viewInsets.bottom + 24,
         ),
         decoration: BoxDecoration(
-          color: AppColors.deepBlack,
+          color: AppColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
           border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
         ),
@@ -136,9 +136,9 @@ class AdminCategoryManager extends ConsumerWidget {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: AppTextStyles.caption.copyWith(color: Colors.white24),
+      hintStyle: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.3)),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.05),
+      fillColor: AppColors.pureWhite.withOpacity(0.05),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -161,7 +161,7 @@ class _EmptyState extends StatelessWidget {
         children: [
           Icon(Icons.category_outlined, size: 64, color: AppColors.royalGold.withOpacity(0.1)),
           const SizedBox(height: 16),
-          Text('No categories found', style: AppTextStyles.labelLarge.copyWith(color: Colors.white24)),
+          Text('No categories found', style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite.withOpacity(0.3))),
         ],
       ),
     );

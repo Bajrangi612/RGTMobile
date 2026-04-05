@@ -20,19 +20,19 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      scaffoldBackgroundColor: AppColors.deepBlack,
+      scaffoldBackgroundColor: AppColors.background,
       primaryColor: AppColors.royalGold,
 
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: AppColors.royalGold,
-        onPrimary: isDark ? AppColors.deepBlack : AppColors.pureWhite,
+        onPrimary: isDark ? const Color(0xFF05070A) : Colors.white,
         secondary: AppColors.darkGold,
-        onSecondary: AppColors.deepBlack,
-        surface: AppColors.cardDark,
+        onSecondary: Colors.white,
+        surface: AppColors.surface,
         onSurface: AppColors.pureWhite,
         error: AppColors.error,
-        onError: AppColors.pureWhite,
+        onError: Colors.white,
       ),
 
       // AppBar
@@ -40,7 +40,7 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
         titleTextStyle: GoogleFonts.poppins(
           fontSize: 18,
           fontWeight: FontWeight.w600,
@@ -61,7 +61,7 @@ class AppTheme {
 
       // Bottom Nav
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.cardDark,
+        backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.royalGold,
         unselectedItemColor: AppColors.grey,
         type: BottomNavigationBarType.fixed,
@@ -71,7 +71,7 @@ class AppTheme {
       // Input fields
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.cardDark,
+        fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         labelStyle: TextStyle(color: AppColors.grey),
         hintStyle: TextStyle(color: AppColors.grey.withOpacity(0.5)),

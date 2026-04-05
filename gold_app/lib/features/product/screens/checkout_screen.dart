@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/utils/extensions.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/mock_data_service.dart';
 import '../../../core/network/api_service.dart';
@@ -12,7 +11,6 @@ import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../data/models/product_model.dart';
-import '../../order/screens/orders_screen.dart';
 import '../../order/providers/order_provider.dart';
 import '../../home/screens/home_screen.dart';
 

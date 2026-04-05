@@ -12,6 +12,9 @@ class OrderModel {
   final double total;
   final String status; // String from backend
   final String? paymentId;
+  final double? orderWeight;
+  final String? referralCode;
+  final String? invoiceNo;
   final DateTime createdAt;
 
   OrderModel({
@@ -25,6 +28,9 @@ class OrderModel {
     required this.total,
     required this.status,
     this.paymentId,
+    this.orderWeight,
+    this.referralCode,
+    this.invoiceNo,
     required this.createdAt,
   });
 
@@ -40,20 +46,22 @@ class OrderModel {
       total: (json['total'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] ?? 'PENDING',
       paymentId: json['paymentId'],
+      orderWeight: (json['weight'] as num?)?.toDouble(),
+      referralCode: json['referralCode'],
+      invoiceNo: json['invoiceNo'],
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
     );
   }
 
   // UI COMPATIBILITY GETTERS
   String get productName => product?.name ?? 'Gold Coin';
-  double get weight => product?.weight ?? 1.0;
+  double get weight => orderWeight ?? product?.weight ?? 1.0;
   double get price => amount;
   double get gstAmount => gst;
   double get totalPrice => total;
   String get orderDate => createdAt.toIso8601String();
   String get estimatedDelivery => '5-7 Business Days';
   String? get deliveredDate => null;
-  String? get referralCode => null;
   double get referralCommission => 0.0;
   String get paymentMethod => 'Online (Razorpay)';
   
@@ -82,6 +90,7 @@ class OrderModel {
       'total': total,
       'status': status,
       'paymentId': paymentId,
+      'invoiceNo': invoiceNo,
       'createdAt': createdAt.toIso8601String(),
     };
   }

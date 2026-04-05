@@ -12,6 +12,7 @@ import '../../../widgets/gold_card.dart';
 import '../providers/auth_provider.dart';
 import '../../home/screens/home_screen.dart';
 import '../../admin/screens/admin_dashboard_screen.dart';
+import 'complete_profile_screen.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String phone;
@@ -71,9 +72,15 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
 
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
-          pageBuilder: (_, __, ___) => user?.isAdmin == true 
-              ? const AdminDashboardScreen() 
-              : const HomeScreen(),
+          pageBuilder: (_, __, ___) {
+            if (user?.isAdmin == true) {
+              return const AdminDashboardScreen();
+            } else if (user?.registerRequired == true || (user?.name.isEmpty ?? true)) {
+              return const CompleteProfileScreen();
+            } else {
+              return const HomeScreen();
+            }
+          },
           transitionsBuilder: (_, anim, __, child) =>
               FadeTransition(opacity: anim, child: child),
           transitionDuration: const Duration(milliseconds: 600),
@@ -189,7 +196,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           shape: PinCodeFieldShape.box,
                           borderRadius: BorderRadius.circular(12),
                           fieldHeight: 56,
-                          fieldWidth: 44,
+                          fieldWidth: 40,
                           activeFillColor: Colors.white,
                           inactiveFillColor: Colors.white,
                           selectedFillColor: Colors.white,

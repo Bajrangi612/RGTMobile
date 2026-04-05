@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:html' as html;
 
 class StorageService {
   static const _storage = FlutterSecureStorage();
@@ -9,12 +8,8 @@ class StorageService {
   // Write
   static Future<void> write(String key, String value) async {
     if (kIsWeb) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(key, value);
-      } catch (e) {
-        html.window.localStorage[key] = value;
-      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(key, value);
       return;
     }
     
@@ -27,14 +22,8 @@ class StorageService {
   // Read
   static Future<String?> read(String key) async {
     if (kIsWeb) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final val = prefs.getString(key);
-        if (val != null) return val;
-        return html.window.localStorage[key];
-      } catch (e) {
-        return html.window.localStorage[key];
-      }
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(key);
     }
 
     try {
@@ -48,13 +37,8 @@ class StorageService {
   // Delete
   static Future<void> delete(String key) async {
     if (kIsWeb) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove(key);
-        html.window.localStorage.remove(key);
-      } catch (e) {
-        html.window.localStorage.remove(key);
-      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(key);
       return;
     }
 
@@ -67,13 +51,8 @@ class StorageService {
   // Delete all
   static Future<void> clearAll() async {
     if (kIsWeb) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-        html.window.localStorage.clear();
-      } catch (e) {
-        html.window.localStorage.clear();
-      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
       return;
     }
 
@@ -86,13 +65,8 @@ class StorageService {
   // Check if key exists
   static Future<bool> containsKey(String key) async {
     if (kIsWeb) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        if (prefs.containsKey(key)) return true;
-        return html.window.localStorage.containsKey(key);
-      } catch (e) {
-        return html.window.localStorage.containsKey(key);
-      }
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.containsKey(key);
     }
 
     try {

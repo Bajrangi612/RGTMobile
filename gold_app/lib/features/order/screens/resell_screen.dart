@@ -5,7 +5,6 @@ import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/utils/extensions.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/services/mock_data_service.dart';
 import '../../../widgets/gold_button.dart';
@@ -17,7 +16,7 @@ import '../../home/screens/home_screen.dart';
 class ResellScreen extends ConsumerStatefulWidget {
   final OrderModel order;
 
-  ResellScreen({super.key, required this.order}) ;
+  const ResellScreen({super.key, required this.order});
 
   @override
   ConsumerState<ResellScreen> createState() => _ResellScreenState();

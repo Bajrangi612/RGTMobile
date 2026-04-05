@@ -7,7 +7,7 @@ final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) {
 });
 
 class ThemeNotifier extends StateNotifier<ThemeMode> {
-  ThemeNotifier() : super(ThemeMode.dark); // Default to Premium Dark
+  ThemeNotifier() : super(ThemeMode.light); // Default to Premium Light
 
   void toggleTheme() {
     state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
@@ -21,5 +21,5 @@ class ThemeNotifier extends StateNotifier<ThemeMode> {
 // Helper to provide the current palette
 final paletteProvider = Provider<ThemePalette>((ref) {
   final mode = ref.watch(themeProvider);
-  return mode == ThemeMode.dark ? ThemePalette.dark : ThemePalette.light;
+  return mode == ThemeMode.light ? ThemePalette.light : ThemePalette.dark;
 });

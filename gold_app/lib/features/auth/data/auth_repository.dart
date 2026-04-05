@@ -95,4 +95,31 @@ class AuthRepository {
   Future<void> logout() async {
     await StorageService.clearAll();
   }
+
+  // Update Profile
+  Future<UserModel?> updateProfile({required String name, String? email}) async {
+    try {
+      final response = await ApiService().updateProfile({
+        'name': name,
+        if (email != null) 'email': email,
+      });
+
+      if (response.statusCode == 200) {
+        final userData = response.data['data']['user'];
+        final Map<String, dynamic> mappedUser = {
+          ...Map<String, dynamic>.from(userData),
+          'phone': userData['contactNo'] ?? userData['phone'] ?? '',
+          'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
+          'kycStatus': 'verified',
+          'bankStatus': 'verified',
+          'isAdmin': userData['role'] == 'ADMIN',
+          'registerRequired': false,
+        };
+        return UserModel.fromJson(mappedUser);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 }

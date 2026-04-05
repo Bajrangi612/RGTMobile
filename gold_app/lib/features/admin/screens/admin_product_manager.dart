@@ -21,7 +21,7 @@ class AdminProductManager extends ConsumerWidget {
     final adminState = ref.watch(adminProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Product Catalog', style: AppTextStyles.h4),
         backgroundColor: Colors.transparent,
@@ -63,7 +63,7 @@ class AdminProductManager extends ConsumerWidget {
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        decoration: BoxDecoration(color: AppColors.background),
         child: Column(
           children: [
             /// 🔍 Search & Filter Bar
@@ -77,7 +77,7 @@ class AdminProductManager extends ConsumerWidget {
                   cursorColor: AppColors.royalGold,
                   decoration: InputDecoration(
                     hintText: 'Search products by name...',
-                    hintStyle: AppTextStyles.caption.copyWith(color: Colors.white24),
+                    hintStyle: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.3)),
                     border: InputBorder.none,
                     icon: Icon(Icons.search, color: AppColors.royalGold, size: 22),
                   ),
@@ -114,7 +114,7 @@ class AdminProductManager extends ConsumerWidget {
               child: RefreshIndicator(
                 onRefresh: () => ref.read(adminProvider.notifier).loadInitialData(),
                 color: AppColors.royalGold,
-                backgroundColor: AppColors.deepBlack,
+                backgroundColor: AppColors.background,
                 child: () {
                   final filteredProducts = ref.watch(adminProvider.notifier).filteredProducts;
                   
@@ -148,7 +148,7 @@ class AdminProductManager extends ConsumerWidget {
                                   height: 65,
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.05),
+                                    color: AppColors.pureWhite.withOpacity(0.05),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: _ProductImage(imageUrl: product.image),
@@ -174,7 +174,7 @@ class AdminProductManager extends ConsumerWidget {
                                     Text(
                                       'AVAILABLE STOCK: ${product.stock} UNITS',
                                       style: AppTextStyles.caption.copyWith(
-                                        color: isLowStock ? (isCritical ? AppColors.error : AppColors.warning) : Colors.white24,
+                                        color: isLowStock ? (isCritical ? AppColors.error : AppColors.warning) : AppColors.pureWhite.withOpacity(0.3),
                                         fontSize: 9,
                                         fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal,
                                       ),

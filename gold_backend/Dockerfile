@@ -3,8 +3,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install build dependencies for Prisma
-RUN apk add --no-cache openssl g++ make python3
+# Install build dependencies for Prisma and Bash for build scripts
+RUN apk add --no-cache openssl g++ make python3 bash
 
 COPY package.json package-lock.json* ./
 RUN npm install
@@ -20,8 +20,8 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Ensure OpenSSL and libc6-compat are available for Prisma query engine
-RUN apk add --no-cache openssl libc6-compat
+# Ensure OpenSSL, libc6-compat and Bash are available for scripts/Prisma
+RUN apk add --no-cache openssl libc6-compat bash
 
 # Set Production Environment
 ENV NODE_ENV=production
@@ -37,6 +37,7 @@ COPY --from=builder /app/prisma ./prisma
 RUN npm install --omit=dev
 
 # RE-GENERATE Prisma client in the final environment to ensure binaries match
+# Note: Since prisma is a devDependency, we rely on the cached npx version or global
 RUN npx prisma generate
 
 # Expose Port

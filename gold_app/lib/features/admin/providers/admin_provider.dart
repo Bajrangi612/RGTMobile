@@ -213,6 +213,16 @@ class AdminNotifier extends StateNotifier<AdminState> {
     }
   }
 
+  Future<void> updateBankStatus(String userId, String status) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await ApiService().updateUserBank(userId, status);
+      await loadInitialData();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   Future<bool> createCategory(Map<String, dynamic> categoryData) async {
     try {
       await ApiService().createCategory(categoryData);

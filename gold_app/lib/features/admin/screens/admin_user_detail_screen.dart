@@ -16,7 +16,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
     final adminState = ref.watch(adminProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(user['name']?.toUpperCase() ?? 'USER PROFILE', style: AppTextStyles.h4),
         backgroundColor: Colors.transparent,
@@ -25,7 +25,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
         iconTheme: IconThemeData(color: AppColors.royalGold),
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        decoration: BoxDecoration(color: AppColors.background),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
@@ -77,17 +77,16 @@ class AdminUserDetailScreen extends ConsumerWidget {
 
               const SizedBox(height: 32),
 
-              /// ✅ KYC Actions (Only if PENDING or REJECTED)
-              if (user['kycStatus'] != 'verified')
+              /// ✅ KYC Actions
+              if (user['kycStatus'] != 'VERIFIED')
                 Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton(
+                      child: OutlinedButton(
                         onPressed: adminState.isLoading 
                           ? null 
-                          : () => _updateKyc(context, ref, 'rejected'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent.withOpacity(0.1),
+                          : () => _updateKyc(context, ref, 'REJECTED'),
+                        style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.redAccent,
                           side: const BorderSide(color: Colors.redAccent),
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -100,7 +99,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
                       child: ElevatedButton(
                         onPressed: adminState.isLoading 
                           ? null 
-                          : () => _updateKyc(context, ref, 'verified'),
+                          : () => _updateKyc(context, ref, 'VERIFIED'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.success,
                           foregroundColor: Colors.black,
@@ -111,27 +110,61 @@ class AdminUserDetailScreen extends ConsumerWidget {
                     ),
                   ],
                 ).animate().fadeIn(delay: 400.ms),
+
+              const SizedBox(height: 32),
+
+              /// 🏦 Bank Details Review
+              Text('BANK ACCOUNT VERIFICATION', style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, letterSpacing: 1.2)),
+              const SizedBox(height: 16),
               
-              const SizedBox(height: 20),
-              
-              if (user['kycStatus'] == 'verified')
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.success.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.success),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+              GoldCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _InfoRow('Acc Name', user['accountName'] ?? 'N/A'),
+                    _InfoRow('Acc Number', user['accountNo'] ?? 'N/A'),
+                    _InfoRow('IFSC Code', user['ifscCode'] ?? 'N/A'),
+                    _InfoRow('Nominee', user['nomineeName'] ?? 'N/A'),
+                    const SizedBox(height: 12),
+                    Row(
                       children: [
-                        Icon(Icons.verified, color: AppColors.success, size: 20),
-                        const SizedBox(width: 10),
-                        Text('ENTITY FULLY VERIFIED', style: AppTextStyles.labelLarge.copyWith(color: AppColors.success)),
+                        Text('Bank Status: ', style: AppTextStyles.caption),
+                        _KycStatusBanner(status: user['bankStatus']),
                       ],
                     ),
-                  ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              if (user['bankStatus'] != 'VERIFIED')
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: adminState.isLoading ? null : () => _updateBank(context, ref, 'REJECTED'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text('REJECT BANK'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: adminState.isLoading ? null : () => _updateBank(context, ref, 'VERIFIED'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.success,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text('APPROVE BANK', style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
 
               const SizedBox(height: 40),
@@ -147,7 +180,17 @@ class AdminUserDetailScreen extends ConsumerWidget {
     if (context.mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User KYC set to ${status.toUpperCase()}')),
+        SnackBar(content: Text('User KYC set to $status')),
+      );
+    }
+  }
+
+  Future<void> _updateBank(BuildContext context, WidgetRef ref, String status) async {
+    await ref.read(adminProvider.notifier).updateBankStatus(user['id'], status);
+    if (context.mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bank details set to $status')),
       );
     }
   }
@@ -160,8 +203,8 @@ class _KycStatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color color = AppColors.royalGold;
-    if (status == 'verified') color = AppColors.success;
-    if (status == 'rejected') color = AppColors.error;
+    if (status?.toUpperCase() == 'VERIFIED') color = AppColors.success;
+    if (status?.toUpperCase() == 'REJECTED') color = AppColors.error;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -208,9 +251,9 @@ class _DocumentCard extends StatelessWidget {
             height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: AppColors.pureWhite.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.white10),
+              border: Border.all(color: AppColors.pureWhite.withOpacity(0.1)),
             ),
             child: Center(
               child: Column(
@@ -218,11 +261,31 @@ class _DocumentCard extends StatelessWidget {
                 children: [
                   Icon(Icons.image_outlined, size: 48, color: placeholderColor.withOpacity(0.3)),
                   const SizedBox(height: 8),
-                  Text('Official Document Photo', style: AppTextStyles.caption.copyWith(color: Colors.white24)),
+                  Text('Official Document Photo', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.3))),
                 ],
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _InfoRow(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTextStyles.bodySmall),
+          Text(value, style: AppTextStyles.labelLarge),
         ],
       ),
     );

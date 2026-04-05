@@ -12,6 +12,7 @@ class UserModel {
   final String createdAt;
   final bool isAdmin;
   final bool registerRequired;
+  final WalletModel? wallet;
 
   UserModel({
     required this.id,
@@ -27,6 +28,7 @@ class UserModel {
     required this.createdAt,
     this.isAdmin = false,
     this.registerRequired = false,
+    this.wallet,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class UserModel {
       createdAt: json['createdAt'] ?? '',
       isAdmin: json['isAdmin'] ?? false,
       registerRequired: json['registerRequired'] ?? false,
+      wallet: json['wallet'] != null ? WalletModel.fromJson(json['wallet']) : null,
     );
   }
 
@@ -61,6 +64,7 @@ class UserModel {
         'createdAt': createdAt,
         'isAdmin': isAdmin,
         'registerRequired': registerRequired,
+        'wallet': wallet?.toJson(),
       };
 
   UserModel copyWith({
@@ -77,6 +81,7 @@ class UserModel {
     String? createdAt,
     bool? isAdmin,
     bool? registerRequired,
+    WalletModel? wallet,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -92,10 +97,42 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       isAdmin: isAdmin ?? this.isAdmin,
       registerRequired: registerRequired ?? this.registerRequired,
+      wallet: wallet ?? this.wallet,
     );
   }
 
   bool get isKycVerified => kycStatus == 'verified';
   bool get isBankVerified => bankStatus == 'verified';
   bool get isFullyVerified => isKycVerified && isBankVerified;
+}
+
+class WalletModel {
+  final double balance;
+  final double goldAdvance;
+  final double referralRewards;
+
+  WalletModel({
+    required this.balance,
+    required this.goldAdvance,
+    required this.referralRewards,
+  });
+
+  factory WalletModel.fromJson(Map<String, dynamic> json) {
+    return WalletModel(
+      balance: _toDouble(json['balance']),
+      goldAdvance: _toDouble(json['goldAdvance']),
+      referralRewards: _toDouble(json['referralRewards']),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'balance': balance,
+        'goldAdvance': goldAdvance,
+        'referralRewards': referralRewards,
+      };
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '0') ?? 0.0;
+  }
 }

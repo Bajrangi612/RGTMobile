@@ -40,4 +40,7 @@ class AppConstants {
   static const String passKeyKey = 'pass_key';
   static const String onboardingKey = 'onboarding_complete';
   static const String lastOrderTimeKey = 'last_order_time';
+
+  // Payment Keys
+  static const String razorpayKeyId = 'rzp_test_SUR1HJFojazFPc';
 }

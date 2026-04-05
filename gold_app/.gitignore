@@ -5,7 +5,7 @@
 *.swp
 .DS_Store
 .atom/
-.build/
+
 .buildlog/
 .history
 .svn/
@@ -42,4 +42,6 @@ app.*.map.json
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
-/android/app/release
+# Signing files
+android/key.properties
+*.jks

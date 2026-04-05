@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
@@ -11,6 +12,7 @@ import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/status_badge.dart';
 import '../data/models/order_model.dart';
 import '../providers/order_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import 'resell_screen.dart';
 import '../../../core/services/invoice_service.dart';
 
@@ -75,7 +77,7 @@ class OrderDetailScreen extends ConsumerWidget {
                           _DetailRow('GST (3%)', Formatters.currency(order.gstAmount)),
                           _DetailRow('Total Price', Formatters.currency(order.totalPrice), isBold: true),
                           _DetailRow('Payment', order.paymentMethod),
-                          _DetailRow('Order Date', Formatters.date(order.orderDate)),
+                          _DetailRow('Order Date', DateFormat('dd/MM/yyyy').format(order.createdAt)),
                           if (order.referralCode != null && order.referralCode!.isNotEmpty)
                             _DetailRow('Referral', order.referralCode!),
                         ],
@@ -130,7 +132,7 @@ class OrderDetailScreen extends ConsumerWidget {
                           SizedBox(height: 16),
                           _ProgressStep(
                             title: 'Confirmed',
-                            subtitle: Formatters.date(order.orderDate),
+                            subtitle: Formatters.date(order.createdAt.toIso8601String()),
                             isCompleted: true,
                             isFirst: true,
                           ),
@@ -225,11 +227,14 @@ class OrderDetailScreen extends ConsumerWidget {
               ),
             if (!order.isCancelled)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                 child: GoldButton(
                   text: 'Download Invoice',
                   isOutlined: true,
-                  onPressed: () => InvoiceService.generateAndPreviewInvoice(order),
+                  onPressed: () => InvoiceService.generateAndPreviewInvoice(
+                    order,
+                    user: ref.read(authProvider).user,
+                  ),
                   icon: Icons.picture_as_pdf_rounded,
                 ),
               ),

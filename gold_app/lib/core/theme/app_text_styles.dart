@@ -118,3 +118,13 @@ class AppTextStyles {
         color: AppColors.deepBlack,
       );
 }
+
+extension TextStyleExtensions on TextStyle {
+  TextStyle scaled(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    double factor = 1.0;
+    if (width > 600) factor = 1.1;
+    if (width < 360) factor = 0.9;
+    return copyWith(fontSize: (fontSize ?? 14) * factor);
+  }
+}

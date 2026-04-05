@@ -8,7 +8,7 @@ class AdminReportsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Platform Reports', style: AppTextStyles.h4),
         backgroundColor: Colors.transparent,
@@ -21,7 +21,7 @@ class AdminReportsScreen extends StatelessWidget {
           children: [
             Icon(Icons.analytics_outlined, size: 64, color: AppColors.royalGold.withOpacity(0.5)),
             const SizedBox(height: 16),
-            Text('Advanced Analytics Coming Soon', style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
+            Text('Advanced Analytics Coming Soon', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite.withOpacity(0.7))),
           ],
         ),
       ),

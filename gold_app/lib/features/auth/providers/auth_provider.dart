@@ -132,6 +132,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void updateUser(UserModel user) {
     state = state.copyWith(user: user);
   }
+
+  // Update profile in backend
+  Future<bool> updateProfile({required String name, String? email}) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final updatedUser = await _repository.updateProfile(name: name, email: email);
+      if (updatedUser != null) {
+        state = state.copyWith(
+          user: updatedUser,
+          isLoading: false,
+        );
+        return true;
+      }
+      state = state.copyWith(isLoading: false, error: 'Failed to update profile');
+      return false;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
 }
 
 // Provider

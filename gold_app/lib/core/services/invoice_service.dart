@@ -1,179 +1,340 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import '../constants/app_constants.dart';
+import 'package:intl/intl.dart';
+import '../../features/auth/data/models/user_model.dart';
 import '../../features/order/data/models/order_model.dart';
+import '../utils/formatters.dart';
 
 class InvoiceService {
-  static String generateInvoiceNumber() {
-    final now = DateTime.now();
-    final formatter = DateFormat('yyyyMMdd');
-    final randomDigits = (1000 + (now.millisecondsSinceEpoch % 9000)).toString();
-    return 'RG-${formatter.format(now)}-$randomDigits';
-  }
-
   static Map<String, dynamic> calculateInvoiceDetails({
     required double basePrice,
     required double weight,
-    double? commissionOverride,
     double? gstRateOverride,
   }) {
     final subtotal = basePrice * weight;
-    final commissionRate = commissionOverride ?? 2.5; 
-    final commissionAmount = subtotal * (commissionRate / 100);
-    final taxableAmount = subtotal + commissionAmount;
-    final currentGstRate = gstRateOverride ?? AppConstants.gstRate;
-    final gstAmount = taxableAmount * currentGstRate;
+    final taxableAmount = subtotal;
+    final gstRate = gstRateOverride ?? 0.03;
+    final gstAmount = taxableAmount * gstRate;
     final totalAmount = taxableAmount + gstAmount;
 
     return {
-      'invoiceNumber': generateInvoiceNumber(),
-      'date': DateTime.now().toIso8601String(),
-      'basePricePerGram': basePrice,
-      'weight': weight,
+      'invoiceNumber': 'RG-${DateTime.now().millisecondsSinceEpoch}',
       'subtotal': subtotal,
-      'commissionRate': commissionRate,
-      'commissionAmount': commissionAmount,
-      'taxableAmount': taxableAmount,
-      'gstRate': currentGstRate * 100,
       'gstAmount': gstAmount,
       'totalAmount': totalAmount,
     };
   }
-  
-  static Future<void> generateAndPreviewInvoice(OrderModel order, {double? gstRate}) async {
+
+  static Future<void> generateAndPreviewInvoice(OrderModel order, {UserModel? user}) async {
     final pdf = pw.Document();
-    
-    // Calculate details
-    final details = calculateInvoiceDetails(
-      basePrice: order.price,
-      weight: order.weight,
-      gstRateOverride: gstRate,
-    );
 
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(0),
         build: (pw.Context context) {
-          return pw.Padding(
-            padding: const pw.EdgeInsets.all(40),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                // Header
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          return pw.Column(
+            children: [
+              _buildHeader(),
+              pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 0),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
-                    pw.Column(
+                    pw.SizedBox(height: 20),
+                    _buildInvoiceTitle(),
+                    pw.SizedBox(height: 20),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('ROYAL GOLD', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.amber)),
-                        pw.Text('Premium Bullion Trading', style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                        _buildInvoiceMetadata(order, user),
+                        _buildQrPlaceholder(),
                       ],
                     ),
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    pw.SizedBox(height: 30),
+                    _buildBilledTo(user),
+                    pw.SizedBox(height: 30),
+                    _buildProductTable(order),
+                    pw.SizedBox(height: 20),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text('INVOICE', style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-                        pw.Text('No: ${details['invoiceNumber']}', style: pw.TextStyle(fontSize: 12)),
-                        pw.Text('Date: ${DateFormat('dd MMM yyyy').format(DateTime.now())}', style: pw.TextStyle(fontSize: 12)),
+                        _buildPaymentDetails(order),
+                        _buildSummaryAndStamp(order),
                       ],
                     ),
+                    pw.SizedBox(height: 40),
+                    _buildFooter(),
                   ],
                 ),
-                pw.SizedBox(height: 40),
-                
-                // Customer Section
-                pw.Text('Bill To:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                pw.Text('Valued Customer', style: pw.TextStyle(fontSize: 14)),
-                pw.Text('Order ID: ${order.id}'),
-                pw.SizedBox(height: 40),
-                
-                // Table
-                pw.TableHelper.fromTextArray(
-                  headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-                  headerDecoration: pw.BoxDecoration(color: PdfColors.amber900),
-                  cellHeight: 30,
-                  cellAlignments: {
-                    0: pw.Alignment.centerLeft,
-                    1: pw.Alignment.center,
-                    2: pw.Alignment.centerRight,
-                    3: pw.Alignment.centerRight,
-                  },
-                  headers: ['Description', 'Weight', 'Base Price', 'Total'],
-                  data: [
-                    [
-                      order.productName,
-                      '${order.weight} g',
-                      NumberFormat.currency(locale: 'en_IN', symbol: 'Rs.').format(order.price),
-                      NumberFormat.currency(locale: 'en_IN', symbol: 'Rs.').format(details['subtotal']),
-                    ],
-                  ],
-                ),
-                pw.SizedBox(height: 20),
-                
-                // Summary Section
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.end,
-                  children: [
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.end,
-                      children: [
-                        _SummaryRow('Subtotal', details['subtotal']),
-                        _SummaryRow('GST (3%)', details['gstAmount']),
-                        pw.Divider(color: PdfColors.amber, thickness: 2),
-                        pw.Text(
-                          'Total Amount: ${NumberFormat.currency(locale: 'en_IN', symbol: 'Rs.').format(details['totalAmount'])}',
-                          style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.amber900),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                
-                pw.Spacer(),
-                
-                // Footer
-                pw.Divider(),
-                pw.Text('Terms and Conditions', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                pw.Text('1. All sales of gold are final and non-refundable.', style: pw.TextStyle(fontSize: 10)),
-                pw.Text('2. Prices are based on live market rates at the time of purchase.', style: pw.TextStyle(fontSize: 10)),
-                pw.Text('3. This is a computer-generated invoice and does not require a signature.', style: pw.TextStyle(fontSize: 10)),
-                pw.SizedBox(height: 10),
-                pw.Center(child: pw.Text('Thank you for choosing Royal Gold.', style: pw.TextStyle(fontStyle: pw.FontStyle.italic))),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
     );
 
-    if (kIsWeb) {
-      await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save(),
-        name: 'invoice_${order.id}.pdf',
-      );
-    } else {
-      // For mobile/desktop, we can still use printing or save to file
-      await Printing.sharePdf(
-        bytes: await pdf.save(),
-        filename: 'invoice_${order.id}.pdf',
-      );
-    }
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'Invoice_${order.invoiceNo ?? order.id}.pdf',
+    );
   }
 
-  static pw.Widget _SummaryRow(String label, double amount) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+  static pw.Widget _buildHeader() {
+    return pw.Container(
+      height: 140,
+      width: double.infinity,
+      decoration: pw.BoxDecoration(
+        color: PdfColor.fromInt(0xFF1A1A1A),
+      ),
+      child: pw.Column(
+        mainAxisAlignment: pw.MainAxisAlignment.center,
+        children: [
+          pw.Text(
+            'ROYAL GOLD TRADERS',
+            style: pw.TextStyle(
+              color: PdfColor.fromInt(0xFFC5A059),
+              fontSize: 28,
+              fontWeight: pw.FontWeight.bold,
+              letterSpacing: 2,
+            ),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            '123 Gold Market Road, Bangalore - 560001  |  +91 98765 43210',
+            style: pw.TextStyle(color: PdfColors.white, fontSize: 8),
+          ),
+          pw.Text(
+            'GSTIN: 29AABCR1234J1ZJ  |  PAN: ABCR1234J  |  State Code: 29',
+            style: pw.TextStyle(color: PdfColors.white, fontSize: 8),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildInvoiceTitle() {
+    return pw.Center(
       child: pw.Row(
         mainAxisSize: pw.MainAxisSize.min,
         children: [
-          pw.Text('$label: ', style: pw.TextStyle(color: PdfColors.grey700)),
-          pw.Text(NumberFormat.currency(locale: 'en_IN', symbol: 'Rs.').format(amount)),
+          pw.Container(width: 40, height: 1, color: PdfColors.grey400),
+          pw.Padding(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 10),
+            child: pw.Text(
+              'GST INVOICE / ADVANCE RECEIPT',
+              style: pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          pw.Container(width: 40, height: 1, color: PdfColors.grey400),
         ],
       ),
+    );
+  }
+
+  static pw.Widget _buildInvoiceMetadata(OrderModel order, UserModel? user) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _metaRow('Invoice No:', order.invoiceNo ?? 'RGT/2026/0001'),
+        _metaRow('Date:', DateFormat('dd/MM/yyyy').format(order.createdAt)),
+        _metaRow('Place of Supply:', 'Karnataka'),
+        _metaRow('Customer ID:', user?.id.substring(0, 8).toUpperCase() ?? 'CUST12345'),
+      ],
+    );
+  }
+
+  static pw.Widget _metaRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 4),
+      child: pw.Row(
+        children: [
+          pw.SizedBox(width: 80, child: pw.Text(label, style: pw.TextStyle(fontSize: 9, color: PdfColors.grey700))),
+          pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildQrPlaceholder() {
+    return pw.Column(
+      children: [
+        pw.Container(
+          width: 80,
+          height: 80,
+          decoration: pw.BoxDecoration(
+            border: pw.Border.all(color: PdfColors.grey300),
+          ),
+          child: pw.Center(child: pw.Text('QR CODE', style: const pw.TextStyle(fontSize: 8))),
+        ),
+        pw.SizedBox(height: 4),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          color: PdfColors.black,
+          child: pw.Text('SCAN TO PAY', style: const pw.TextStyle(color: PdfColors.white, fontSize: 7)),
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _buildBilledTo(UserModel? user) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Container(
+          padding: const pw.EdgeInsets.only(bottom: 2),
+          decoration: pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey400))),
+          child: pw.Text('Billed To:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+        ),
+        pw.SizedBox(height: 8),
+        pw.Text(user?.name ?? 'Rahul Sharma', style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
+        pw.Text('Phone: ${user?.phone ?? '9876543210'}', style: const pw.TextStyle(fontSize: 10)),
+        pw.Text('Address: 56, Lakeview Street, Bangalore, Karnataka - 560038', style: const pw.TextStyle(fontSize: 10)),
+      ],
+    );
+  }
+
+  static pw.Widget _buildProductTable(OrderModel order) {
+    return pw.Table(
+      border: pw.TableBorder.all(color: PdfColors.grey300),
+      columnWidths: {
+        0: const pw.FixedColumnWidth(40),
+        1: const pw.FlexColumnWidth(),
+        2: const pw.FixedColumnWidth(60),
+        3: const pw.FixedColumnWidth(80),
+        4: const pw.FixedColumnWidth(80),
+      },
+      children: [
+        pw.TableRow(
+          decoration: pw.BoxDecoration(color: PdfColors.black),
+          children: [
+            _tableHeader('Sr.'),
+            _tableHeader('Description'),
+            _tableHeader('Qty'),
+            _tableHeader('Rate'),
+            _tableHeader('Amount'),
+          ],
+        ),
+        pw.TableRow(
+          children: [
+            _tableCell('1.'),
+            _tableCell(order.productName),
+            _tableCell(order.quantity.toString()),
+            _tableCell(Formatters.currency(order.price / order.quantity)),
+            _tableCell(Formatters.currency(order.price)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static pw.Widget _tableHeader(String text) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(text, style: pw.TextStyle(color: PdfColors.yellow, fontWeight: pw.FontWeight.bold, fontSize: 9)),
+    );
+  }
+
+  static pw.Widget _tableCell(String text) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(8),
+      child: pw.Text(text, style: const pw.TextStyle(fontSize: 9)),
+    );
+  }
+
+  static pw.Widget _buildSummaryAndStamp(OrderModel order) {
+    final taxable = order.price;
+    final cgst = taxable * 0.015;
+    final sgst = taxable * 0.015;
+    final total = taxable + cgst + sgst;
+    
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.end,
+      children: [
+        _summaryRow('Taxable Amount:', taxable),
+        _summaryRow('CGST @ 1.5%:', cgst),
+        _summaryRow('SGST @ 1.5%:', sgst),
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: pw.BoxDecoration(color: PdfColors.black),
+          child: pw.Row(
+            mainAxisSize: pw.MainAxisSize.min,
+            children: [
+              pw.Text('Grand Total:', style: pw.TextStyle(color: PdfColors.white, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(width: 20),
+              pw.Text(Formatters.currency(total), style: pw.TextStyle(color: PdfColors.yellow, fontWeight: pw.FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 20),
+        _buildStamp(),
+      ],
+    );
+  }
+
+  static pw.Widget _summaryRow(String label, double value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 6),
+      child: pw.Row(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: [
+          pw.SizedBox(width: 100, child: pw.Text(label, style: pw.TextStyle(fontSize: 9, color: PdfColors.grey700))),
+          pw.SizedBox(width: 20),
+          pw.Text(Formatters.currency(value), style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildStamp() {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: PdfColors.green700, width: 2),
+        borderRadius: pw.BorderRadius.all(pw.Radius.circular(4)),
+      ),
+      child: pw.Text(
+        'ADVANCE RECEIVED',
+        style: pw.TextStyle(
+          color: PdfColors.green700,
+          fontSize: 12,
+        ),
+      ),
+    );
+  }
+
+  static pw.Widget _buildPaymentDetails(OrderModel order) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text('Payment Mode: Online', style: const pw.TextStyle(fontSize: 10)),
+        pw.Text('Transaction Ref. No: ${order.paymentId ?? 'UPI1234567890'}', style: const pw.TextStyle(fontSize: 10)),
+      ],
+    );
+  }
+
+  static pw.Widget _buildFooter() {
+    return pw.Column(
+      children: [
+        pw.Divider(color: PdfColors.grey400),
+        pw.Text('This is a system-generated invoice.', style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600)),
+        pw.Text('www.royalgoldtraders.com  |  Customer Care: +91 98765 43210', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+        pw.SizedBox(height: 10),
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text('ORIGINAL FOR CUSTOMER', style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
+            pw.Text('DUPLICATE FOR OFFICE', style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey500)),
+          ],
+        ),
+      ],
     );
   }
 }

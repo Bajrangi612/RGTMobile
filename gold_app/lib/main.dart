@@ -12,7 +12,7 @@ void main() {
   // Set system UI overlay style for premium dark theme
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(
-      statusBarColor: Colors.white,
+      statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: Color(0xFF1A1A2E),
       systemNavigationBarIconBrightness: Brightness.light,
@@ -34,7 +34,6 @@ class RoyalGoldApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
     final palette = ref.watch(paletteProvider);
     
     // Update the global AppColors helper
@@ -43,8 +42,8 @@ class RoyalGoldApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Royal Gold',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      themeMode: ThemeMode.dark,
+      theme: AppTheme.lightTheme,
+      themeMode: ThemeMode.light,
       home:  SplashScreen(),
     ) ;
   }

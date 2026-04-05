@@ -11,7 +11,6 @@ import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/gold_text_field.dart';
 import '../data/models/product_model.dart';
 import '../presentation/widgets/checkout_sheet.dart';
-import '../../../core/services/invoice_service.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -35,13 +34,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
-    final invoiceDetails = InvoiceService.calculateInvoiceDetails(
-      basePrice: product.price,
-      weight: product.weight * _quantity,
-    );
-    final subtotal = invoiceDetails['subtotal'] as double;
-    final gstAmount = invoiceDetails['gstAmount'] as double;
-    final totalAmount = invoiceDetails['totalAmount'] as double;
+    final pricing = product.pricing!;
+    final subtotal = pricing.goldValue * _quantity;
+    final gstAmount = pricing.gstAmount * _quantity;
+    final totalAmount = pricing.total * _quantity;
 
     return Scaffold(
       backgroundColor: AppColors.deepBlack,

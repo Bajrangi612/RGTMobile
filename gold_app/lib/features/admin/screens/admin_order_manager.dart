@@ -16,7 +16,7 @@ class AdminOrderManager extends ConsumerWidget {
     final adminState = ref.watch(adminProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text('Order Management', style: AppTextStyles.h4),
         backgroundColor: Colors.transparent,
@@ -31,7 +31,7 @@ class AdminOrderManager extends ConsumerWidget {
         ],
       ),
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        decoration: BoxDecoration(color: AppColors.background),
         child: Column(
           children: [
             /// 📊 Order Summary Bar
@@ -78,7 +78,7 @@ class AdminOrderManager extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
+                              color: AppColors.pureWhite.withOpacity(0.03),
                               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                             ),
                             child: Row(
@@ -131,7 +131,7 @@ class AdminOrderManager extends ConsumerWidget {
                                 ),
 
                                 const SizedBox(height: 20),
-                                const Divider(height: 1, color: Colors.white10),
+                                Divider(height: 1, color: AppColors.pureWhite.withOpacity(0.1)),
                                 const SizedBox(height: 12),
 
                                 /// 🚀 Quick Actions
@@ -169,7 +169,7 @@ class AdminOrderManager extends ConsumerWidget {
   void _showStatusUpdateMenu(BuildContext context, WidgetRef ref, String orderId) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
@@ -228,7 +228,7 @@ class _OrderSummaryTile extends StatelessWidget {
           children: [
             Text('$count', style: AppTextStyles.h4.copyWith(color: color)),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(color: Colors.white54, fontSize: 8, fontWeight: FontWeight.bold)),
+            Text(label, style: TextStyle(color: AppColors.pureWhite.withOpacity(0.6), fontSize: 8, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -250,7 +250,7 @@ class _ActionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white10),
+          border: Border.all(color: AppColors.pureWhite.withOpacity(0.1)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
