@@ -42,5 +42,5 @@ RUN npx prisma generate
 # Expose Port
 EXPOSE 4000
 
-# Run the compiled JS directly (Bypasses npm for better signal handling)
-CMD ["node", "dist/index.js"]
+# Automate database migrations and then start the server
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
