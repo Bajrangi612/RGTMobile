@@ -10,7 +10,7 @@ class ApiService {
   late final Dio _dio;
 
   // Update this to your local backend IP if testing on a physical device
-  static const String baseUrl = 'http://localhost:4000/api';
+  static const String baseUrl = 'http://o1qp4x36ni2pggogwxgzntcz.91.108.111.194.sslip.io/api';
 
   ApiService._internal() {
     _dio = Dio(
