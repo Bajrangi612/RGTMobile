@@ -151,7 +151,7 @@ model User {
   bankHolderName String?
   bankName       String?
   bankStatus     BankStatus @default(PENDING)
-  referralCode   String         @unique(map: "User_referralCode_key")
+  referralCode   String?        @unique(map: "User_referralCode_key")
   
   auditLogs                         AuditLog[]
   orders                            Order[]

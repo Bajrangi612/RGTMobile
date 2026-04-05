@@ -33,6 +33,7 @@ class OrderService {
         amount: new Prisma.Decimal(pricing.goldValue),
         gst: new Prisma.Decimal(pricing.gstAmount),
         total: new Prisma.Decimal(pricing.total),
+        weight: new Prisma.Decimal(pricing.weight), // Store product weight
         status: "PENDING",
         referralCode: referralCode, // Track code used
       },
@@ -40,12 +41,18 @@ class OrderService {
 
     // 4. Create Razorpay Order
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    const razorpayOrder = await PaymentService.createOrder(
-      pricing.total * quantity,
-      order.id,
-      userId,
-      user?.phone || "9999999999"
-    );
+    let razorpayOrder;
+    try {
+      razorpayOrder = await PaymentService.createOrder(
+        pricing.total * quantity,
+        order.id,
+        userId,
+        user?.phone || "9999999999"
+      );
+    } catch (paymentError: any) {
+      console.error("❌ [OrderService] Razorpay Order Creation Failed:", paymentError.message || paymentError);
+      throw new Error(`Payment gateway error: ${paymentError.message || "Failed to initiate payment"}`);
+    }
 
     // 5. Link Razorpay Order ID to our local Order
     await prisma.order.update({
