@@ -28,7 +28,7 @@ model Category {
   imageUrl  String?
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime  @updatedAt
   products  Product[]
 
   @@index([isActive], map: "Category_isActive_idx")
@@ -46,23 +46,23 @@ model GoldPrice {
 }
 
 model Order {
-  id            String       @id @default(uuid())
+  id            String      @id @default(uuid())
   userId        String
   productId     String
-  quantity      Int          @default(1)
-  weight        Decimal?     @db.Decimal(10, 3)
-  amount        Decimal      @db.Decimal(15, 2)
-  gst           Decimal      @db.Decimal(15, 2)
-  total         Decimal      @db.Decimal(15, 2)
-  status        OrderStatus  @default(PENDING)
-  paymentId     String?      @unique(map: "Order_paymentId_key")
+  quantity      Int         @default(1)
+  weight        Decimal?    @db.Decimal(10, 3)
+  amount        Decimal     @db.Decimal(15, 2)
+  gst           Decimal     @db.Decimal(15, 2)
+  total         Decimal     @db.Decimal(15, 2)
+  status        OrderStatus @default(PENDING)
+  paymentId     String?     @unique(map: "Order_paymentId_key")
   paymentStatus String?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
   referralCode  String?
-  invoiceNo     String?      @unique(map: "Order_invoiceNo_key")
-  product       Product      @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
-  user          User         @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
+  invoiceNo     String?     @unique(map: "Order_invoiceNo_key")
+  product       Product     @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
+  user          User        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
 
   @@index([productId], map: "Order_productId_fkey")
   @@index([status], map: "Order_status_idx")
@@ -92,7 +92,7 @@ model Product {
   isActive      Boolean   @default(true)
   categoryId    String?
   createdAt     DateTime  @default(now())
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime  @updatedAt
   fixedPrice    Decimal   @default(0.00) @db.Decimal(15, 2)
   makingCharges Decimal   @default(0.00) @db.Decimal(15, 2)
   orders        Order[]
@@ -114,15 +114,15 @@ model Setting {
 }
 
 model Transaction {
-  id          String           @id @default(uuid())
+  id          String          @id @default(uuid())
   userId      String
   type        TransactionType
-  amount      Decimal          @db.Decimal(15, 2)
+  amount      Decimal         @db.Decimal(15, 2)
   description String?
-  status      String           @default("COMPLETED")
-  invoiceNo   String?          @unique(map: "Transaction_invoiceNo_key")
-  createdAt   DateTime         @default(now())
-  user        User             @relation(fields: [userId], references: [id], map: "Transaction_userId_fkey")
+  status      String          @default("COMPLETED")
+  createdAt   DateTime        @default(now())
+  invoiceNo   String?         @unique(map: "Transaction_invoiceNo_key")
+  user        User            @relation(fields: [userId], references: [id], map: "Transaction_userId_fkey")
 
   @@index([type], map: "Transaction_type_idx")
   @@index([userId], map: "Transaction_userId_idx")
@@ -130,10 +130,10 @@ model Transaction {
 }
 
 model User {
-  id                               String         @id @default(uuid())
+  id                               String        @id @default(uuid())
   name                             String
-  email                            String         @unique(map: "User_email_key")
-  phone                            String         @unique(map: "User_phone_key")
+  email                            String        @unique(map: "User_email_key")
+  phone                            String        @unique(map: "User_phone_key")
   password                         String
   role                             UserRole      @default(CUSTOMER)
   kycStatus                        KycStatus     @default(PENDING)
@@ -144,22 +144,21 @@ model User {
   dob                              DateTime?
   referrerId                       String?
   staffId                          String?
-  createdAt                        DateTime       @default(now())
-  updatedAt                        DateTime @updatedAt
-  bankAccountNo  String?
-  bankIfsc       String?
-  bankHolderName String?
-  bankName       String?
-  bankStatus     BankStatus @default(PENDING)
-  referralCode   String?        @unique(map: "User_referralCode_key")
-  
-  auditLogs                         AuditLog[]
-  orders                            Order[]
-  transactions                      Transaction[]
-  user_user_referrerIdTouser       User?          @relation("user_referrerIdTouser", fields: [referrerId], references: [id], map: "User_referrerId_fkey")
-  other_user_user_referrerIdTouser User[]         @relation("user_referrerIdTouser")
-  user_user_staffIdTouser          User?          @relation("user_staffIdTouser", fields: [staffId], references: [id], map: "User_staffId_fkey")
-  other_user_user_staffIdTouser    User[]         @relation("user_staffIdTouser")
+  createdAt                        DateTime      @default(now())
+  updatedAt                        DateTime      @updatedAt
+  referralCode                     String        @unique(map: "User_referralCode_key")
+  bankAccountNo                    String?
+  bankHolderName                   String?
+  bankIfsc                         String?
+  bankName                         String?
+  bankStatus                       BankStatus    @default(PENDING)
+  auditLogs                        AuditLog[]
+  orders                           Order[]
+  transactions                     Transaction[]
+  user_user_referrerIdTouser       User?         @relation("user_referrerIdTouser", fields: [referrerId], references: [id], map: "User_referrerId_fkey")
+  other_user_user_referrerIdTouser User[]        @relation("user_referrerIdTouser")
+  user_user_staffIdTouser          User?         @relation("user_staffIdTouser", fields: [staffId], references: [id], map: "User_staffId_fkey")
+  other_user_user_staffIdTouser    User[]        @relation("user_staffIdTouser")
   wallet                           Wallet?
 
   @@index([phone], map: "User_phone_idx")
