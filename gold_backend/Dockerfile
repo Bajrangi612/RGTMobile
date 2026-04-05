@@ -1,47 +1,46 @@
-# Stage 1: Build the Node application
+# Stage 1: Build & Compile
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install openssl which is critically required by Prisma ORM
-RUN apk add --no-cache openssl
+# Install build dependencies for Prisma
+RUN apk add --no-cache openssl g++ make python3
 
-# Copy package configurations and install ALL dependencies (including dev)
 COPY package.json package-lock.json* ./
 RUN npm install
 
-# Copy source code and Prisma schema
 COPY . .
 
-# Generate the Prisma database client
+# Generate Client and Build
 RUN npx prisma generate
-
-# Compile TypeScript into native Javascript inside the 'dist/' folder
 RUN npm run build
 
-# Stage 2: Production Execution (Lighter image with no dev-dependencies)
-FROM node:20-alpine
+# Stage 2: Production Execution
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# OpenSSL is still required in the production layer for Prisma to query the DB
+# Ensure OpenSSL is available for Prisma query engine
 RUN apk add --no-cache openssl
 
-# Copy only exactly what is needed for production
+# Set Production Environment
+ENV NODE_ENV=production
+ENV PORT=4000
+
+# Copy necessary files from builder
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json* ./
-
-# Ignore devDependencies like typescript entirely to save enormous RAM/Space
-RUN npm install --omit=dev
-
-# Copy the built code and generated schema hooks
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
-# Copying existing environment variables (ensure these exist locally before committing, or remove this line and inject via Coolify UI)
-COPY --from=builder /app/.env ./.env
 
-# Tell Coolify to route traffic to port 4000
+# Install ONLY production dependencies
+RUN npm install --omit=dev
+
+# RE-GENERATE Prisma client in the final environment to ensure binaries match
+RUN npx prisma generate
+
+# Expose Port
 EXPOSE 4000
 
-# Start the Node HTTP Express Server
-CMD ["npm", "run", "start"]
+# Run the compiled JS directly (Bypasses npm for better signal handling)
+CMD ["node", "dist/index.js"]

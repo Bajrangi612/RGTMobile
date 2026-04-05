@@ -25,6 +25,8 @@
     "dev": "tsx src/index.ts",
     "build": "npx prisma generate && tsc",
     "start": "node dist/index.js",
+    "db:migrate": "npx prisma migrate deploy",
+    "db:seed": "npx prisma db seed",
     "prisma:generate": "prisma generate"
   },
   "keywords": [],
