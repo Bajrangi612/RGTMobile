@@ -15,7 +15,7 @@ export class ProductController {
       const livePrice = livePriceObj ? Number(livePriceObj.sellPrice) : 0;
 
       // Map products with current dynamic pricing
-      const productsWithPrice = products.map(p => {
+      const productsWithPrice = products.map((p: any) => {
         const productPojo = JSON.parse(JSON.stringify(p));
         return {
           ...productPojo,

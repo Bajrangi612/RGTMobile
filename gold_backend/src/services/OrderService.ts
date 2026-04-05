@@ -25,7 +25,7 @@ class OrderService {
     const pricing = ProductService.calculateEffectivePrice(product, livePrice);
 
     // 3. Create Database Order (Pending)
-    const order = await prisma.Order.create({
+    const order = await prisma.order.create({
       data: {
         userId,
         productId,
@@ -39,7 +39,7 @@ class OrderService {
     });
 
     // 4. Create Razorpay Order
-    const user = await prisma.User.findUnique({ where: { id: userId } });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     const razorpayOrder = await PaymentService.createOrder(
       pricing.total * quantity,
       order.id,
@@ -48,7 +48,7 @@ class OrderService {
     );
 
     // 5. Link Razorpay Order ID to our local Order
-    await prisma.Order.update({
+    await prisma.order.update({
       where: { id: order.id },
       data: { paymentId: (razorpayOrder as any).id },
     });
@@ -69,7 +69,7 @@ class OrderService {
     orderId: string
   ) {
     // 1. Fetch Order
-    const order = await prisma.Order.findUnique({
+    const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { product: true }
     });
@@ -94,7 +94,7 @@ class OrderService {
       });
       const invoiceNo = `RGT/${year}/${(orderCount + 1).toString().padStart(4, '0')}`;
 
-      const updatedOrder = await tx.Order.update({
+      const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: {
           status: "PAID",
@@ -126,7 +126,7 @@ class OrderService {
             }
           });
 
-          await tx.Transaction.create({
+          await tx.transaction.create({
             data: {
               userId: referrer.id,
               type: "REFERRAL",
@@ -139,7 +139,7 @@ class OrderService {
       }
 
       // Log the event
-      await tx.AuditLog.create({
+      await tx.auditLog.create({
         data: {
           userId,
           action: "ORDER_PURCHASED",
@@ -155,7 +155,7 @@ class OrderService {
    * Get purchase history for a user
    */
   async getUserOrders(userId: string) {
-    return await prisma.Order.findMany({
+    return await prisma.order.findMany({
       where: { userId },
       include: { product: true },
       orderBy: { createdAt: "desc" },
@@ -166,7 +166,7 @@ class OrderService {
    * Get all orders in the system (Admin only)
    */
   async getAllOrders() {
-    return await prisma.Order.findMany({
+    return await prisma.order.findMany({
       include: {
         product: true,
         user: {
@@ -185,7 +185,7 @@ class OrderService {
    * Update order status (Admin only)
    */
   async updateOrderStatus(orderId: string, status: string) {
-    return await prisma.Order.update({
+    return await prisma.order.update({
       where: { id: orderId },
       data: { status: status as any },
     });

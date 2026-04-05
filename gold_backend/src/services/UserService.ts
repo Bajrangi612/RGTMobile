@@ -10,7 +10,7 @@ export class UserService {
     const phone = normalizeMobile(data.phone);
 
     return await prisma.$transaction(async (tx) => {
-      const user = await tx.User.create({
+      const user = await tx.user.create({
         data: {
           name: data.name,
           phone,
@@ -21,7 +21,7 @@ export class UserService {
         },
       });
 
-      await tx.Wallet.create({
+      await tx.wallet.create({
         data: {
           userId: user.id,
           balance: 0,
@@ -33,7 +33,7 @@ export class UserService {
   }
 
   static async getByPhone(phone: string) {
-    return await prisma.User.findUnique({
+    return await prisma.user.findUnique({
       where: { phone: normalizeMobile(phone) },
       include: { wallet: true },
     });

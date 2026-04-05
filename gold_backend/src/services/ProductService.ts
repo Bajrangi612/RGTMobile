@@ -11,7 +11,7 @@ class ProductService {
       where.categoryId = categoryId;
     }
 
-    return await prisma.Product.findMany({
+    return await prisma.product.findMany({
       where,
       include: {
         category: true,
@@ -30,7 +30,7 @@ class ProductService {
    * Get a single product by ID
    */
   async getProductById(id: string) {
-    return await prisma.Product.findUnique({
+    return await prisma.product.findUnique({
       where: { id: id },
     });
   }
@@ -46,7 +46,7 @@ class ProductService {
     makingCharges?: number;
     fixedPrice?: number;
   }) {
-    return await prisma.Product.create({
+    return await prisma.product.create({
       data: {
         ...data,
         weight: new Prisma.Decimal(data.weight),
@@ -82,7 +82,7 @@ class ProductService {
       updateData.fixedPrice = new Prisma.Decimal(data.fixedPrice);
     }
 
-    return await prisma.Product.update({
+    return await prisma.product.update({
       where: { id },
       data: updateData,
     });
@@ -92,7 +92,7 @@ class ProductService {
    * Delete a product (Soft delete by setting isActive to false)
    */
   async deleteProduct(id: string) {
-    return await prisma.Product.update({
+    return await prisma.product.update({
       where: { id },
       data: { isActive: false },
     });
@@ -102,7 +102,7 @@ class ProductService {
    * Get the latest gold price from the database
    */
   async getLatestGoldPrice(): Promise<GoldPrice | null> {
-    return await prisma.GoldPrice.findFirst({
+    return await prisma.goldPrice.findFirst({
       orderBy: { timestamp: "desc" },
     });
   }
