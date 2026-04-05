@@ -42,5 +42,5 @@ RUN npx prisma generate
 # Expose Port
 EXPOSE 4000
 
-# Automate database migrations and then start the server
-CMD ["sh", "-c", "echo \"Starting Royal Gold Backend...\"; if [ -z \"$DATABASE_URL\" ]; then echo \"ERROR: DATABASE_URL is not set!\"; exit 1; fi; npx prisma migrate deploy && node dist/index.js"]
+# Run the compiled JS directly (Bypasses npm for better signal handling)
+CMD ["node", "dist/index.js"]
