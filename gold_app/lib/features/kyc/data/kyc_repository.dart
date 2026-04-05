@@ -1,15 +1,17 @@
-import '../../../core/services/mock_data_service.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/constants/app_constants.dart';
+import '../../../core/services/mock_data_service.dart';
 import 'models/kyc_model.dart';
 
 class KycRepository {
+  final ApiService _apiService = ApiService();
+
   Future<KycModel> submitAadhaarKyc(String aadhaarNumber) async {
-    await MockDataService.simulateDelay(AppConstants.apiDelayLong);
-    return KycModel(
-      aadhaarNumber: aadhaarNumber,
-      status: 'pending', // Verification starts as pending
-      submittedAt: DateTime.now(),
-    );
+    final response = await _apiService.post('/users/kyc', data: {
+      'aadhaarNo': aadhaarNumber,
+    });
+    
+    return KycModel.fromJson(response.data['data']['user']);
   }
 
   // Verify Aadhaar OTP

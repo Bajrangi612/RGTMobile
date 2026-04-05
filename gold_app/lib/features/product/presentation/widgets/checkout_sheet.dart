@@ -7,8 +7,9 @@ import '../../../../core/theme/app_colors.dart';
 
 class CheckoutSheet extends ConsumerStatefulWidget {
   final ProductModel product;
+  final String? referralCode;
 
-  const CheckoutSheet({super.key, required this.product});
+  const CheckoutSheet({super.key, required this.product, this.referralCode});
 
   @override
   ConsumerState<CheckoutSheet> createState() => _CheckoutSheetState();
@@ -17,7 +18,7 @@ class CheckoutSheet extends ConsumerStatefulWidget {
 class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
   late Razorpay _razorpay;
   int _quantity = 1;
-  String? _pendingOrderId;
+  String? _pendingOrderId; // Database Order ID
 
   @override
   void initState() {
@@ -30,17 +31,15 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
 
   @override
   void dispose() {
-    _razorpay.clear();
     super.dispose();
+    _razorpay.clear();
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
+    // We pass our backend orderId, not razorpay's order id, as our backend maps it!
     if (_pendingOrderId != null) {
       await ref.read(purchaseProvider.notifier).verifyPayment(
         orderId: _pendingOrderId!,
-        razorpayOrderId: response.orderId!,
-        razorpayPaymentId: response.paymentId!,
-        razorpaySignature: response.signature!,
       );
 
       if (mounted) {
@@ -61,40 +60,36 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
-    // Handle external wallet
+    // Handle external wallet if needed
   }
 
   void _startPayment() async {
     final purchaseData = await ref.read(purchaseProvider.notifier).initiatePurchase(
       widget.product.id,
       _quantity,
+      referralCode: widget.referralCode,
     );
 
     if (purchaseData != null) {
       setState(() {
         _pendingOrderId = purchaseData['orderId'];
       });
-      
-      final options = {
-        'key': purchaseData['razorpayKeyId'],
-        'amount': purchaseData['amount'] * 100, // Amount in paise
-        'name': 'Royal Gold Traders',
-        'order_id': purchaseData['razorpayOrderId'],
-        'description': 'Purchase of ${widget.product.name} (Qty: $_quantity)',
-        'timeout': 300, // 5 minutes
-        'prefill': {
-          'contact': '', 
-          'email': '',
-        },
-        'theme': {
-          'color': '#D4AF37'
-        }
-      };
 
       try {
+        var options = {
+          'key': 'rzp_test_SUR1HJFojazFPc', // Razorpay Test Key
+          'amount': (purchaseData['amount'] * 100).round(), // amount in paise
+          'name': 'Royal Gold',
+          'description': '${_quantity}x ${widget.product.name}',
+          'order_id': purchaseData['razorpayOrderId'], // Provide Razorpay Order ID from backend
+          'theme': {
+            'color': '#D4AF37' // Match our Champagne Gold primary theme
+          }
+        };
+
         _razorpay.open(options);
       } catch (e) {
-        debugPrint('Error: $e');
+        debugPrint('Error opening Razorpay: $e');
       }
     }
   }

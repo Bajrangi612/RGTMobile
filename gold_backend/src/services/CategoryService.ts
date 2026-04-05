@@ -28,6 +28,16 @@ class CategoryService {
       data,
     });
   }
+
+  /**
+   * Delete a category
+   */
+  async deleteCategory(id: string) {
+    return await prisma.category.update({
+      where: { id },
+      data: { isActive: false },
+    });
+  }
 }
 
 export default new CategoryService();

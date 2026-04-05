@@ -1,9 +1,39 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/AuthService';
 import { UserService } from '../services/UserService';
+import { prisma } from '../lib/prisma';
 import { successResponse, errorResponse } from '../utils/response';
 
 export class AuthController {
+  static async me(req: any, res: Response, next: NextFunction) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.id }
+      });
+      if (!user) return errorResponse(res, 'User not found', 404);
+      
+      return successResponse(
+        res,
+        {
+          user: {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            contactNo: user.phone, // Legacy compatibility
+            email: user.email,
+            role: user.role,
+            goldAdvanceAmount: 0, // Legacy compatibility
+            referralCode: "", // Legacy compatibility
+            registerRequired: false,
+          }
+        },
+        'User fetched successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async sendOtp(req: Request, res: Response, next: NextFunction) {
     try {
       const phone = req.body.phone || req.body.mobile;

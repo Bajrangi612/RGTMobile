@@ -66,10 +66,21 @@ class AuthRepository {
   // Get current user
   Future<UserModel> getCurrentUser() async {
     try {
-      // In a real app, we might need a specific /me endpoint or similar
-      // For now, we use a placeholder or assume the token handles it
-      final response = await ApiService().get('/auth/lookup-referrer?mobile=9999999999'); // Placeholder
-      return UserModel.fromJson(response.data);
+      final response = await ApiService().getMe();
+      if (response.statusCode == 200) {
+        final userData = response.data['data']['user'];
+        final Map<String, dynamic> mappedUser = {
+          ...Map<String, dynamic>.from(userData),
+          'phone': userData['contactNo'] ?? userData['phone'] ?? '',
+          'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
+          'kycStatus': 'verified',
+          'bankStatus': 'verified',
+          'isAdmin': userData['role'] == 'ADMIN',
+          'registerRequired': false,
+        };
+        return UserModel.fromJson(mappedUser);
+      }
+      throw Exception('Failed to fetch user');
     } catch (e) {
       // Return empty user on error
       return UserModel(

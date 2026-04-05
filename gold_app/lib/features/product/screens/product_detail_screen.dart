@@ -78,19 +78,23 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ],
                         ),
                         child: Center(
-                          child: ClipOval(
-                            child: Image.asset(
-                              product.images.first,
-                              height: 180,
-                              width: 180,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Icon(
+                          child: product.image.isNotEmpty
+                            ? Image.network(
+                                product.image,
+                                height: 180,
+                                width: 180,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => Icon(
+                                  Icons.monetization_on_rounded,
+                                  size: 80,
+                                  color: AppColors.royalGold.withOpacity(0.9),
+                                ),
+                              )
+                            : Icon(
                                 Icons.monetization_on_rounded,
                                 size: 80,
                                 color: AppColors.royalGold.withOpacity(0.9),
                               ),
-                            ),
-                          ),
                         ),
                       ),
                     ).animate(onPlay: (controller) => controller.repeat(reverse: true))
@@ -280,7 +284,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (context) => CheckoutSheet(product: product),
+                      builder: (context) => CheckoutSheet(
+                        product: product,
+                        referralCode: _referralController.text.trim().isNotEmpty 
+                          ? _referralController.text.trim() 
+                          : null,
+                      ),
                     );
                   },
                   icon: Icons.shopping_cart_checkout,

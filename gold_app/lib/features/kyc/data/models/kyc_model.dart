@@ -15,11 +15,11 @@ class KycModel {
 
   factory KycModel.fromJson(Map<String, dynamic> json) {
     return KycModel(
-      aadhaarNumber: json['aadhaarNumber'] ?? '',
-      status: json['status'] ?? 'pending',
+      aadhaarNumber: json['aadharNo'] ?? '',
+      status: (json['kycStatus'] as String?)?.toLowerCase() ?? 'pending',
       name: json['name'],
-      submittedAt: json['submittedAt'] != null ? DateTime.parse(json['submittedAt']) : null,
-      verifiedAt: json['verifiedAt'] != null ? DateTime.parse(json['verifiedAt']) : null,
+      submittedAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+      verifiedAt: null, // Verified at will be updated by Admin
     );
   }
 

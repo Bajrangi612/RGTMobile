@@ -7,20 +7,19 @@ final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>((ref) {
 });
 
 class ThemeNotifier extends StateNotifier<ThemeMode> {
-  ThemeNotifier() : super(ThemeMode.light);
+  ThemeNotifier() : super(ThemeMode.dark); // Default to Premium Dark
 
   void toggleTheme() {
-    // Theme is now locked to Light Mode per user request
-    state = ThemeMode.light;
+    state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
   }
 
   void setTheme(ThemeMode mode) {
-    state = ThemeMode.light;
+    state = mode;
   }
 }
 
 // Helper to provide the current palette
 final paletteProvider = Provider<ThemePalette>((ref) {
-  // Always return light palette
-  return ThemePalette.light;
+  final mode = ref.watch(themeProvider);
+  return mode == ThemeMode.dark ? ThemePalette.dark : ThemePalette.light;
 });

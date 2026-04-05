@@ -10,14 +10,14 @@ class AppTextStyles {
         fontSize: 34,
         fontWeight: FontWeight.w700,
         color: AppColors.pureWhite,
-        letterSpacing: -1.0,
+        letterSpacing: -0.2, // Slightly more open for luxury feel
       );
 
   static TextStyle get h2 => GoogleFonts.outfit(
         fontSize: 26,
         fontWeight: FontWeight.w600,
         color: AppColors.pureWhite,
-        letterSpacing: -0.5,
+        letterSpacing: -0.1,
       );
 
   static TextStyle get h3 => GoogleFonts.outfit(
@@ -30,6 +30,7 @@ class AppTextStyles {
         fontSize: 18,
         fontWeight: FontWeight.w600,
         color: AppColors.pureWhite,
+        letterSpacing: 0.1,
       );
 
   // Body — Inter (Remains for high readability)
@@ -58,7 +59,7 @@ class AppTextStyles {
         fontSize: 15,
         fontWeight: FontWeight.w600,
         color: AppColors.pureWhite,
-        letterSpacing: 0.2,
+        letterSpacing: 0.8, // Elegant tracking
       );
 
   static TextStyle get labelMedium => GoogleFonts.outfit(
@@ -108,7 +109,7 @@ class AppTextStyles {
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: AppColors.pureWhite,
-        letterSpacing: 0.5,
+        letterSpacing: 1.2, // Premium button tracking
       );
 
   static TextStyle get buttonSmall => GoogleFonts.poppins(

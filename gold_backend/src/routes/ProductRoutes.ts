@@ -16,4 +16,18 @@ router.post(
   ProductController.createProduct
 );
 
+router.patch(
+  "/:id",
+  authenticate,
+  authorize([Role.ADMIN]),
+  ProductController.updateProduct
+);
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorize([Role.ADMIN]),
+  ProductController.deleteProduct
+);
+
 export default router;

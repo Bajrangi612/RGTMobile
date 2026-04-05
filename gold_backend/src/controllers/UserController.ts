@@ -59,6 +59,32 @@ export class UserController {
   }
 
   /**
+   * Submit Aadhaar KYC (Customer)
+   */
+  static async submitKyc(req: any, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user.id;
+      const { aadhaarNo } = req.body;
+
+      if (!aadhaarNo || aadhaarNo.length !== 12) {
+        return errorResponse(res, "A valid 12-digit Aadhaar number is required", 400);
+      }
+
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          aadharNo: aadhaarNo,
+          kycStatus: "PENDING" 
+        },
+      });
+
+      return successResponse(res, { user }, "KYC submitted successfully and is pending approval");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Update user KYC status (Admin only)
    */
   static async updateKyc(req: Request, res: Response, next: NextFunction) {

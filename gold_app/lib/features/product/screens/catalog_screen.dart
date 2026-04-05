@@ -83,6 +83,9 @@ class CatalogScreen extends ConsumerWidget {
           ),
         ),
       ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -182,7 +185,7 @@ class _CatalogProductCard extends ConsumerWidget {
                             shape: BoxShape.circle,
                             border: Border.all(color: AppColors.royalGold.withOpacity(0.5)),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.edit,
                             color: AppColors.royalGold,
                             size: 16,

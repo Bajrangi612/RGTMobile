@@ -43,12 +43,58 @@ class ProductService {
     imageUrl?: string;
     stock: number;
     categoryId?: string;
+    makingCharges?: number;
+    fixedPrice?: number;
   }) {
     return await prisma.product.create({
       data: {
         ...data,
         weight: new Prisma.Decimal(data.weight),
+        makingCharges: new Prisma.Decimal(data.makingCharges || 0),
+        fixedPrice: new Prisma.Decimal(data.fixedPrice || 0),
       },
+    });
+  }
+
+  /**
+   * Update an existing product
+   */
+  async updateProduct(id: string, data: Partial<{
+    name: string;
+    description: string;
+    weight: number;
+    purity: string;
+    imageUrl: string;
+    stock: number;
+    categoryId: string;
+    isActive: boolean;
+    makingCharges: number;
+    fixedPrice: number;
+  }>) {
+    const updateData: any = { ...data };
+    if (data.weight !== undefined) {
+      updateData.weight = new Prisma.Decimal(data.weight);
+    }
+    if (data.makingCharges !== undefined) {
+      updateData.makingCharges = new Prisma.Decimal(data.makingCharges);
+    }
+    if (data.fixedPrice !== undefined) {
+      updateData.fixedPrice = new Prisma.Decimal(data.fixedPrice);
+    }
+
+    return await prisma.product.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
+  /**
+   * Delete a product (Soft delete by setting isActive to false)
+   */
+  async deleteProduct(id: string) {
+    return await prisma.product.update({
+      where: { id },
+      data: { isActive: false },
     });
   }
 
@@ -69,7 +115,16 @@ class ProductService {
    */
   calculateEffectivePrice(product: Product, livePrice: number) {
     const weight = Number(product.weight);
-    const goldValue = weight * livePrice;
+    const makingCharges = Number(product.makingCharges || 0);
+    const fixedPrice = Number(product.fixedPrice || 0);
+
+    let goldValue: number;
+    
+    if (fixedPrice > 0) {
+      goldValue = fixedPrice;
+    } else {
+      goldValue = (weight * livePrice) + makingCharges;
+    }
     
     // 3% GST
     const gstAmount = goldValue * 0.03;

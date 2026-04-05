@@ -64,6 +64,10 @@ class ApiService {
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
+  Future<Response> getMe() async {
+    return await _dio.get('/auth/me');
+  }
+
   Future<Response> post(String path, {dynamic data}) async {
     return await _dio.post(path, data: data);
   }
@@ -81,7 +85,7 @@ class ApiService {
   Future<Response> getProducts({String? categoryId}) async {
     return await _dio.get(
       '/products',
-      queryParameters: {'categoryId': ?categoryId},
+      queryParameters: categoryId != null ? {'categoryId': categoryId} : null,
     );
   }
 
@@ -101,12 +105,8 @@ class ApiService {
     return await _dio.delete('/products/$id');
   }
 
-  Future<Response> updateProduct(String id, Map<String, dynamic> data) async {
-    return await _dio.patch('/products/$id', data: data);
-  }
-
-  Future<Response> deleteProduct(String id) async {
-    return await _dio.delete('/products/$id');
+  Future<Response> updateOrderStatus(String id, String status) async {
+    return await _dio.patch('/orders/$id/status', data: {'status': status});
   }
 
   Future<Response> getAdminOrders() async {
@@ -137,26 +137,24 @@ class ApiService {
     return await _dio.delete('/categories/$id');
   }
 
-  Future<Response> createOrder(String productId, int quantity) async {
+  Future<Response> createOrder(String productId, int quantity, {String? referralCode}) async {
     return await _dio.post(
       '/orders/start',
-      data: {'productId': productId, 'quantity': quantity},
+      data: {
+        'productId': productId, 
+        'quantity': quantity,
+        'referralCode': referralCode,
+      },
     );
   }
 
   Future<Response> verifyPayment({
     required String orderId,
-    required String razorpayOrderId,
-    required String razorpayPaymentId,
-    required String razorpaySignature,
   }) async {
     return await _dio.post(
       '/orders/verify',
       data: {
         'orderId': orderId,
-        'razorpayOrderId': razorpayOrderId,
-        'razorpayPaymentId': razorpayPaymentId,
-        'razorpaySignature': razorpaySignature,
       },
     );
   }

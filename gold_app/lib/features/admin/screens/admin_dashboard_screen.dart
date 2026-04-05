@@ -23,6 +23,7 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+
   @override
   void initState() {
     super.initState();
@@ -36,119 +37,296 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     final adminState = ref.watch(adminProvider);
     final homeState = ref.watch(homeProvider);
+    final size = MediaQuery.of(context).size;
+    final bool isDesktop = size.width > 1000;
 
     return Scaffold(
       backgroundColor: AppColors.deepBlack,
+      drawer: isDesktop ? null : _buildMobileDrawer(context),
       body: Container(
         decoration: BoxDecoration(gradient: AppColors.darkGradient),
         child: adminState.isLoading
             ? Center(child: CircularProgressIndicator(color: AppColors.royalGold))
-            : SafeArea(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      /// 👑 Institutional Market Ticker
-                      _MarketTicker(
-                        price: homeState.goldPrice,
-                        change: homeState.priceChange,
-                      ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.2),
+            : Row(
+                children: [
+                  if (isDesktop) _buildSidebar(context),
+                  Expanded(
+                    child: SafeArea(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            /// 👑 Institutional Market Ticker
+                            _MarketTicker(
+                              price: homeState.goldPrice,
+                              change: homeState.priceChange,
+                            ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.2),
 
-                      const SizedBox(height: 24),
+                            const SizedBox(height: 32),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'GLOBAL COMMAND',
-                                style: AppTextStyles.labelLarge.copyWith(
-                                  color: AppColors.royalGold,
-                                  letterSpacing: 2,
-                                  fontWeight: FontWeight.bold,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'GLOBAL COMMAND',
+                                      style: AppTextStyles.labelLarge.copyWith(
+                                        color: AppColors.royalGold,
+                                        letterSpacing: 2,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'SYSTEM OPERATIONAL · STABLE',
+                                          style: AppTextStyles.caption.copyWith(color: Colors.white38, letterSpacing: 1),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Text(
-                                'System Integrity: Stable',
-                                style: AppTextStyles.caption.copyWith(color: AppColors.success.withOpacity(0.7)),
-                              ),
-                            ],
-                          ),
-                          _HeaderActions(onRefresh: () {
-                            ref.read(adminProvider.notifier).loadInitialData();
-                            ref.read(homeProvider.notifier).loadDashboard();
-                          }),
-                        ],
-                      ).animate().fadeIn(delay: 200.ms),
+                                if (!isDesktop)
+                                  Builder(
+                                    builder: (context) => IconButton(
+                                      icon: Icon(Icons.menu, color: AppColors.royalGold),
+                                      onPressed: () => Scaffold.of(context).openDrawer(),
+                                    ),
+                                  )
+                                else
+                                  _HeaderActions(onRefresh: () {
+                                    ref.read(adminProvider.notifier).loadInitialData();
+                                    ref.read(homeProvider.notifier).loadDashboard();
+                                  }),
+                              ],
+                            ).animate().fadeIn(delay: 200.ms),
 
-                      const SizedBox(height: 24),
+                            const SizedBox(height: 32),
 
-                      /// 📈 Interactive Revenue Analysis
-                      _RevenueAnalysisChart(totalRevenue: adminState.totalRevenue)
-                          .animate()
-                          .fadeIn(delay: 400.ms)
-                          .scale(begin: const Offset(0.95, 0.95)),
+                            /// 📈 Interactive Revenue Analysis
+                            _RevenueAnalysisChart(totalRevenue: adminState.totalRevenue)
+                                .animate()
+                                .fadeIn(delay: 400.ms)
+                                .scale(begin: const Offset(0.98, 0.98)),
 
-                      const SizedBox(height: 24),
+                            const SizedBox(height: 32),
 
-                      /// 📊 Core Analytics Grid
-                      GridView.count(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        crossAxisCount: 2,
-                        childAspectRatio: 1.3,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        children: [
-                          _EliteStatCard(
-                            label: 'REVENUE',
-                            value: '₹${adminState.totalRevenue.toStringAsFixed(0)}',
-                            icon: Icons.account_balance_wallet_outlined,
-                            color: AppColors.royalGold,
-                            sparkData: _generateRelativeSpark(adminState.totalRevenue),
-                          ),
-                          _EliteStatCard(
-                            label: 'GOLD SOLD',
-                            value: '${adminState.totalWeight.toStringAsFixed(1)}g',
-                            icon: Icons.auto_graph,
-                            color: AppColors.success,
-                            sparkData: _generateRelativeSpark(adminState.totalWeight),
-                          ),
-                          _EliteStatCard(
-                            label: 'INVESTORS',
-                            value: '${adminState.users.length}',
-                            icon: Icons.group_outlined,
-                            color: Colors.blueAccent,
-                            sparkData: _generateRelativeSpark(adminState.users.length.toDouble()),
-                          ),
-                          _EliteStatCard(
-                            label: 'PENDING',
-                            value: '${adminState.pendingOrdersCount}',
-                            icon: Icons.pending_actions,
-                            color: AppColors.warning,
-                            sparkData: _generateRelativeSpark(adminState.pendingOrdersCount.toDouble()),
-                          ),
-                        ],
-                      ).animate().fadeIn(delay: 600.ms),
+                            /// 📊 Core Analytics Grid
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final count = constraints.maxWidth > 800 ? 4 : 2;
+                                return GridView.count(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  crossAxisCount: count,
+                                  childAspectRatio: 1.5,
+                                  mainAxisSpacing: 16,
+                                  crossAxisSpacing: 16,
+                                  children: [
+                                    _EliteStatCard(
+                                      label: 'GROSS REVENUE',
+                                      value: '₹${adminState.totalRevenue.toStringAsFixed(0)}',
+                                      icon: Icons.account_balance_wallet_outlined,
+                                      color: AppColors.royalGold,
+                                      sparkData: _generateRelativeSpark(adminState.totalRevenue),
+                                    ),
+                                    _EliteStatCard(
+                                      label: 'ASSETS LIQUIDATED',
+                                      value: '${adminState.totalWeight.toStringAsFixed(1)}g',
+                                      icon: Icons.auto_graph,
+                                      color: AppColors.success,
+                                      sparkData: _generateRelativeSpark(adminState.totalWeight),
+                                    ),
+                                    _EliteStatCard(
+                                      label: 'ACTIVE INVESTORS',
+                                      value: '${adminState.users.length}',
+                                      icon: Icons.group_outlined,
+                                      color: Colors.blueAccent,
+                                      sparkData: _generateRelativeSpark(adminState.users.length.toDouble()),
+                                    ),
+                                    _EliteStatCard(
+                                      label: 'PENDING LIQUIDATIONS',
+                                      value: '${adminState.pendingOrdersCount}',
+                                      icon: Icons.pending_actions,
+                                      color: AppColors.warning,
+                                      sparkData: _generateRelativeSpark(adminState.pendingOrdersCount.toDouble()),
+                                    ),
+                                  ],
+                                );
+                              }
+                            ).animate().fadeIn(delay: 600.ms),
 
-                      const SizedBox(height: 32),
+                            const SizedBox(height: 32),
 
-                      /// 🛠 Management Suite [High Density]
-                      _ManagementGrid(),
+                            /// 🛠 Management Suite
+                            Text('MANAGEMENT MODULES', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, color: Colors.white24)),
+                            const SizedBox(height: 16),
+                            _ManagementGrid(),
 
-                      const SizedBox(height: 32),
-                      
-                      /// 📋 Operation Logs
-                      _OperationLogs(orders: adminState.allOrders),
+                            const SizedBox(height: 32),
+                            
+                            /// 📋 Operation Logs
+                            _OperationLogs(orders: adminState.allOrders),
 
-                      const SizedBox(height: 40),
-                    ],
+                            const SizedBox(height: 48),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  Widget _buildSidebar(BuildContext context) {
+    return Container(
+      width: 260,
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.3),
+        border: Border(right: BorderSide(color: AppColors.royalGold.withOpacity(0.1))),
+      ),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.royalGold, width: 2),
+                  ),
+                  child: Icon(Icons.shield_outlined, color: AppColors.royalGold, size: 32),
+                ),
+                const SizedBox(height: 16),
+                Text('ROYAL GOLD', style: AppTextStyles.h4),
+                Text('ADMIN TERMINAL', style: AppTextStyles.caption.copyWith(letterSpacing: 2, color: Colors.white38)),
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white10, indent: 20, endIndent: 20),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+              children: [
+                _SidebarItem(icon: Icons.dashboard_outlined, label: 'Dashboard', isSelected: true, onTap: () {}),
+                _SidebarItem(icon: Icons.inventory_2_outlined, label: 'Products', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminProductManager()))),
+                _SidebarItem(icon: Icons.category_outlined, label: 'Categories', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminCategoryManager()))),
+                _SidebarItem(icon: Icons.people_outline, label: 'Investors', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager()))),
+                _SidebarItem(icon: Icons.local_shipping_outlined, label: 'Orders', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager()))),
+                _SidebarItem(icon: Icons.settings_outlined, label: 'Settings', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminConfigScreen()))),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: InkWell(
+              onTap: () {
+                ref.read(adminProvider.notifier).logout();
+                Navigator.of(context).pop();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: AppColors.error, size: 20),
+                    const SizedBox(width: 12),
+                    Text('DISCONNECT', style: AppTextStyles.labelSmall.copyWith(color: AppColors.error, fontWeight: FontWeight.bold)),
+                  ],
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMobileDrawer(BuildContext context) {
+    return Drawer(
+      backgroundColor: AppColors.deepBlack,
+      child: _buildSidebar(context),
+    );
+  }
+
+  List<double> _generateRelativeSpark(double value) {
+    return [
+      value * 0.8,
+      value * 0.9,
+      value * 0.85,
+      value * 1.1,
+      value * 1.05,
+      value * 1.2,
+      value * 1.0,
+    ];
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SidebarItem({
+    required this.icon,
+    required this.label,
+    this.isSelected = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.royalGold.withOpacity(0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.royalGold.withOpacity(0.3) : Colors.transparent,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.royalGold : Colors.white54,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: isSelected ? AppColors.royalGold : Colors.white54,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

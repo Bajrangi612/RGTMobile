@@ -5,6 +5,8 @@ class ProductModel {
   final String name;
   final String? description;
   final double weight;
+  final double makingCharges;
+  final double fixedPrice;
   final String purity;
   final String? imageUrl;
   final int stock;
@@ -18,6 +20,8 @@ class ProductModel {
     required this.name,
     this.description,
     required this.weight,
+    this.makingCharges = 0.0,
+    this.fixedPrice = 0.0,
     required this.purity,
     this.imageUrl,
     required this.stock,
@@ -33,6 +37,8 @@ class ProductModel {
       name: json['name']?.toString() ?? '',
       description: json['description']?.toString(),
       weight: _toDouble(json['weight']),
+      makingCharges: _toDouble(json['makingCharges']),
+      fixedPrice: _toDouble(json['fixedPrice']),
       purity: json['purity']?.toString() ?? '24K',
       imageUrl: json['imageUrl']?.toString(),
       stock: _toInt(json['stock']),

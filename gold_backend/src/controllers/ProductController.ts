@@ -55,12 +55,15 @@ export class ProductController {
    */
   static async createProduct(req: Request, res: Response, next: NextFunction) {
     try {
-      const { name, description, weight, purity, stock, imageUrl, categoryId } = req.body;
+      const { 
+        name, description, weight, purity, stock, imageUrl, categoryId,
+        makingCharges, fixedPrice 
+      } = req.body;
       
       if (!name || !weight) {
         return errorResponse(res, "Name and Weight are required", 400);
       }
-
+      
       const product = await ProductService.createProduct({
         name,
         description,
@@ -69,9 +72,37 @@ export class ProductController {
         stock: Number(stock) || 0,
         imageUrl,
         categoryId,
+        makingCharges: Number(makingCharges) || 0,
+        fixedPrice: Number(fixedPrice) || 0,
       });
 
       return successResponse(res, { product }, "Product created successfully", 201);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Update an existing gold coin (Admin only)
+   */
+  static async updateProduct(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const product = await ProductService.updateProduct(id, req.body);
+      return successResponse(res, { product }, "Product updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Delete a gold coin (Admin only)
+   */
+  static async deleteProduct(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      await ProductService.deleteProduct(id);
+      return successResponse(res, null, "Product deleted successfully");
     } catch (error) {
       next(error);
     }

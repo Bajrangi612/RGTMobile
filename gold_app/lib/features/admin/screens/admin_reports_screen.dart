@@ -13,7 +13,7 @@ class AdminReportsScreen extends StatelessWidget {
         title: Text('Platform Reports', style: AppTextStyles.h4),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.royalGold),
+        iconTheme: IconThemeData(color: AppColors.royalGold),
       ),
       body: Center(
         child: Column(
@@ -21,7 +21,7 @@ class AdminReportsScreen extends StatelessWidget {
           children: [
             Icon(Icons.analytics_outlined, size: 64, color: AppColors.royalGold.withOpacity(0.5)),
             const SizedBox(height: 16),
-            Text('Advanced Analytics Coming Soon', style: AppTextStyles.bodyText.copyWith(color: Colors.white70)),
+            Text('Advanced Analytics Coming Soon', style: AppTextStyles.bodyMedium.copyWith(color: Colors.white70)),
           ],
         ),
       ),

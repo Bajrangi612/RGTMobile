@@ -18,6 +18,7 @@ class AdminState {
   final double gstRate;
   final String searchQuery;
   final String weightFilter; // 'all', '0.5', '1', '2', '5', '10'
+  final int lowStockThreshold;
   final String? error;
 
   AdminState({
@@ -36,6 +37,7 @@ class AdminState {
     this.gstRate = 3.0,
     this.searchQuery = '',
     this.weightFilter = 'all',
+    this.lowStockThreshold = 10,
     this.error,
   });
 
@@ -55,6 +57,7 @@ class AdminState {
     double? gstRate,
     String? searchQuery,
     String? weightFilter,
+    int? lowStockThreshold,
     String? error,
   }) {
     return AdminState(
@@ -73,6 +76,7 @@ class AdminState {
       gstRate: gstRate ?? this.gstRate,
       searchQuery: searchQuery ?? this.searchQuery,
       weightFilter: weightFilter ?? this.weightFilter,
+      lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       error: error,
     );
   }
@@ -130,9 +134,14 @@ class AdminNotifier extends StateNotifier<AdminState> {
       /// =======================
       List<ProductModel> products = [];
       try {
-        final productsData = productsResponse.data['data']?['products'];
+        final dynamic rawProducts = productsResponse.data['data'];
+        print('📦 Products Data type: ${rawProducts.runtimeType}');
+        final productsData = rawProducts is Map ? rawProducts['products'] : null;
         if (productsData is List) {
           products = productsData.map((p) => ProductModel.fromJson(p as Map<String, dynamic>)).toList();
+          print('✅ Parsed ${products.length} products');
+        } else {
+          print('⚠️ productsData is not a List: ${productsData.runtimeType}');
         }
       } catch (e) {
         print('⚠️ Products parsing failed: $e');
@@ -141,13 +150,37 @@ class AdminNotifier extends StateNotifier<AdminState> {
       /// =======================
       /// ✅ CATEGORIES
       /// =======================
-      List<dynamic> categories = categoriesResponse.data['data'] ?? [];
+      List<dynamic> categories = [];
+      try {
+        final dynamic rawCat = categoriesResponse.data['data'];
+        print('📂 Categories Data type: ${rawCat.runtimeType}');
+        final catData = rawCat is Map ? rawCat['categories'] : null;
+        if (catData is List) {
+          categories = catData;
+          print('✅ Parsed ${categories.length} categories');
+        } else {
+          print('⚠️ catData is not a List: ${catData.runtimeType}');
+        }
+      } catch (e) {
+        print('⚠️ Categories parsing failed: $e');
+      }
 
       /// =======================
       /// ✅ ORDERS & USERS
       /// =======================
-      List<dynamic> orders = ordersResponse.data['data'] ?? [];
-      List<dynamic> users = usersResponse.data['data'] ?? [];
+      List<dynamic> orders = [];
+      try {
+        final dynamic rawOrders = ordersResponse.data['data'];
+        final ordersData = rawOrders is Map ? rawOrders['orders'] : null;
+        if (ordersData is List) orders = ordersData;
+      } catch (e) { print('⚠️ Orders parsing failed: $e'); }
+
+      List<dynamic> users = [];
+      try {
+        final dynamic rawUsers = usersResponse.data['data'];
+        final usersData = rawUsers is Map ? rawUsers['users'] : null;
+        if (usersData is List) users = usersData;
+      } catch (e) { print('⚠️ Users parsing failed: $e'); }
 
       /// =======================
       /// ✅ FINAL STATE UPDATE
@@ -239,25 +272,24 @@ class AdminNotifier extends StateNotifier<AdminState> {
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
-    final updatedOrders = state.allOrders.map((order) {
-      if (order['id'] == orderId) {
-        return {...order, 'status': status};
-      }
-      return order;
-    }).toList();
-
-    state = state.copyWith(allOrders: updatedOrders);
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await ApiService().updateOrderStatus(orderId, status);
+      await loadInitialData();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   Future<void> updateUserStatus(String userId, String status) async {
-    final updatedUsers = state.users.map((user) {
-      if (user['id'] == userId) {
-        return {...user, 'status': status};
-      }
-      return user;
-    }).toList();
-
-    state = state.copyWith(users: updatedUsers);
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      // Assuming we have an updateStatus endpoint for user, or use KYC endpoint if it's related
+      await ApiService().updateUserKyc(userId, status); 
+      await loadInitialData();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 
   void updateSearchQuery(String query) {
@@ -290,12 +322,14 @@ class AdminNotifier extends StateNotifier<AdminState> {
     int? deliveryTimeDays,
     int? orderIntervalMinutes,
     double? gstRate,
+    int? lowStockThreshold,
   }) async {
     state = state.copyWith(
       commissionRate: commissionRate ?? state.commissionRate,
       deliveryTimeDays: deliveryTimeDays ?? state.deliveryTimeDays,
       orderIntervalMinutes: orderIntervalMinutes ?? state.orderIntervalMinutes,
       gstRate: gstRate ?? state.gstRate,
+      lowStockThreshold: lowStockThreshold ?? state.lowStockThreshold,
     );
   }
 

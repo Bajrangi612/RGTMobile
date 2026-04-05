@@ -46,6 +46,7 @@ model User {
   address      String?
   photo        String?
   dob          DateTime?
+  referralCode String    @unique @default(cuid()) // Unique code for every user
   
   // Relations
   wallet       Wallet?
@@ -122,6 +123,10 @@ model Product {
   stock       Int      @default(0)
   isActive    Boolean  @default(true)
   
+  // Pricing
+  makingCharges Decimal @default(0) @db.Decimal(15, 2)
+  fixedPrice    Decimal @default(0) @db.Decimal(15, 2) // If > 0, overrides dynamic pricing
+  
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
   
@@ -173,6 +178,7 @@ model Order {
   status          OrderStatus @default(PENDING)
   paymentId       String?     @unique // Cashfree Order ID
   paymentStatus   String?     // Cashfree status
+  referralCode    String?     // The code used for this order
   
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
@@ -203,4 +209,15 @@ model AuditLog {
   ipAddress   String?
   
   createdAt   DateTime @default(now())
+}
+
+// ─── Settings ───────────────────────────────────────────────────────────────
+
+model Setting {
+  id                   String   @id @default(cuid())
+  key                  String   @unique
+  value                String
+  description          String?
+  
+  updatedAt            DateTime @updatedAt
 }

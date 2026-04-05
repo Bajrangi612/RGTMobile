@@ -9,14 +9,19 @@ export class OrderController {
    */
   static async startPurchase(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { productId, quantity } = req.body;
+      const { productId, quantity, referralCode } = req.body;
       const userId = req.user!.id;
 
       if (!productId || !quantity) {
         return errorResponse(res, "Product ID and Quantity are required", 400);
       }
 
-      const orderData = await OrderService.createPurchaseOrder(userId, productId, Number(quantity));
+      const orderData = await OrderService.createPurchaseOrder(
+        userId, 
+        productId, 
+        Number(quantity),
+        referralCode
+      );
       
       return successResponse(res, orderData, "Order initiated successfully", 201);
     } catch (error) {
@@ -68,6 +73,20 @@ export class OrderController {
     try {
       const orders = await OrderService.getAllOrders();
       return successResponse(res, { orders }, "All orders fetched successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Update order status (Admin only)
+   */
+  static async updateStatus(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const { status } = req.body;
+      const order = await OrderService.updateOrderStatus(id, status);
+      return successResponse(res, { order }, "Order status updated successfully");
     } catch (error) {
       next(error);
     }

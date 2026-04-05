@@ -10,7 +10,7 @@ class OrderService {
    * @param productId The Gold Coin to buy
    * @param quantity Number of coins
    */
-  async createPurchaseOrder(userId: string, productId: string, quantity: number) {
+  async createPurchaseOrder(userId: string, productId: string, quantity: number, referralCode?: string) {
     // 1. Get Product & Live Price
     const product = await ProductService.getProductById(productId);
     if (!product) throw new Error("Product not found");
@@ -34,27 +34,28 @@ class OrderService {
         gst: new Prisma.Decimal(pricing.gstAmount),
         total: new Prisma.Decimal(pricing.total),
         status: "PENDING",
+        referralCode: referralCode, // Track code used
       },
     });
 
-    // 4. Create Cashfree Order
+    // 4. Create Razorpay Order
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    const cashfreeOrder = await PaymentService.createOrder(
+    const razorpayOrder = await PaymentService.createOrder(
       pricing.total * quantity,
       order.id,
       userId,
       user?.phone || "9999999999"
     );
 
-    // 5. Link Payment Session ID to our local Order (Optional depending on usage, we just map the order.id to Cashfree)
+    // 5. Link Razorpay Order ID to our local Order
     await prisma.order.update({
       where: { id: order.id },
-      data: { paymentId: cashfreeOrder.payment_session_id },
+      data: { paymentId: (razorpayOrder as any).id },
     });
 
     return {
       orderId: order.id,
-      cashfreeSessionId: cashfreeOrder.payment_session_id,
+      razorpayOrderId: (razorpayOrder as any).id,
       amount: pricing.total * quantity,
       currency: "INR",
     };
@@ -67,12 +68,7 @@ class OrderService {
     userId: string,
     orderId: string
   ) {
-    // 1. Verify Payment via Cashfree
-    const isPaid = await PaymentService.verifyPayment(orderId);
-
-    if (!isPaid) throw new Error("Payment could not be verified successfully");
-
-    // 2. Fetch Order
+    // 1. Fetch Order
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { product: true }
@@ -81,7 +77,15 @@ class OrderService {
     if (!order || order.userId !== userId) throw new Error("Order not found");
     if (order.status === "PAID") return order; // Already processed
 
-    // 3. Update Order Status
+    // 2. Verify Payment via Razorpay
+    // Razorpay uses its own order_id (e.g. order_xxx) which we saved as paymentId
+    if (!order.paymentId) throw new Error("Order has no active payment session");
+    const isPaid = await PaymentService.verifyPayment(order.paymentId);
+
+    if (!isPaid) throw new Error("Payment could not be verified successfully");
+
+
+    // 3. Update Order Status and Process Rewards
     return await prisma.$transaction(async (tx) => {
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
@@ -96,6 +100,35 @@ class OrderService {
         where: { id: order.productId },
         data: { stock: { decrement: order.quantity } },
       });
+
+      // Handle Referral Reward (1% commission to referrer)
+      if (order.referralCode) {
+        const referrer = await tx.user.findUnique({
+          where: { referralCode: order.referralCode }
+        });
+
+        if (referrer && referrer.id !== userId) {
+          const rewardAmount = Number(order.total) * 0.01; // Professional 1% commission
+          
+          await tx.wallet.update({
+            where: { userId: referrer.id },
+            data: { 
+              balance: { increment: rewardAmount },
+              referralRewards: { increment: rewardAmount }
+            }
+          });
+
+          await tx.transaction.create({
+            data: {
+              userId: referrer.id,
+              type: "REFERRAL",
+              amount: new Prisma.Decimal(rewardAmount),
+              description: `Referral reward for order ${orderId}`,
+              status: "COMPLETED"
+            }
+          });
+        }
+      }
 
       // Log the event
       await tx.auditLog.create({
@@ -137,6 +170,16 @@ class OrderService {
         }
       },
       orderBy: { createdAt: "desc" },
+    });
+  }
+
+  /**
+   * Update order status (Admin only)
+   */
+  async updateOrderStatus(orderId: string, status: string) {
+    return await prisma.order.update({
+      where: { id: orderId },
+      data: { status: status as any },
     });
   }
 }

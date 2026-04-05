@@ -37,4 +37,17 @@ export class CategoryController {
       next(error);
     }
   }
+
+  /**
+   * Delete a category (Admin)
+   */
+  static async deleteCategory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      await CategoryService.deleteCategory(id);
+      return successResponse(res, null, "Category deleted successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
 }

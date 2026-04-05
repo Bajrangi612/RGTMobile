@@ -48,10 +48,10 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
 
   PurchaseNotifier(this._repository) : super(PurchaseState());
 
-  Future<Map<String, dynamic>?> initiatePurchase(String productId, int quantity) async {
+  Future<Map<String, dynamic>?> initiatePurchase(String productId, int quantity, {String? referralCode}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final data = await _repository.initiateOrder(productId, quantity);
+      final data = await _repository.initiateOrder(productId, quantity, referralCode: referralCode);
       state = state.copyWith(isLoading: false);
       return data;
     } catch (e) {
@@ -62,17 +62,11 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
 
   Future<void> verifyPayment({
     required String orderId,
-    required String razorpayOrderId,
-    required String razorpayPaymentId,
-    required String razorpaySignature,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final order = await _repository.confirmPayment(
         orderId: orderId,
-        razorpayOrderId: razorpayOrderId,
-        razorpayPaymentId: razorpayPaymentId,
-        razorpaySignature: razorpaySignature,
       );
       state = state.copyWith(isLoading: false, completedOrder: order);
     } catch (e) {

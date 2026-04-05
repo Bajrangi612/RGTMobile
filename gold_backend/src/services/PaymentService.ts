@@ -1,48 +1,37 @@
-import { Cashfree } from "cashfree-pg";
+import Razorpay from "razorpay";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-Cashfree.XClientId = process.env.CASHFREE_APP_ID;
-Cashfree.XClientSecret = process.env.CASHfree_SECRET_KEY;
-Cashfree.XEnvironment = process.env.CASHFREE_ENV === "PRODUCTION" ? Cashfree.Environment.PRODUCTION : Cashfree.Environment.SANDBOX;
+const instance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || "",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "",
+});
 
 class PaymentService {
-  /**
-   * Create a new Cashfree order
-   * @param amount Amount in INR
-   * @param orderId Our Database Order ID
-   * @param customerId The user ID
-   * @param customerPhone The user's phone number
-   * @returns Cashfree Payment Session Information
-   */
   async createOrder(amount: number, orderId: string, customerId: string, customerPhone: string) {
-    const request = {
-      order_id: orderId,
-      order_amount: amount,
-      order_currency: "INR",
-      customer_details: {
-        customer_id: customerId,
-        customer_phone: customerPhone || "9999999999",
-      },
+    const options = {
+      amount: Math.round(amount * 100), // amount in paise
+      currency: "INR",
+      receipt: orderId,
+      notes: { customerId, customerPhone },
     };
 
-    const response = await Cashfree.PGCreateOrder("2023-08-01", request);
-    return response.data;
+    const order = await instance.orders.create(options);
+    return order;
   }
 
-  /**
-   * Verify the payment status from Cashfree
-   * @param orderId The order ID to check
-   * @returns boolean indicating if payment was successful
-   */
-  async verifyPayment(orderId: string): Promise<boolean> {
-    const response = await Cashfree.PGOrderFetchPayments("2023-08-01", orderId);
-    if (response.data && response.data.length > 0) {
-      // Return true if any payment attempt was SUCCESS
-      return response.data.some((payment: any) => payment.payment_status === "SUCCESS");
+  async verifyPayment(razorpayOrderId: string): Promise<boolean> {
+    try {
+      const payments = await instance.orders.fetchPayments(razorpayOrderId);
+      if (payments && payments.items && payments.items.length > 0) {
+        return payments.items.some((p: any) => p.status === 'captured');
+      }
+      return false;
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      return false;
     }
-    return false;
   }
 }
 

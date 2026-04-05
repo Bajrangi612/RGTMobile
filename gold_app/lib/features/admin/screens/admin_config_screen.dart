@@ -19,6 +19,7 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
   final _deliveryController = TextEditingController();
   final _intervalController = TextEditingController();
   final _gstController = TextEditingController();
+  final _lowStockController = TextEditingController();
 
   @override
   void initState() {
@@ -28,6 +29,7 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
     _deliveryController.text = state.deliveryTimeDays.toString();
     _intervalController.text = state.orderIntervalMinutes.toString();
     _gstController.text = state.gstRate.toString();
+    _lowStockController.text = state.lowStockThreshold.toString();
   }
 
   @override
@@ -36,6 +38,7 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
     _deliveryController.dispose();
     _intervalController.dispose();
     _gstController.dispose();
+    _lowStockController.dispose();
     super.dispose();
   }
 
@@ -45,6 +48,7 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
       deliveryTimeDays: int.tryParse(_deliveryController.text),
       orderIntervalMinutes: int.tryParse(_intervalController.text),
       gstRate: double.tryParse(_gstController.text),
+      lowStockThreshold: int.tryParse(_lowStockController.text),
     );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -116,6 +120,24 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
                         controller: _intervalController,
                         keyboardType: TextInputType.number,
                         hint: 'e.g., 15',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text('Inventory & Alerts', style: AppTextStyles.labelLarge),
+              const SizedBox(height: 16),
+              GoldCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      GoldTextField(
+                        label: 'Low Stock Threshold (Units)',
+                        controller: _lowStockController,
+                        keyboardType: TextInputType.number,
+                        hint: 'e.g., 10',
                       ),
                     ],
                   ),

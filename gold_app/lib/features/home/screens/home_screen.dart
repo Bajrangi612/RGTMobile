@@ -181,7 +181,7 @@ class _HomeDashboard extends ConsumerWidget {
                           );
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                            MaterialPageRoute(builder: (_) => OrdersScreen()),
                           );
                         },
                       ),
@@ -271,7 +271,7 @@ class _HomeDashboard extends ConsumerWidget {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const WalletScreen()),
+                          MaterialPageRoute(builder: (_) => WalletScreen()),
                         );
                       },
                     ),
@@ -698,17 +698,23 @@ class _ProductCard extends StatelessWidget {
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.all(12),
-                        child: Image.asset(
-                          product.image,
-                          width: double.infinity,
-                          height: double.infinity,
-                          fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => Icon(
-                            Icons.monetization_on_rounded,
-                            size: 64,
-                            color: AppColors.royalGold.withOpacity(0.8),
-                          ),
-                        ),
+                        child: product.image.isNotEmpty 
+                          ? Image.network(
+                              product.image,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                Icons.monetization_on_rounded,
+                                size: 64,
+                                color: AppColors.royalGold.withOpacity(0.8),
+                              ),
+                            )
+                          : Icon(
+                              Icons.monetization_on_rounded,
+                              size: 64,
+                              color: AppColors.royalGold.withOpacity(0.8),
+                            ),
                       ),
                     ),
                     Positioned(

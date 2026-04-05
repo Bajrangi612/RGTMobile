@@ -35,9 +35,9 @@ class ProductRepository {
   /**
    * Initiate a purchase order
    */
-  Future<Map<String, dynamic>> initiateOrder(String productId, int quantity) async {
+  Future<Map<String, dynamic>> initiateOrder(String productId, int quantity, {String? referralCode}) async {
     try {
-      final response = await _apiService.createOrder(productId, quantity);
+      final response = await _apiService.createOrder(productId, quantity, referralCode: referralCode);
       return response.data['data'];
     } catch (e) {
       rethrow;
@@ -49,16 +49,10 @@ class ProductRepository {
    */
   Future<OrderModel> confirmPayment({
     required String orderId,
-    required String razorpayOrderId,
-    required String razorpayPaymentId,
-    required String razorpaySignature,
   }) async {
     try {
       final response = await _apiService.verifyPayment(
         orderId: orderId,
-        razorpayOrderId: razorpayOrderId,
-        razorpayPaymentId: razorpayPaymentId,
-        razorpaySignature: razorpaySignature,
       );
       return OrderModel.fromJson(response.data['data']['order']);
     } catch (e) {

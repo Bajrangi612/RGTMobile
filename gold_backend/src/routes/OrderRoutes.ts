@@ -11,5 +11,6 @@ router.get("/my", authenticate, OrderController.myOrders);
 
 // Admin only routes
 router.get("/", authenticate, authorize([Role.ADMIN]), OrderController.listAllOrders);
+router.patch("/:id/status", authenticate, authorize([Role.ADMIN]), OrderController.updateStatus);
 
 export default router;

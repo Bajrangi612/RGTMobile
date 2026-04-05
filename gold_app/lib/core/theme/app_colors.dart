@@ -41,9 +41,9 @@ class AppColors {
   static const Color info = Color(0xFF1976D2);
   static const Color pending = Color(0xFFFBC02D);
 
-  // Gradients — "Satin Luxury Gold"
+  // Gradients — "Champagne Suede Gold"
   static LinearGradient get goldGradient => const LinearGradient(
-        colors: [Color(0xFFD4AF37), Color(0xFFF2D17E), Color(0xFFB8860B)],
+        colors: [Color(0xFF8E6E2E), Color(0xFFD4AF37), Color(0xFFC5A059)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       );
@@ -53,13 +53,14 @@ class AppColors {
   static LinearGradient get cardGradient => _palette.cardGradient;
 
   static const LinearGradient successGradient = LinearGradient(
-    colors: [Color(0xFF34C759), Color(0xFF30D158)],
+    colors: [Color(0xFF1B5E20), Color(0xFF2E7D32)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // Glass Effect Colors — High Transparency
-  static Color get glassWhite => Colors.white.withOpacity(0.4);
-  static Color get glassBorder => Colors.white.withOpacity(0.12);
-  static Color get glassGold => const Color(0xFFD4AF37).withOpacity(0.1);
+  // Glass Effect Colors — Elevated obsidian transparency
+  static Color get glassWhite => Colors.white.withOpacity(0.03);
+  static Color get glassBorder => Colors.white.withOpacity(0.08);
+  static Color get glassGold => const Color(0xFFD4AF37).withOpacity(0.05);
+  static Color get obsidianOverlay => const Color(0xFF05070A).withOpacity(0.8);
 }

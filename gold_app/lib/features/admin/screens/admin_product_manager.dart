@@ -10,7 +10,8 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../widgets/gold_card.dart';
 import '../providers/admin_provider.dart';
-import 'dart:html' as html;
+import 'package:image_picker/image_picker.dart';
+import '../../product/data/models/product_model.dart';
 
 class AdminProductManager extends ConsumerWidget {
   const AdminProductManager({super.key});
@@ -43,7 +44,7 @@ class AdminProductManager extends ConsumerWidget {
           ],
         ),
         child: FloatingActionButton(
-          onPressed: () => _showAddProductSheet(context),
+          onPressed: () => _showProductSheet(context),
           backgroundColor: Colors.transparent,
           elevation: 0,
           child: Container(
@@ -126,7 +127,8 @@ class AdminProductManager extends ConsumerWidget {
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
                       final product = filteredProducts[index];
-                      final isLowStock = product.stock < 10;
+                      final isLowStock = product.stock <= adminState.lowStockThreshold;
+                      final isCritical = product.stock <= (adminState.lowStockThreshold / 2);
                       
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -156,29 +158,36 @@ class AdminProductManager extends ConsumerWidget {
                                 children: [
                                   Expanded(child: Text(product.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold))),
                                   if (isLowStock)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.error.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text('LOW STOCK', style: AppTextStyles.caption.copyWith(color: AppColors.error, fontSize: 8, fontWeight: FontWeight.bold)),
-                                    ),
+                                    _StockBadge(count: product.stock, isCritical: isCritical),
                                 ],
                               ),
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                  '${product.weight}g · ${product.purity} · ${Formatters.currency(product.price)}',
-                                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${product.weight}g · ${product.purity} · ${Formatters.currency(product.price)}',
+                                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'AVAILABLE STOCK: ${product.stock} UNITS',
+                                      style: AppTextStyles.caption.copyWith(
+                                        color: isLowStock ? (isCritical ? AppColors.error : AppColors.warning) : Colors.white24,
+                                        fontSize: 9,
+                                        fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               trailing: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.edit_outlined, color: Colors.white38, size: 20),
-                                    onPressed: () {},
+                                    icon: Icon(Icons.edit, color: AppColors.royalGold),
+                                    onPressed: () => _showProductSheet(context, product: product),
                                   ),
                                 ],
                               ),
@@ -197,12 +206,47 @@ class AdminProductManager extends ConsumerWidget {
     );
   }
 
-  void _showAddProductSheet(BuildContext context) {
+  void _showProductSheet(BuildContext context, {ProductModel? product}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const _AddProductForm(),
+      builder: (context) => _ProductForm(product: product),
+    );
+  }
+}
+
+class _StockBadge extends StatelessWidget {
+  final int count;
+  final bool isCritical;
+  const _StockBadge({required this.count, required this.isCritical});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isCritical ? AppColors.error : AppColors.warning;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(isCritical ? Icons.warning_amber_rounded : Icons.inventory_2_outlined, color: color, size: 10),
+          const SizedBox(width: 6),
+          Text(
+            isCritical ? 'CRITICAL: $count' : 'LOW: $count',
+            style: AppTextStyles.caption.copyWith(
+              color: color,
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -245,35 +289,51 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _AddProductForm extends ConsumerStatefulWidget {
-  const _AddProductForm();
+class _ProductForm extends ConsumerStatefulWidget {
+  final ProductModel? product;
+  const _ProductForm({this.product});
 
   @override
-  ConsumerState<_AddProductForm> createState() => _AddProductFormState();
+  ConsumerState<_ProductForm> createState() => _ProductFormState();
 }
 
-class _AddProductFormState extends ConsumerState<_AddProductForm> {
+class _ProductFormState extends ConsumerState<_ProductForm> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  final _weightController = TextEditingController();
-  final _stockController = TextEditingController();
-  final _imageUrlController = TextEditingController();
+  late final TextEditingController _nameController;
+  late final TextEditingController _descriptionController;
+  late final TextEditingController _weightController;
+  late final TextEditingController _makingChargesController;
+  late final TextEditingController _fixedPriceController;
+  late final TextEditingController _stockController;
+  late final TextEditingController _imageUrlController;
   String _purity = '24K';
   String? _selectedCategoryId;
   bool _isSaving = false;
   
-  Uint8List? _imageBytes;
-  String? _imageFileName;
+  XFile? _pickedImage;
   bool _isUploading = false;
 
   @override
   void initState() {
     super.initState();
-    final categories = ref.read(adminProvider).categories;
-    if (categories.isNotEmpty) {
-      _selectedCategoryId = categories.first['id'];
-    }
+    _nameController = TextEditingController(text: widget.product?.name);
+    _descriptionController = TextEditingController(text: widget.product?.description);
+    _weightController = TextEditingController(text: widget.product?.weight.toString() ?? '1.0');
+    _makingChargesController = TextEditingController(text: widget.product?.makingCharges.toString() ?? '0');
+    _fixedPriceController = TextEditingController(text: widget.product?.fixedPrice.toString() ?? '0');
+    _stockController = TextEditingController(text: widget.product?.stock.toString() ?? '0');
+    _imageUrlController = TextEditingController(text: widget.product?.imageUrl);
+    _purity = widget.product?.purity ?? '24K';
+    _selectedCategoryId = widget.product?.categoryId;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final categories = ref.read(adminProvider).categories;
+      if (_selectedCategoryId == null && categories.isNotEmpty) {
+        setState(() {
+          _selectedCategoryId = categories.first['id'];
+        });
+      }
+    });
   }
 
   @override
@@ -281,34 +341,24 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
     _nameController.dispose();
     _descriptionController.dispose();
     _weightController.dispose();
+    _makingChargesController.dispose();
+    _fixedPriceController.dispose();
     _stockController.dispose();
     _imageUrlController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
-    final uploadInput = html.FileUploadInputElement()..accept = 'image/*';
-    uploadInput.click();
-
-    uploadInput.onChange.listen((e) {
-      final files = uploadInput.files;
-      if (files?.isEmpty ?? true) return;
-
-      final reader = html.FileReader();
-      final file = files![0];
-      reader.readAsArrayBuffer(file);
-      reader.onLoadEnd.listen((e) {
-        setState(() {
-          _imageBytes = reader.result as Uint8List;
-          _imageFileName = file.name;
-        });
-      });
-    });
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() => _pickedImage = image);
+    }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_imageBytes == null && _imageUrlController.text.isEmpty) {
+    if (_pickedImage == null && _imageUrlController.text.isEmpty && widget.product == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please upload an image or provide a URL')),
       );
@@ -321,36 +371,44 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
       String imageUrl = _imageUrlController.text.trim();
 
       // 1. Upload image if picked
-      if (_imageBytes != null) {
+      if (_pickedImage != null) {
         setState(() => _isUploading = true);
-        final response = await ApiService().uploadImage(_imageBytes!, _imageFileName!);
+        final bytes = await _pickedImage!.readAsBytes();
+        final response = await ApiService().uploadImage(bytes, _pickedImage!.name);
         imageUrl = response.data['data']['url'];
         setState(() => _isUploading = false);
       }
 
-      // 2. Submit product
+      // 2. Prepare product data
       final productData = {
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'weight': double.tryParse(_weightController.text) ?? 0.0,
+        'weight': double.tryParse(_weightController.text) ?? 1.0,
+        'makingCharges': double.tryParse(_makingChargesController.text) ?? 0.0,
+        'fixedPrice': double.tryParse(_fixedPriceController.text) ?? 0.0,
         'purity': _purity,
         'stock': int.tryParse(_stockController.text) ?? 0,
         'imageUrl': imageUrl,
         'categoryId': _selectedCategoryId,
       };
 
-      final success = await ref.read(adminProvider.notifier).addProduct(productData);
+      bool success;
+      if (widget.product != null) {
+        success = await ref.read(adminProvider.notifier).updateProduct(widget.product!.id, productData);
+      } else {
+        success = await ref.read(adminProvider.notifier).addProduct(productData);
+      }
 
       if (mounted) {
         setState(() => _isSaving = false);
         if (success) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Product added successfully!')),
+            SnackBar(content: Text(widget.product != null ? 'Product updated!' : 'Product added!')),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to add product: ${ref.read(adminProvider).error}')),
+            SnackBar(content: Text('Failed: ${ref.read(adminProvider).error}')),
           );
         }
       }
@@ -367,8 +425,41 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
     }
   }
 
+  Future<void> _delete() async {
+    if (widget.product == null) return;
+    
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.deepBlack,
+        title: Text('Delete Product', style: AppTextStyles.labelLarge),
+        content: Text('Are you sure you want to delete this product?', style: AppTextStyles.caption),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true), 
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _isSaving = true);
+      final success = await ref.read(adminProvider.notifier).deleteProduct(widget.product!.id);
+      if (mounted) {
+        setState(() => _isSaving = false);
+        if (success) {
+          Navigator.pop(context);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.product != null;
+    
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: BoxDecoration(
@@ -391,10 +482,19 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Add New Asset', style: AppTextStyles.h4.copyWith(color: AppColors.royalGold)),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white54),
-                    onPressed: () => Navigator.pop(context),
+                  Text(isEditing ? 'Edit Asset' : 'Add New Asset', style: AppTextStyles.h4.copyWith(color: AppColors.royalGold)),
+                  Row(
+                    children: [
+                      if (isEditing)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                          onPressed: _isSaving ? null : _delete,
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white54),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -500,6 +600,38 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
                 children: [
                   Expanded(
                     child: _LabeledField(
+                      label: 'Making Charges (₹)',
+                      child: TextFormField(
+                        controller: _makingChargesController,
+                        keyboardType: TextInputType.number,
+                        style: AppTextStyles.bodyMedium,
+                        decoration: _inputDecoration('0'),
+                        validator: (v) => double.tryParse(v ?? '') == null ? 'Invalid' : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _LabeledField(
+                      label: 'Fixed Price (₹)',
+                      child: TextFormField(
+                        controller: _fixedPriceController,
+                        keyboardType: TextInputType.number,
+                        style: AppTextStyles.bodyMedium,
+                        decoration: _inputDecoration('0 (Optional)'),
+                        validator: (v) => double.tryParse(v ?? '') == null ? 'Invalid' : null,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: _LabeledField(
                       label: 'Stock',
                       child: TextFormField(
                         controller: _stockController,
@@ -511,7 +643,7 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  Expanded(child: const SizedBox()),
+                  const Expanded(child: SizedBox()),
                 ],
               ),
 
@@ -521,12 +653,20 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
                 label: 'Product Image',
                 child: Column(
                   children: [
-                    if (_imageBytes != null)
+                    if (_pickedImage != null)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.memory(_imageBytes!, height: 100, width: 100, fit: BoxFit.cover),
+                          child: FutureBuilder<Uint8List>(
+                            future: _pickedImage!.readAsBytes(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return Image.memory(snapshot.data!, height: 100, width: 100, fit: BoxFit.cover);
+                              }
+                              return const SizedBox(height: 100, width: 100, child: Center(child: CircularProgressIndicator()));
+                            },
+                          ),
                         ),
                       ),
                     Row(
@@ -536,14 +676,14 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
                             controller: _imageUrlController,
                             style: AppTextStyles.bodyMedium,
                             decoration: _inputDecoration('Or paste URL...'),
-                            enabled: _imageBytes == null,
+                            enabled: _pickedImage == null,
                           ),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
                           onPressed: _pickImage,
                           icon: const Icon(Icons.upload_file, size: 18),
-                          label: Text(_imageBytes == null ? 'Upload' : 'Change'),
+                          label: Text(_pickedImage == null ? 'Upload' : 'Change'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.royalGold.withOpacity(0.1),
                             foregroundColor: AppColors.royalGold,
@@ -572,7 +712,7 @@ class _AddProductFormState extends ConsumerState<_AddProductForm> {
                   child: _isSaving 
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
                     : Text(
-                        _isUploading ? 'Uploading Image...' : 'Save Product',
+                        _isUploading ? 'Uploading Image...' : (isEditing ? 'Update Product' : 'Save Product'),
                         style: AppTextStyles.labelLarge.copyWith(color: Colors.black, fontWeight: FontWeight.bold),
                       ),
                 ),
