@@ -20,8 +20,8 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Ensure OpenSSL is available for Prisma query engine
-RUN apk add --no-cache openssl
+# Ensure OpenSSL and libc6-compat are available for Prisma query engine
+RUN apk add --no-cache openssl libc6-compat
 
 # Set Production Environment
 ENV NODE_ENV=production
@@ -43,4 +43,4 @@ RUN npx prisma generate
 EXPOSE 4000
 
 # Automate database migrations and then start the server
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "echo \"Starting Royal Gold Backend...\"; if [ -z \"$DATABASE_URL\" ]; then echo \"ERROR: DATABASE_URL is not set!\"; exit 1; fi; npx prisma migrate deploy && node dist/index.js"]
