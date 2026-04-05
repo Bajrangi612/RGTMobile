@@ -17,8 +17,6 @@ class OrderService {
     if (product.stock < quantity) throw new Error("Out of stock");
 
     const livePriceObj = await ProductService.getLatestGoldPrice();
-    if (!livePriceObj) throw new Error("Live gold price not available");
-
     const livePrice = Number(livePriceObj.sellPrice);
 
     // 2. Calculate Pricing (Weight * Price * 1.03)

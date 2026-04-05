@@ -1,35 +1,53 @@
 import { Request, Response, NextFunction } from "express";
 import { successResponse } from "../utils/response";
+import { prisma } from "../lib/prisma";
 
 export class ConfigController {
-  // Mock config storage for now (could be moved to DB later)
-  static systemConfig = {
-    commissionRate: 2.5,
-    deliveryTimeDays: 5,
-    orderIntervalMinutes: 15,
-    gstRate: 3.0,
-    minWithdrawal: 500,
-  };
-
   /**
-   * Get system configurations (Admin only)
+   * Get all system configurations (Admin only)
    */
   static async getConfigs(req: Request, res: Response, next: NextFunction) {
     try {
-      return successResponse(res, ConfigController.systemConfig, "Configs fetched successfully");
+      const settings = await prisma.setting.findMany();
+      // Map to a more usable object
+      const config: any = {};
+      settings.forEach((s) => {
+        // Try to parse numbers or booleans
+        let val: any = s.value;
+        if (!isNaN(val as any)) val = Number(val);
+        if (val === "true") val = true;
+        if (val === "false") val = false;
+        
+        config[s.key] = val;
+      });
+
+      return successResponse(res, config, "Configs fetched successfully from DB");
     } catch (error) {
       next(error);
     }
   }
 
   /**
-   * Update system configurations (Admin only)
+   * Update or create system configurations (Admin only)
    */
   static async updateConfigs(req: Request, res: Response, next: NextFunction) {
     try {
       const updates = req.body;
-      ConfigController.systemConfig = { ...ConfigController.systemConfig, ...updates };
-      return successResponse(res, ConfigController.systemConfig, "Configs updated successfully");
+      
+      const updatePromises = Object.entries(updates).map(([key, value]) => {
+        return prisma.setting.upsert({
+          where: { key: key },
+          update: { value: String(value) },
+          create: {
+            key: key,
+            value: String(value),
+          },
+        });
+      });
+
+      await Promise.all(updatePromises);
+      
+      return successResponse(res, updates, "Configs updated in database successfully");
     } catch (error) {
       next(error);
     }

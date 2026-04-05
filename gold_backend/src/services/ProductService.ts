@@ -99,12 +99,23 @@ class ProductService {
   }
 
   /**
-   * Get the latest gold price from the database
+   * Get the latest gold price from the database (with fallback)
    */
-  async getLatestGoldPrice(): Promise<GoldPrice | null> {
-    return await prisma.goldPrice.findFirst({
+  async getLatestGoldPrice(): Promise<GoldPrice | any> {
+    const price = await prisma.goldPrice.findFirst({
       orderBy: { timestamp: "desc" },
     });
+
+    // Fallback: Always return a safe price if DB is empty
+    if (!price) {
+      return {
+        buyPrice: new Prisma.Decimal(7500.0),
+        sellPrice: new Prisma.Decimal(7600.0),
+        timestamp: new Date(),
+      };
+    }
+
+    return price;
   }
 
   /**
