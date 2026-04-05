@@ -87,12 +87,20 @@ class OrderService {
 
     // 3. Update Order Status and Process Rewards
     return await prisma.$transaction(async (tx) => {
+      // Generate Invoice Reference
+      const year = new Date().getFullYear();
+      const orderCount = await tx.order.count({
+        where: { createdAt: { gte: new Date(`${year}-01-01`) } }
+      });
+      const invoiceNo = `RGT/${year}/${(orderCount + 1).toString().padStart(4, '0')}`;
+
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: {
           status: "PAID",
           paymentStatus: "SUCCESS",
-        },
+          invoiceNo: invoiceNo,
+        } as any,
       });
 
       // Reduce Stock

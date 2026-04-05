@@ -8,8 +8,9 @@ export class AuthController {
   static async me(req: any, res: Response, next: NextFunction) {
     try {
       const user = await prisma.user.findUnique({
-        where: { id: req.user.id }
-      });
+        where: { id: req.user.id },
+        include: { wallet: true }
+      }) as any;
       if (!user) return errorResponse(res, 'User not found', 404);
       
       return successResponse(
@@ -19,12 +20,19 @@ export class AuthController {
             id: user.id,
             name: user.name,
             phone: user.phone,
-            contactNo: user.phone, // Legacy compatibility
+            contactNo: user.phone,
             email: user.email,
             role: user.role,
-            goldAdvanceAmount: 0, // Legacy compatibility
-            referralCode: "", // Legacy compatibility
-            registerRequired: false,
+            kycStatus: user.kycStatus,
+            bankStatus: user.bankStatus,
+            referralCode: user.referralCode,
+            wallet: user.wallet ? {
+              balance: Number(user.wallet.balance),
+              goldAdvance: Number(user.wallet.goldAdvance),
+              referralRewards: Number(user.wallet.referralRewards),
+            } : null,
+            goldAdvanceAmount: user.wallet ? Number(user.wallet.goldAdvance) : 0,
+            registerRequired: !user.name || user.name.startsWith('User '),
           }
         },
         'User fetched successfully'

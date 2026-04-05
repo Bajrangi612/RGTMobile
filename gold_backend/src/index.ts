@@ -12,6 +12,8 @@ import imageRoutes from './routes/ImageRoutes';
 import userRoutes from './routes/UserRoutes';
 import configRoutes from './routes/ConfigRoutes';
 import categoryRoutes from './routes/CategoryRoutes';
+import bankRoutes from './routes/BankRoutes';
+import walletRoutes from './routes/WalletRoutes';
 
 dotenv.config();
 
@@ -36,6 +38,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/images', imageRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/bank', bankRoutes);
+app.use('/api/wallet', walletRoutes);
 
 // Routes Placeholder
 // Routes Placeholder

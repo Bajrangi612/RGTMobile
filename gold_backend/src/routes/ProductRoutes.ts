@@ -6,6 +6,7 @@ import { Role } from "@prisma/client";
 const router = Router();
 
 router.get("/", ProductController.listProducts);
+router.get("/price", ProductController.getGoldPrice);
 router.get("/:id", ProductController.getProduct);
 
 // Admin only routes

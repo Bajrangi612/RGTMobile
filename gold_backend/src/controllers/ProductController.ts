@@ -30,6 +30,21 @@ export class ProductController {
   }
 
   /**
+   * Get latest gold price specifically
+   */
+  static async getGoldPrice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const livePriceObj = await ProductService.getLatestGoldPrice();
+      const livePrice = livePriceObj ? Number(livePriceObj.sellPrice) : 0;
+      const buyPrice = livePriceObj ? Number(livePriceObj.buyPrice) : 0;
+
+      return successResponse(res, { livePrice, buyPrice }, "Latest gold price fetched");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Get product by ID with precise pricing
    */
   static async getProduct(req: Request, res: Response, next: NextFunction) {

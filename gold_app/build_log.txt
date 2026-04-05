@@ -1,0 +1,93 @@
+Running Gradle task 'assembleDebug'...                          
+Invalid depfile: D:\RGT\gold_app\.dart_tool\flutter_build\3760d0f1543077d013440af9f8269832\kernel_snapshot_program.d
+Invalid depfile: D:\RGT\gold_app\.dart_tool\flutter_build\3760d0f1543077d013440af9f8269832\kernel_snapshot_program.d
+lib/core/services/storage_service.dart:4:8: Error: Dart library 'dart:html' is not available on this platform.
+import 'dart:html' as html;
+       ^
+Context: The unavailable library 'dart:html' is imported through these packages:
+
+    package:gold_app => dart:html
+
+Detailed import paths for (some of) the these imports:
+
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/product/screens/product_detail_screen.dart => package:gold_app/features/product/presentation/widgets/checkout_sheet.dart => package:gold_app/features/product/presentation/providers/product_providers.dart => package:gold_app/features/product/data/repositories/product_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/product/screens/catalog_screen.dart => package:gold_app/features/product/presentation/providers/product_providers.dart => package:gold_app/features/product/data/repositories/product_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/product/screens/catalog_screen.dart => package:gold_app/features/product/presentation/widgets/checkout_sheet.dart => package:gold_app/features/product/presentation/providers/product_providers.dart => package:gold_app/features/product/data/repositories/product_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/product/screens/catalog_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/product/screens/catalog_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/product/screens/catalog_screen.dart => package:gold_app/features/admin/screens/admin_product_manager.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/product/screens/catalog_screen.dart => package:gold_app/features/admin/screens/admin_product_manager.dart => package:gold_app/features/admin/providers/admin_provider.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/order/screens/orders_screen.dart => package:gold_app/features/order/providers/order_provider.dart => package:gold_app/features/product/presentation/providers/product_providers.dart => package:gold_app/features/product/data/repositories/product_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/order/screens/orders_screen.dart => package:gold_app/features/order/providers/order_provider.dart => package:gold_app/features/product/data/repositories/product_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/order/screens/orders_screen.dart => package:gold_app/features/order/screens/order_detail_screen.dart => package:gold_app/features/order/providers/order_provider.dart => package:gold_app/features/product/presentation/providers/product_providers.dart => package:gold_app/features/product/data/repositories/product_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/order/screens/orders_screen.dart => package:gold_app/features/order/screens/order_detail_screen.dart => package:gold_app/features/order/providers/order_provider.dart => package:gold_app/features/product/data/repositories/product_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/referral/screens/referral_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/referral/screens/referral_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/profile/screens/profile_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/network/api_service.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    package:gold_app/main.dart => package:gold_app/features/auth/screens/splash_screen.dart => package:gold_app/features/auth/screens/login_screen.dart => package:gold_app/features/auth/screens/otp_screen.dart => package:gold_app/features/home/screens/home_screen.dart => package:gold_app/features/profile/screens/profile_screen.dart => package:gold_app/features/auth/providers/auth_provider.dart => package:gold_app/features/auth/data/auth_repository.dart => package:gold_app/core/services/storage_service.dart => dart:html
+    ...
+
+lib/core/services/storage_service.dart:16:14: Error: Undefined name 'window'.
+        html.window.localStorage[key] = value;
+             ^^^^^^
+lib/core/services/storage_service.dart:34:21: Error: Undefined name 'window'.
+        return html.window.localStorage[key];
+                    ^^^^^^
+lib/core/services/storage_service.dart:36:21: Error: Undefined name 'window'.
+        return html.window.localStorage[key];
+                    ^^^^^^
+lib/core/services/storage_service.dart:54:14: Error: Undefined name 'window'.
+        html.window.localStorage.remove(key);
+             ^^^^^^
+lib/core/services/storage_service.dart:56:14: Error: Undefined name 'window'.
+        html.window.localStorage.remove(key);
+             ^^^^^^
+lib/core/services/storage_service.dart:73:14: Error: Undefined name 'window'.
+        html.window.localStorage.clear();
+             ^^^^^^
+lib/core/services/storage_service.dart:75:14: Error: Undefined name 'window'.
+        html.window.localStorage.clear();
+             ^^^^^^
+lib/core/services/storage_service.dart:92:21: Error: Undefined name 'window'.
+        return html.window.localStorage.containsKey(key);
+                    ^^^^^^
+lib/core/services/storage_service.dart:94:21: Error: Undefined name 'window'.
+        return html.window.localStorage.containsKey(key);
+                    ^^^^^^
+Unhandled exception:
+FileSystemException(uri=org-dartlang-untranslatable-uri:dart%3Ahtml; message=StandardFileSystem only supports file:* and data:* URIs)
+#0      StandardFileSystem.entityForUri (package:front_end/src/api_prototype/standard_file_system.dart:45)
+#1      asFileUri (package:vm/kernel_front_end.dart:1038)
+#2      writeDepfile (package:vm/kernel_front_end.dart:1201)
+<asynchronous suspension>
+#3      FrontendCompiler.compile (package:frontend_server/frontend_server.dart:751)
+<asynchronous suspension>
+#4      starter (package:frontend_server/starter.dart:102)
+<asynchronous suspension>
+#5      main (file:///C:/b/s/w/ir/x/w/sdk/pkg/frontend_server/bin/frontend_server_starter.dart:13)
+<asynchronous suspension>
+
+Target kernel_snapshot_program failed: Exception
+
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildDebug'.
+> Process 'command 'D:\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 10s
+Running Gradle task 'assembleDebug'...                             11.8s
+Gradle task assembleDebug failed with exit code 1

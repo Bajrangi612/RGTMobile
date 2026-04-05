@@ -106,4 +106,23 @@ export class UserController {
       next(error);
     }
   }
+
+  /**
+   * Update current user profile
+   */
+  static async updateProfile(req: any, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user.id;
+      const { name, email } = req.body;
+
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { name, email },
+      });
+
+      return successResponse(res, { user }, "Profile updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
 }
