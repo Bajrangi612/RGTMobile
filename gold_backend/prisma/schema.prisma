@@ -150,7 +150,7 @@ model User {
   staffId                          String?
   createdAt                        DateTime      @default(now())
   updatedAt                        DateTime      @updatedAt
-  referralCode                     String        @unique(map: "User_referralCode_key")
+  referralCode                     String?       @unique(map: "User_referralCode_key")
   bankAccountNo                    String?
   bankHolderName                   String?
   bankIfsc                         String?
