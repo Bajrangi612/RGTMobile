@@ -6,11 +6,12 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/services/mock_data_service.dart';
 import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../data/models/order_model.dart';
+import '../providers/order_provider.dart';
+import '../../home/providers/home_provider.dart';
 import '../../home/screens/home_screen.dart';
 
 class ResellScreen extends ConsumerStatefulWidget {
@@ -32,14 +33,16 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
   @override
   void initState() {
     super.initState();
-    _currentPrice = MockDataService.getGoldPrice();
+    final homeState = ref.read(homeProvider);
+    _currentPrice = homeState.buyPrice > 0 ? homeState.buyPrice : 7200.0;
     _resellAmount = _currentPrice * widget.order.weight;
   }
 
   Future<void> _verifyPassKey() async {
     if (_passKey.length != AppConstants.passKeyLength) return;
     setState(() => _isVerifying = true);
-    await MockDataService.simulateDelay(AppConstants.apiDelayMedium);
+    // In production, you would verify this passkey via backend
+    await Future.delayed(const Duration(milliseconds: 800));
     setState(() {
       _isVerifying = false;
       _step = 1;
@@ -48,10 +51,12 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
 
   Future<void> _confirmResell() async {
     setState(() => _isVerifying = true);
-    await MockDataService.simulateDelay(AppConstants.apiDelayLong);
+    final success = await ref.read(orderProvider.notifier).resellOrder(widget.order.id);
     setState(() {
       _isVerifying = false;
-      _step = 2;
+      if (success) {
+        _step = 2;
+      }
     });
   }
 
@@ -91,9 +96,9 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppColors.royalGold.withOpacity(0.1),
+                color: AppColors.royalGold.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.royalGold.withOpacity(0.3)),
+                border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
               ),
               child: Icon(Icons.lock_rounded, size: 40, color: AppColors.royalGold),
             ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
@@ -173,7 +178,7 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: (isProfit ? AppColors.success : AppColors.error).withOpacity(0.1),
+                          color: (isProfit ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
@@ -220,7 +225,7 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.charcoal.withOpacity(0.95),
+            color: AppColors.charcoal.withValues(alpha: 0.95),
             border: Border(top: BorderSide(color: AppColors.glassBorder)),
           ),
           child: SafeArea(
@@ -249,8 +254,8 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
                 height: 100,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.success.withOpacity(0.15),
-                  border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                  color: AppColors.success.withValues(alpha: 0.15),
+                  border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                 ),
                 child: Icon(Icons.check_circle, color: AppColors.success, size: 56),
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),

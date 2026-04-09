@@ -54,15 +54,18 @@ model Order {
   amount        Decimal     @db.Decimal(15, 2)
   gst           Decimal     @db.Decimal(15, 2)
   total         Decimal     @db.Decimal(15, 2)
-  status        OrderStatus @default(PENDING)
+  status        OrderStatus @default(CREATED)
   paymentId     String?     @unique(map: "Order_paymentId_key")
   paymentStatus String?
+  deliveryDate  DateTime?
+  goldPriceAtPurchase Decimal? @db.Decimal(15, 2)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   referralCode  String?
   invoiceNo     String?     @unique(map: "Order_invoiceNo_key")
   product       Product     @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
   user          User        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
+  payments      Payment[]
 
   @@index([productId], map: "Order_productId_fkey")
   @@index([status], map: "Order_status_idx")
@@ -89,6 +92,7 @@ model Product {
   purity        String    @default("24K")
   imageUrl      String?
   stock         Int       @default(0)
+  readyStock    Int       @default(0)
   isActive      Boolean   @default(true)
   categoryId    String?
   createdAt     DateTime  @default(now())
@@ -180,8 +184,32 @@ model Wallet {
   @@map("wallet")
 }
 
+model Payment {
+  id                String   @id @default(uuid())
+  orderId           String
+  razorpayOrderId   String   @unique
+  razorpayPaymentId String?  @unique
+  razorpaySignature String?
+  amount            Decimal  @db.Decimal(15, 2)
+  currency          String   @default("INR")
+  status            String   @default("PENDING")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  order             Order    @relation(fields: [orderId], references: [id])
+
+  @@map("payment")
+}
+
+model AppConfig {
+  key   String @id
+  value String
+
+  @@map("app_config")
+}
+
 enum TransactionType {
   DEPOSIT
+  PURCHASE
   WITHDRAWAL
   PROFIT
   REFERRAL
@@ -215,11 +243,15 @@ enum BankStatus {
 }
 
 enum OrderStatus {
-  PENDING
+  CREATED
   PAID
-  SHIPPED
-  DELIVERED
+  PENDING
+  READY
+  PICKED
+  RESOLD
   CANCELLED
+  REFUND_REQUESTED
+  REFUNDED
 
   @@map("order_status")
 }

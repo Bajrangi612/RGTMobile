@@ -113,11 +113,42 @@ export class UserController {
   static async updateProfile(req: any, res: Response, next: NextFunction) {
     try {
       const userId = req.user.id;
-      const { name, email } = req.body;
+      const { 
+        name, 
+        email, 
+        address, 
+        dob, 
+        panNo, 
+        aadharNo,
+        bankAccountNo, 
+        bankIfsc, 
+        bankHolderName, 
+        bankName 
+      } = req.body;
+
+      // Prepare update data
+      const updateData: any = {
+        name,
+        email,
+      };
+
+      if (address !== undefined) updateData.address = address;
+      if (dob !== undefined) updateData.dob = dob ? new Date(dob) : null;
+      if (panNo !== undefined) updateData.panNo = panNo;
+      if (aadharNo !== undefined) updateData.aadharNo = aadharNo;
+      
+      // Handle Bank Details
+      if (bankAccountNo !== undefined) {
+        updateData.bankAccountNo = bankAccountNo;
+        updateData.bankStatus = "PENDING"; // Reset status on edit
+      }
+      if (bankIfsc !== undefined) updateData.bankIfsc = bankIfsc;
+      if (bankHolderName !== undefined) updateData.bankHolderName = bankHolderName;
+      if (bankName !== undefined) updateData.bankName = bankName;
 
       const user = await prisma.user.update({
         where: { id: userId },
-        data: { name, email },
+        data: updateData,
       });
 
       return successResponse(res, { user }, "Profile updated successfully");

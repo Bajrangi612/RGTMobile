@@ -60,7 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Scaffold(
         body: Container(
           decoration: BoxDecoration(
-            color: AppColors.background,
+            gradient: AppColors.darkGradient,
           ),
           child: Stack(
             children: [
@@ -73,7 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.royalGold.withOpacity(0.04),
+                    color: AppColors.royalGold.withValues(alpha: 0.04),
                   ),
                 ),
               ),
@@ -121,7 +121,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Text(
                         'Buy • Sell • Invest in Gold Coins',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.pureWhite.withOpacity(0.6),
+                          color: AppColors.pureWhite.withValues(alpha: 0.6),
                           letterSpacing: 1.1,
                         ),
                       ).animate().fadeIn(delay: 400.ms),
@@ -175,7 +175,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(color: AppColors.royalGold.withOpacity(0.15)),
+                                    borderSide: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.15)),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),

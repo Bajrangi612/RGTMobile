@@ -11,6 +11,8 @@ import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/gold_text_field.dart';
 import '../data/models/product_model.dart';
 import '../presentation/widgets/checkout_sheet.dart';
+import '../../auth/providers/auth_provider.dart';
+import '../../profile/screens/profile_screen.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -61,13 +63,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppColors.royalGold.withOpacity(0.15),
+                              AppColors.royalGold.withValues(alpha: 0.15),
                               AppColors.cardDark,
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.royalGold.withOpacity(0.1),
+                              color: AppColors.royalGold.withValues(alpha: 0.1),
                               blurRadius: 40,
                               spreadRadius: 5,
                             ),
@@ -83,13 +85,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 errorBuilder: (context, error, stackTrace) => Icon(
                                   Icons.monetization_on_rounded,
                                   size: 80,
-                                  color: AppColors.royalGold.withOpacity(0.9),
+                                  color: AppColors.royalGold.withValues(alpha: 0.9),
                                 ),
                               )
                             : Icon(
                                 Icons.monetization_on_rounded,
                                 size: 80,
-                                color: AppColors.royalGold.withOpacity(0.9),
+                                color: AppColors.royalGold.withValues(alpha: 0.9),
                               ),
                         ),
                       ),
@@ -159,9 +161,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.royalGold.withOpacity(0.05),
+                              color: AppColors.royalGold.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
+                              border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
                             ),
                             child: Row(
                               children: [
@@ -225,7 +227,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withOpacity(0.15),
+                                  color: AppColors.success.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -269,13 +271,49 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.charcoal.withOpacity(0.95),
+                color: AppColors.charcoal.withValues(alpha: 0.95),
                 border: Border(top: BorderSide(color: AppColors.glassBorder)),
               ),
               child: SafeArea(
                 child: GoldButton(
                   text: 'Proceed to Checkout',
                   onPressed: () {
+                    final user = ref.read(authProvider).user;
+                    if (user == null || !user.isProfileComplete) {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => GoldCard(
+                          margin: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.info_outline, color: AppColors.royalGold, size: 48),
+                              const SizedBox(height: 16),
+                              Text('Complete Profile', style: AppTextStyles.h3),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Please complete your personal and bank details to proceed with gold purchases.',
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.bodyMedium,
+                              ),
+                              const SizedBox(height: 24),
+                              GoldButton(
+                                text: 'GO TO PROFILE',
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => ProfileScreen()),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
@@ -310,9 +348,9 @@ class _SpecChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.royalGold.withOpacity(0.1),
+        color: AppColors.royalGold.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

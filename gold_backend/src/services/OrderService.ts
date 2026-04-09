@@ -31,9 +31,10 @@ class OrderService {
         amount: new Prisma.Decimal(pricing.goldValue),
         gst: new Prisma.Decimal(pricing.gstAmount),
         total: new Prisma.Decimal(pricing.total),
-        weight: new Prisma.Decimal(pricing.weight), // Store product weight
-        status: "PENDING",
-        referralCode: referralCode, // Track code used
+        weight: new Prisma.Decimal(pricing.weight),
+        status: "CREATED",
+        goldPriceAtPurchase: new Prisma.Decimal(livePrice),
+        referralCode: referralCode,
       },
     });
 
@@ -71,7 +72,9 @@ class OrderService {
    */
   async verifyAndFinalizeOrder(
     userId: string,
-    orderId: string
+    orderId: string,
+    razorpayPaymentId: string,
+    razorpaySignature: string
   ) {
     // 1. Fetch Order
     const order = await prisma.order.findUnique({
@@ -82,22 +85,24 @@ class OrderService {
     if (!order || order.userId !== userId) throw new Error("Order not found");
     if (order.status === "PAID") return order; // Already processed
 
-    // 2. Verify Payment via Razorpay
-    // Razorpay uses its own order_id (e.g. order_xxx) which we saved as paymentId
+    // 2. Verify Payment via Razorpay Signature
     if (!order.paymentId) throw new Error("Order has no active payment session");
-    const isPaid = await PaymentService.verifyPayment(order.paymentId);
-
-    if (!isPaid) throw new Error("Payment could not be verified successfully");
+    
+    const isValid = PaymentService.verifySignature(order.paymentId, razorpayPaymentId, razorpaySignature);
+    if (!isValid) throw new Error("Invalid payment signature");
 
 
     // 3. Update Order Status and Process Rewards
+    const invoiceNo = `INV-${Date.now()}-${order.id.substring(0, 4).toUpperCase()}`;
+
     return await prisma.$transaction(async (tx) => {
-      // Generate Invoice Reference
-      const year = new Date().getFullYear();
-      const orderCount = await tx.order.count({
-        where: { createdAt: { gte: new Date(`${year}-01-01`) } }
-      });
-      const invoiceNo = `RGT/${year}/${(orderCount + 1).toString().padStart(4, '0')}`;
+      // Get delivery settings
+      const deliveryDaysSetting = await tx.setting.findUnique({ where: { key: "delivery_days" } });
+      const deliveryDays = deliveryDaysSetting ? parseInt(deliveryDaysSetting.value) : 7;
+      const deliveryDate = new Date();
+      deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+
+      const latestPrice = await ProductService.getLatestGoldPrice();
 
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
@@ -105,13 +110,45 @@ class OrderService {
           status: "PAID",
           paymentStatus: "SUCCESS",
           invoiceNo: invoiceNo,
+          deliveryDate: deliveryDate,
+          goldPriceAtPurchase: latestPrice.sellPrice,
         } as any,
+      });
+
+      // Track Payment in separate table
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          razorpayOrderId: order.paymentId!,
+          razorpayPaymentId: razorpayPaymentId,
+          razorpaySignature: razorpaySignature,
+          amount: order.total,
+          status: "SUCCESS"
+        }
+      });
+
+      // Transition to PENDING (Delivery starts)
+      await tx.order.update({
+        where: { id: orderId },
+        data: { status: "PENDING" }
       });
 
       // Reduce Stock
       await tx.product.update({
         where: { id: order.productId },
         data: { stock: { decrement: order.quantity } },
+      });
+
+      // Create Transaction record for the Purchase
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "PURCHASE",
+          amount: order.total,
+          description: `Gold Purchase - ${order.product.name} (Qty: ${order.quantity})`,
+          status: "COMPLETED",
+          invoiceNo: invoiceNo,
+        }
       });
 
       // Handle Referral Reward (1% commission to referrer)
@@ -190,9 +227,102 @@ class OrderService {
    * Update order status (Admin only)
    */
   async updateOrderStatus(orderId: string, status: string) {
+    const order = await prisma.order.update({
+      where: { id: orderId },
+      data: { status: status.toUpperCase() as any },
+    });
+
+    // If status changed to READY, check for notifications (handled in Phase 4)
+    return order;
+  }
+
+  /**
+   * Cancel order - only if not yet READY
+   */
+  async cancelOrder(userId: string, orderId: string) {
+    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!order || order.userId !== userId) throw new Error("Order not found");
+    if (order.status === "READY" || order.status === "PICKED" || order.status === "RESOLD") {
+      throw new Error("Order cannot be cancelled at this stage");
+    }
+
     return await prisma.order.update({
       where: { id: orderId },
-      data: { status: status as any },
+      data: { status: "CANCELLED" }
+    });
+  }
+
+  /**
+   * Resell logic - Buy back based on current purchase price
+   */
+  async resellOrder(userId: string, orderId: string) {
+    const order = await prisma.order.findUnique({ 
+      where: { id: orderId },
+      include: { product: true } 
+    });
+    if (!order || order.userId !== userId) throw new Error("Order not found");
+    if (order.status !== "READY") throw new Error("Only READY orders can be resold");
+
+    const livePriceObj = await ProductService.getLatestGoldPrice();
+    const purchasePrice = Number(livePriceObj.buyPrice);
+    const weight = Number(order.weight);
+    const quantity = order.quantity;
+    const resellAmount = purchasePrice * weight * quantity;
+
+    return await prisma.$transaction(async (tx) => {
+      // 1. Mark order as RESOLD
+      const updatedOrder = await tx.order.update({
+        where: { id: orderId },
+        data: { status: "RESOLD" }
+      });
+
+      // 2. Add amount to user wallet
+      await tx.wallet.update({
+        where: { userId },
+        data: { balance: { increment: resellAmount } }
+      });
+
+      // 3. Create Transaction record
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "PROFIT",
+          amount: new Prisma.Decimal(resellAmount),
+          description: `Resell credit for order ${orderId}`,
+          status: "COMPLETED"
+        }
+      });
+
+      return updatedOrder;
+    });
+  }
+
+  /**
+   * FIFO Auto-approval: Mark oldest pending orders as READY
+   */
+  async autoApproveOrders(productId: string, readyStockCount: number) {
+    if (readyStockCount <= 0) return;
+
+    // Get oldest PENDING orders for this product
+    const pendingOrders = await prisma.order.findMany({
+      where: { productId, status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      take: readyStockCount
+    });
+
+    return await prisma.$transaction(async (tx) => {
+      for (const order of pendingOrders) {
+        await tx.order.update({
+          where: { id: order.id },
+          data: { status: "READY" }
+        });
+      }
+
+      // Decrement ready stock from the product
+      await tx.product.update({
+        where: { id: productId },
+        data: { readyStock: { decrement: pendingOrders.length } }
+      });
     });
   }
 }

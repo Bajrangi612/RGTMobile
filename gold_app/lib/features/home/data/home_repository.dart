@@ -2,15 +2,19 @@ import '../../../core/network/api_service.dart';
 import '../../product/data/models/product_model.dart';
 
 class HomeRepository {
-  Future<double> getGoldPrice() async {
+  Future<Map<String, double>> getGoldPriceData() async {
     try {
       final response = await ApiService().getGoldPrice();
       if (response.statusCode == 200) {
-        return (response.data['data']['livePrice'] ?? 0.0).toDouble();
+        final data = response.data['data'];
+        return {
+          'sellPrice': double.tryParse(data['sellPrice']?.toString() ?? '0') ?? 0.0,
+          'buyPrice': double.tryParse(data['buyPrice']?.toString() ?? '0') ?? 0.0,
+        };
       }
-      return 0.0;
+      return {'sellPrice': 0.0, 'buyPrice': 0.0};
     } catch (e) {
-      return 0.0;
+      return {'sellPrice': 0.0, 'buyPrice': 0.0};
     }
   }
 

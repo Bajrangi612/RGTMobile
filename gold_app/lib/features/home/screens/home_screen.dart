@@ -20,6 +20,7 @@ import '../../kyc/screens/aadhaar_kyc_screen.dart';
 import '../../notifications/screens/transactions_screen.dart';
 import '../../order/screens/resell_screen.dart';
 import '../../wallet/screens/wallet_screen.dart';
+import '../../admin/screens/admin_gold_price_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -30,10 +31,18 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
+    _screens = [
+      _HomeDashboard(onTabChange: (index) => setState(() => _currentIndex = index)),
+      const OrdersScreen(),
+      const ReferralScreen(),
+      const ProfileScreen(),
+      const CatalogScreen(),
+    ];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeProvider.notifier).loadDashboard();
     });
@@ -41,19 +50,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screens = [
-      _HomeDashboard(onTabChange: (index) => setState(() => _currentIndex = index)),
-       OrdersScreen(),
-       ReferralScreen(),
-       ProfileScreen(),
-       CatalogScreen(),
-    ];
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: IndexedStack(
         index: _currentIndex,
-        children: screens,
+        children: _screens,
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
@@ -122,10 +123,10 @@ class _HomeDashboard extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: AppColors.surface,
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.royalGold.withOpacity(0.1)),
+                          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 10,
                             ),
                           ],
@@ -213,6 +214,7 @@ class _HomeDashboard extends ConsumerWidget {
                         price: homeState.goldPrice,
                         change: homeState.priceChange,
                         isLoading: homeState.isLoading,
+                        isAdmin: authState.user?.isAdmin ?? false,
                         onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
                       ),
                     ),
@@ -251,10 +253,10 @@ class _HomeDashboard extends ConsumerWidget {
                       onTap: () => onTabChange(1),
                     ),
                     _SmallQuickAction(
-                      icon: Icons.card_giftcard_rounded,
-                      label: 'Refer',
+                      icon: Icons.shopping_bag_rounded,
+                      label: 'Shop',
                       color: AppColors.success,
-                      onTap: () => onTabChange(2),
+                      onTap: () => onTabChange(4),
                     ),
                     _SmallQuickAction(
                       icon: Icons.verified_user_rounded,
@@ -430,7 +432,7 @@ class _PortfolioCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.05),
+              color: AppColors.success.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -487,7 +489,7 @@ class _AssetAllocationCard extends ConsumerWidget {
               height: 80,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.royalGold.withOpacity(0.1), width: 12),
+                border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1), width: 12),
               ),
               child: Container(
                  margin: const EdgeInsets.all(4),
@@ -496,7 +498,7 @@ class _AssetAllocationCard extends ConsumerWidget {
                    gradient: SweepGradient(
                      colors: [
                        AppColors.royalGold,
-                       AppColors.royalGold.withOpacity(0.3),
+                       AppColors.royalGold.withValues(alpha: 0.3),
                        AppColors.royalGold,
                      ],
                      stops: const [0.0, 0.7, 1.0],
@@ -515,7 +517,7 @@ class _AssetAllocationCard extends ConsumerWidget {
           _AllocationLabel(
             label: 'Digital Gold', 
             value: total > 0 ? '30%' : '0%', 
-            color: AppColors.royalGold.withOpacity(0.3)
+            color: AppColors.royalGold.withValues(alpha: 0.3)
           ),
         ],
       ),
@@ -549,12 +551,14 @@ class _GoldPriceCard extends StatelessWidget {
   final double price;
   final double change;
   final bool isLoading;
+  final bool isAdmin;
   final VoidCallback onRefresh;
 
   const _GoldPriceCard({
     required this.price,
     required this.change,
     required this.isLoading,
+    this.isAdmin = false,
     required this.onRefresh,
   });
 
@@ -565,7 +569,21 @@ class _GoldPriceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Gold Spot Price', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Gold Spot Price', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
+              if (isAdmin)
+                IconButton(
+                  icon: Icon(Icons.edit_note_rounded, color: AppColors.royalGold, size: 22),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AdminGoldPriceScreen()),
+                  ),
+                ),
+            ],
+          ),
           const SizedBox(height: 8),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -605,7 +623,7 @@ class _SparklinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.royalGold.withOpacity(0.5)
+      ..color = AppColors.royalGold.withValues(alpha: 0.5)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
@@ -647,9 +665,9 @@ class _SmallQuickAction extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.08),
+              color: color.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: color.withOpacity(0.12)),
+              border: Border.all(color: color.withValues(alpha: 0.12)),
             ),
             child: Icon(icon, color: color, size: 24),
           ),
@@ -676,10 +694,10 @@ class _ProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.cardDark,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.royalGold.withOpacity(0.05)),
+          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 18,
               offset: const Offset(0, 6),
             ),
@@ -697,7 +715,7 @@ class _ProductCard extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       AppColors.surface,
-                      AppColors.cardDarkAlt.withOpacity(0.3),
+                      AppColors.cardDarkAlt.withValues(alpha: 0.3),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -718,13 +736,13 @@ class _ProductCard extends StatelessWidget {
                               errorBuilder: (context, error, stackTrace) => Icon(
                                 Icons.monetization_on_rounded,
                                 size: 64,
-                                color: AppColors.royalGold.withOpacity(0.8),
+                                color: AppColors.royalGold.withValues(alpha: 0.8),
                               ),
                             )
                           : Icon(
                               Icons.monetization_on_rounded,
                               size: 64,
-                              color: AppColors.royalGold.withOpacity(0.8),
+                              color: AppColors.royalGold.withValues(alpha: 0.8),
                             ),
                       ),
                     ),
@@ -736,7 +754,7 @@ class _ProductCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.royalGold.withOpacity(0.3)),
+                          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
                         ),
                         child: Text(
                           '${product.weight.toInt()}g',
@@ -822,13 +840,13 @@ class _PromoBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B0000).withOpacity(0.2),
+            color: const Color(0xFF8B0000).withValues(alpha: 0.2),
             blurRadius: 20,
             spreadRadius: -4,
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -839,7 +857,7 @@ class _PromoBanner extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -862,8 +880,8 @@ class _PromoBanner extends StatelessWidget {
             height: 60,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1),
-              border: Border.all(color: AppColors.royalGold.withOpacity(0.5)),
+              color: Colors.white.withValues(alpha: 0.1),
+              border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.5)),
             ),
             child: Icon(
               Icons.discount_rounded,
@@ -944,7 +962,7 @@ class _BannerCarouselState extends State<_BannerCarousel> {
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withValues(alpha: 0.08),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -980,7 +998,7 @@ class _BannerCarouselState extends State<_BannerCarousel> {
               height: 6,
               width: _currentPage == index ? 24 : 6,
               decoration: BoxDecoration(
-                color: _currentPage == index ? AppColors.royalGold : AppColors.grey.withOpacity(0.3),
+                color: _currentPage == index ? AppColors.royalGold : AppColors.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(3),
               ),
             );
@@ -1067,10 +1085,10 @@ class _CategoryItem extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: AppColors.royalGold.withOpacity(0.12)),
+          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.12)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -1083,7 +1101,7 @@ class _CategoryItem extends StatelessWidget {
               height: 70,
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.royalGold.withOpacity(0.05),
+                color: AppColors.royalGold.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Image.asset(
@@ -1122,7 +1140,7 @@ class _CategoryItem extends StatelessWidget {
             ),
             Icon(
               Icons.arrow_forward_ios_rounded,
-              color: AppColors.royalGold.withOpacity(0.5),
+              color: AppColors.royalGold.withValues(alpha: 0.5),
               size: 16,
             ),
           ],

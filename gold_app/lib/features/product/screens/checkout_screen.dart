@@ -5,7 +5,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/services/mock_data_service.dart';
 import '../../../core/network/api_service.dart';
 import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_card.dart';
@@ -89,7 +88,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   Widget build(BuildContext context) {
     if (_orderPlaced) {
       return _OrderSuccessView(
-        orderId: MockDataService.generateOrderId(),
+        orderId: _invoiceDetails!['invoiceNumber'],
         amount: _total,
         invoiceDetails: _invoiceDetails!,
       );
@@ -122,7 +121,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  color: AppColors.royalGold.withOpacity(0.1),
+                                  color: AppColors.royalGold.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(Icons.monetization_on_rounded, color: AppColors.royalGold, size: 32),
@@ -223,7 +222,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.charcoal.withOpacity(0.95),
+                color: AppColors.charcoal.withValues(alpha: 0.95),
                 border: Border(top: BorderSide(color: AppColors.glassBorder)),
               ),
               child: SafeArea(
@@ -302,7 +301,7 @@ class _PaymentOption extends StatelessWidget {
         duration: Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.royalGold.withOpacity(0.08) : AppColors.cardDark,
+          color: isSelected ? AppColors.royalGold.withValues(alpha: 0.08) : AppColors.cardDark,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? AppColors.royalGold : AppColors.glassBorder,
@@ -373,8 +372,8 @@ class _OrderSuccessView extends StatelessWidget {
                     height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.success.withOpacity(0.15),
-                      border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                      color: AppColors.success.withValues(alpha: 0.15),
+                      border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                     ),
                     child: Icon(Icons.check_circle, color: AppColors.success, size: 56),
                   ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),

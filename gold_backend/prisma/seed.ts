@@ -77,6 +77,25 @@ async function main() {
     }
   });
 
+  console.log('Seeding Admin User...');
+  await prisma.user.upsert({
+    where: { phone: '9999999999' },
+    update: {},
+    create: {
+      name: 'Main Admin',
+      phone: '9999999999',
+      email: 'admin@royalgold.app',
+      password: 'admin-password-2026', // They use OTP, but password is required
+      role: 'ADMIN',
+      referralCode: 'ADMIN777',
+      wallet: {
+        create: {
+          balance: 0,
+        }
+      }
+    },
+  });
+
   console.log('Seeding completed!');
 }
 

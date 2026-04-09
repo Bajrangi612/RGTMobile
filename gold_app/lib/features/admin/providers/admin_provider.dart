@@ -17,8 +17,10 @@ class AdminState {
   final int orderIntervalMinutes;
   final double gstRate;
   final String searchQuery;
-  final String weightFilter; // 'all', '0.5', '1', '2', '5', '10'
+  final String orderSearchQuery;
+  final String weightFilter;
   final int lowStockThreshold;
+  final List<dynamic> allTransactions;
   final String? error;
 
   AdminState({
@@ -28,6 +30,7 @@ class AdminState {
     this.products = const [],
     this.users = const [],
     this.categories = const [],
+    this.allTransactions = const [],
     this.totalRevenue = 0.0,
     this.totalWeight = 0.0,
     this.pendingOrdersCount = 0,
@@ -36,6 +39,7 @@ class AdminState {
     this.orderIntervalMinutes = 15,
     this.gstRate = 3.0,
     this.searchQuery = '',
+    this.orderSearchQuery = '',
     this.weightFilter = 'all',
     this.lowStockThreshold = 10,
     this.error,
@@ -48,6 +52,7 @@ class AdminState {
     List<ProductModel>? products,
     List<dynamic>? users,
     List<dynamic>? categories,
+    List<dynamic>? allTransactions,
     double? totalRevenue,
     double? totalWeight,
     int? pendingOrdersCount,
@@ -56,6 +61,7 @@ class AdminState {
     int? orderIntervalMinutes,
     double? gstRate,
     String? searchQuery,
+    String? orderSearchQuery,
     String? weightFilter,
     int? lowStockThreshold,
     String? error,
@@ -67,6 +73,7 @@ class AdminState {
       products: products ?? this.products,
       users: users ?? this.users,
       categories: categories ?? this.categories,
+      allTransactions: allTransactions ?? this.allTransactions,
       totalRevenue: totalRevenue ?? this.totalRevenue,
       totalWeight: totalWeight ?? this.totalWeight,
       pendingOrdersCount: pendingOrdersCount ?? this.pendingOrdersCount,
@@ -75,6 +82,7 @@ class AdminState {
       orderIntervalMinutes: orderIntervalMinutes ?? this.orderIntervalMinutes,
       gstRate: gstRate ?? this.gstRate,
       searchQuery: searchQuery ?? this.searchQuery,
+      orderSearchQuery: orderSearchQuery ?? this.orderSearchQuery,
       weightFilter: weightFilter ?? this.weightFilter,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       error: error,
@@ -88,14 +96,26 @@ class AdminNotifier extends StateNotifier<AdminState> {
   Future<bool> login(String pin) async {
     state = state.copyWith(isLoading: true, error: null);
 
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final response = await ApiService().post('/auth/admin-login', data: {'pin': pin});
+      
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        final token = data['token'];
+        
+        if (token != null) {
+          await StorageService.write(AppConstants.tokenKey, token);
+        }
 
-    if (pin == '1234') {
-      state = state.copyWith(isAuthenticated: true);
-      await loadInitialData();
-      return true;
-    } else {
-      state = state.copyWith(isLoading: false, error: 'Invalid Admin PIN');
+        state = state.copyWith(isAuthenticated: true, isLoading: false);
+        await loadInitialData();
+        return true;
+      } else {
+        state = state.copyWith(isLoading: false, error: 'Invalid Admin PIN');
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: 'Authorization Failed: ${e.toString()}');
       return false;
     }
   }
@@ -113,6 +133,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
         ApiService().getAdminUsers(),
         ApiService().getAdminStats(),
         ApiService().getCategories(),
+        ApiService().getAdminTransactions(),
       ]);
 
       final productsResponse = results[0];
@@ -120,14 +141,15 @@ class AdminNotifier extends StateNotifier<AdminState> {
       final usersResponse = results[2];
       final statsResponse = results[3];
       final categoriesResponse = results[4];
+      final transactionsResponse = results[5];
 
       /// =======================
       /// ✅ STATS
       /// =======================
       final stats = statsResponse.data['data'];
-      final totalRevenue = (stats['totalSales'] as num?)?.toDouble() ?? 0.0;
-      final totalWeight = (stats['totalWeight'] as num?)?.toDouble() ?? 0.0;
-      final pendingOrdersCount = (stats['pendingOrders'] as num?)?.toInt() ?? 0;
+      final totalRevenue = _toDouble(stats['totalSales']);
+      final totalWeight = _toDouble(stats['totalWeight']);
+      final pendingOrdersCount = int.tryParse(stats['pendingOrders']?.toString() ?? '0') ?? 0;
 
       /// =======================
       /// ✅ PRODUCTS
@@ -182,6 +204,13 @@ class AdminNotifier extends StateNotifier<AdminState> {
         if (usersData is List) users = usersData;
       } catch (e) { print('⚠️ Users parsing failed: $e'); }
 
+      List<dynamic> transactions = [];
+      try {
+        final dynamic rawTxns = transactionsResponse.data['data'];
+        final txnsData = rawTxns is Map ? rawTxns['transactions'] : null;
+        if (txnsData is List) transactions = txnsData;
+      } catch (e) { print('⚠️ Transactions parsing failed: $e'); }
+
       /// =======================
       /// ✅ FINAL STATE UPDATE
       /// =======================
@@ -190,6 +219,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
         allOrders: orders,
         users: users,
         categories: categories,
+        allTransactions: transactions,
         totalRevenue: totalRevenue,
         totalWeight: totalWeight,
         pendingOrdersCount: pendingOrdersCount,
@@ -282,12 +312,23 @@ class AdminNotifier extends StateNotifier<AdminState> {
   }
 
   Future<void> updateOrderStatus(String orderId, String status) async {
-    state = state.copyWith(isLoading: true, error: null);
+    // Optimistic Update
+    final originalOrders = state.allOrders;
+    final updatedOrders = originalOrders.map((o) {
+      if (o['id'] == orderId) {
+        return {...o, 'status': status};
+      }
+      return o;
+    }).toList();
+    
+    state = state.copyWith(allOrders: updatedOrders);
+
     try {
       await ApiService().updateOrderStatus(orderId, status);
-      await loadInitialData();
+      await loadInitialData(); // Confirm with server
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      // Rollback on error
+      state = state.copyWith(allOrders: originalOrders, error: e.toString());
     }
   }
 
@@ -304,6 +345,10 @@ class AdminNotifier extends StateNotifier<AdminState> {
 
   void updateSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
+  }
+
+  void updateOrderSearchQuery(String query) {
+    state = state.copyWith(orderSearchQuery: query);
   }
 
   void updateWeightFilter(String filter) {
@@ -334,19 +379,49 @@ class AdminNotifier extends StateNotifier<AdminState> {
     double? gstRate,
     int? lowStockThreshold,
   }) async {
-    state = state.copyWith(
-      commissionRate: commissionRate ?? state.commissionRate,
-      deliveryTimeDays: deliveryTimeDays ?? state.deliveryTimeDays,
-      orderIntervalMinutes: orderIntervalMinutes ?? state.orderIntervalMinutes,
-      gstRate: gstRate ?? state.gstRate,
-      lowStockThreshold: lowStockThreshold ?? state.lowStockThreshold,
-    );
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      if (deliveryTimeDays != null) {
+        await ApiService().updateAdminSettings({'delivery_days': deliveryTimeDays});
+      }
+      
+      state = state.copyWith(
+        commissionRate: commissionRate ?? state.commissionRate,
+        deliveryTimeDays: deliveryTimeDays ?? state.deliveryTimeDays,
+        orderIntervalMinutes: orderIntervalMinutes ?? state.orderIntervalMinutes,
+        gstRate: gstRate ?? state.gstRate,
+        lowStockThreshold: lowStockThreshold ?? state.lowStockThreshold,
+        isLoading: false,
+      );
+      
+      await loadInitialData();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<bool> updateGoldPrice(double buyPrice, double sellPrice) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await ApiService().updateGoldPrice(buyPrice, sellPrice);
+      await loadInitialData();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
   }
 
   void logout() {
     state = AdminState();
   }
+
+  double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '0') ?? 0.0;
+  }
 }
+
 
 final adminProvider = StateNotifierProvider<AdminNotifier, AdminState>((ref) {
   return AdminNotifier();

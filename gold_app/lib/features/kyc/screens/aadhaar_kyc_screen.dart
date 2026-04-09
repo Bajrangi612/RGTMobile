@@ -74,9 +74,9 @@ class _AadhaarKycScreenState extends ConsumerState<AadhaarKycScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: AppColors.royalGold.withOpacity(0.1),
+                      color: AppColors.royalGold.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.royalGold.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
                     ),
                     child: Icon(
                       Icons.fingerprint,
@@ -149,7 +149,7 @@ class _AadhaarKycScreenState extends ConsumerState<AadhaarKycScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: AppColors.royalGold.withOpacity(0.7), size: 20),
+                      Icon(Icons.info_outline, color: AppColors.royalGold.withValues(alpha: 0.7), size: 20),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(

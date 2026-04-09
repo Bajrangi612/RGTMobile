@@ -56,9 +56,9 @@ class _KycOtpScreenState extends ConsumerState<KycOtpScreen> {
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    color: AppColors.royalGold.withOpacity(0.1),
+                    color: AppColors.royalGold.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.royalGold.withOpacity(0.3)),
+                    border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
                   ),
                   child: Icon(
                     Icons.sms_outlined,

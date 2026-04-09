@@ -134,10 +134,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   // Update profile in backend
-  Future<bool> updateProfile({required String name, String? email}) async {
+  Future<bool> updateProfile({
+    required String name,
+    String? email,
+    String? address,
+    String? dob,
+    String? aadharNo,
+    String? panNo,
+    String? bankAccountNo,
+    String? bankHolderName,
+    String? bankIfsc,
+    String? bankName,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final updatedUser = await _repository.updateProfile(name: name, email: email);
+      final updatedUser = await _repository.updateProfile(
+        name: name,
+        email: email,
+        address: address,
+        dob: dob,
+        aadharNo: aadharNo,
+        panNo: panNo,
+        bankAccountNo: bankAccountNo,
+        bankHolderName: bankHolderName,
+        bankIfsc: bankIfsc,
+        bankName: bankName,
+      );
       if (updatedUser != null) {
         state = state.copyWith(
           user: updatedUser,

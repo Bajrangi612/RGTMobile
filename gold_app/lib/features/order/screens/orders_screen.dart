@@ -13,7 +13,7 @@ import '../data/models/order_model.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends ConsumerStatefulWidget {
-  OrdersScreen({super.key}) ;
+  const OrdersScreen({super.key}) ;
 
   @override
   ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
@@ -56,51 +56,92 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             SizedBox(height: 20),
 
             Expanded(
-              child: orderState.isLoading
-                  ? ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      itemCount: 3,
-                      itemBuilder: (_, __) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ShimmerLoader.orderCard(),
-                      ),
-                    ) : orderState.orders.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.receipt_long_rounded,
-                                size: 64,
-                                color: AppColors.darkGrey,
-                              ),
-                              SizedBox(height: 16),
-                              Text('No orders yet', style: AppTextStyles.h4.copyWith(color: AppColors.grey)),
-                              SizedBox(height: 8),
-                              Text(
-                                'Start investing in gold coins',
-                                style: AppTextStyles.bodySmall,
-                              ),
-                            ],
-                          ),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 24),
-                          itemCount: orderState.orders.length,
-                          itemBuilder: (context, index) {
-                            final order = orderState.orders[index];
-                            return _OrderCard(
-                              order: order,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => OrderDetailScreen(order: order),
-                                ),
-                              ),
-                            ).animate(delay: (200 + index * 100).ms)
-                                .fadeIn(duration: 400.ms)
-                                .slideX(begin: 0.05);
-                          },
+              child: RefreshIndicator(
+                onRefresh: () => ref.read(orderProvider.notifier).loadOrders(),
+                color: AppColors.royalGold,
+                backgroundColor: AppColors.surface,
+                child: orderState.isLoading && orderState.orders.isEmpty
+                    ? ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: 3,
+                        itemBuilder: (_, __) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ShimmerLoader.orderCard(),
                         ),
+                      ) : orderState.error != null
+                        ? Center(
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 32),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Failed to load orders',
+                                    style: AppTextStyles.h4.copyWith(color: Colors.white),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    orderState.error!,
+                                    style: AppTextStyles.bodySmall,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ElevatedButton(
+                                    onPressed: () => ref.read(orderProvider.notifier).loadOrders(),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.royalGold,
+                                      foregroundColor: Colors.black,
+                                    ),
+                                    child: const Text('RETRY'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ) : orderState.orders.isEmpty
+                        ? Center(
+                            child: SingleChildScrollView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.receipt_long_rounded,
+                                    size: 64,
+                                    color: AppColors.darkGrey,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text('No orders yet', style: AppTextStyles.h4.copyWith(color: AppColors.grey)),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Start investing in gold coins',
+                                    style: AppTextStyles.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            itemCount: orderState.orders.length,
+                            itemBuilder: (context, index) {
+                              final order = orderState.orders[index];
+                              return _OrderCard(
+                                order: order,
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => OrderDetailScreen(order: order),
+                                  ),
+                                ),
+                              ).animate(delay: (200 + index * 100).ms)
+                                  .fadeIn(duration: 400.ms)
+                                  .slideX(begin: 0.05);
+                            },
+                          ),
+              ),
             ),
           ],
         ),
@@ -129,7 +170,7 @@ class _OrderCard extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: AppColors.royalGold.withOpacity(0.1),
+                color: AppColors.royalGold.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Column(

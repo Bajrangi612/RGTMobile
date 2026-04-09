@@ -86,7 +86,7 @@ class BottomNavBar extends StatelessWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF26C6DA).withOpacity(0.4),
+                    color: const Color(0xFF26C6DA).withValues(alpha: 0.4),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -132,7 +132,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Icon(
           icon,
-          color: isActive ? AppColors.royalGold : AppColors.grey.withOpacity(0.5),
+          color: isActive ? AppColors.royalGold : AppColors.grey.withValues(alpha: 0.5),
           size: 28,
         )
         .animate(target: isActive ? 1 : 0)
@@ -145,7 +145,7 @@ class _NavItem extends StatelessWidget {
         .shimmer(
           delay: 400.ms,
           duration: 1200.ms,
-          color: AppColors.royalGold.withOpacity(0.2),
+          color: AppColors.royalGold.withValues(alpha: 0.2),
         ),
       ),
     );

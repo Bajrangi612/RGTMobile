@@ -19,5 +19,8 @@ router.get("/stats", AdminController.getDashboardStats);
  * @desc Update the global gold buy/sell rates
  */
 router.post("/gold-price", AdminController.updateGoldPrice);
+router.put("/stock", AdminController.updateStock);
+router.get("/transactions", AdminController.getAllTransactions);
+router.post("/settings", AdminController.updateSettings);
 
 export default router;

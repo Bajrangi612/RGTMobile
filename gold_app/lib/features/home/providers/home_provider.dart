@@ -5,7 +5,8 @@ import '../../product/data/models/product_model.dart';
 final homeRepositoryProvider = Provider<HomeRepository>((ref) => HomeRepository());
 
 class HomeState {
-  final double goldPrice;
+  final double goldPrice; // sellPrice
+  final double buyPrice;
   final double priceChange;
   final List<ProductModel> products;
   final bool isLoading;
@@ -13,6 +14,7 @@ class HomeState {
 
   HomeState({
     this.goldPrice = 0,
+    this.buyPrice = 0,
     this.priceChange = 0,
     this.products = const [],
     this.isLoading = false,
@@ -21,6 +23,7 @@ class HomeState {
 
   HomeState copyWith({
     double? goldPrice,
+    double? buyPrice,
     double? priceChange,
     List<ProductModel>? products,
     bool? isLoading,
@@ -28,6 +31,7 @@ class HomeState {
   }) {
     return HomeState(
       goldPrice: goldPrice ?? this.goldPrice,
+      buyPrice: buyPrice ?? this.buyPrice,
       priceChange: priceChange ?? this.priceChange,
       products: products ?? this.products,
       isLoading: isLoading ?? this.isLoading,
@@ -44,15 +48,16 @@ class HomeNotifier extends StateNotifier<HomeState> {
   Future<void> loadDashboard() async {
     state = state.copyWith(isLoading: true);
     try {
-      // Parallelize data fetching for 2x speedup
       final results = await Future.wait([
-        _repository.getGoldPrice(),
+        _repository.getGoldPriceData(),
         _repository.getGoldPriceChange(),
         _repository.getProducts(),
       ]);
 
+      final priceData = results[0] as Map<String, double>;
       state = state.copyWith(
-        goldPrice: results[0] as double,
+        goldPrice: priceData['sellPrice'],
+        buyPrice: priceData['buyPrice'],
         priceChange: results[1] as double,
         products: results[2] as List<ProductModel>,
         isLoading: false,
@@ -64,9 +69,13 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   Future<void> refreshPrice() async {
     try {
-      final price = await _repository.getGoldPrice();
+      final priceData = await _repository.getGoldPriceData();
       final change = await _repository.getGoldPriceChange();
-      state = state.copyWith(goldPrice: price, priceChange: change);
+      state = state.copyWith(
+        goldPrice: priceData['sellPrice'],
+        buyPrice: priceData['buyPrice'],
+        priceChange: change,
+      );
     } catch (_) {}
   }
 }

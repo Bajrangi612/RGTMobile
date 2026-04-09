@@ -51,7 +51,7 @@ class _PasskeySetupScreenState extends ConsumerState<PasskeySetupScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.cardDarkAlt,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.royalGold.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
                 ),
                 child: Icon(
                   Icons.fingerprint,
@@ -143,7 +143,7 @@ class _FeatureRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.royalGold.withOpacity(0.1),
+            color: AppColors.royalGold.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: AppColors.royalGold, size: 20),

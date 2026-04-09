@@ -37,7 +37,7 @@ class AdminProductManager extends ConsumerWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: AppColors.royalGold.withOpacity(0.3),
+              color: AppColors.royalGold.withValues(alpha: 0.3),
               blurRadius: 15,
               spreadRadius: 2,
             ),
@@ -77,7 +77,7 @@ class AdminProductManager extends ConsumerWidget {
                   cursorColor: AppColors.royalGold,
                   decoration: InputDecoration(
                     hintText: 'Search products by name...',
-                    hintStyle: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.3)),
+                    hintStyle: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3)),
                     border: InputBorder.none,
                     icon: Icon(Icons.search, color: AppColors.royalGold, size: 22),
                   ),
@@ -116,7 +116,18 @@ class AdminProductManager extends ConsumerWidget {
                 color: AppColors.royalGold,
                 backgroundColor: AppColors.background,
                 child: () {
-                  final filteredProducts = ref.watch(adminProvider.notifier).filteredProducts;
+                  final adminState = ref.watch(adminProvider);
+                  final filteredProducts = adminState.products.where((p) {
+                    final matchesSearch = p.name.toLowerCase().contains(adminState.searchQuery.toLowerCase()) ||
+                        (p.description?.toLowerCase().contains(adminState.searchQuery.toLowerCase()) ?? false);
+                    
+                    bool matchesWeight = true;
+                    if (adminState.weightFilter != 'all') {
+                      final filterVal = double.tryParse(adminState.weightFilter) ?? 0.0;
+                      matchesWeight = p.weight == filterVal;
+                    }
+                    return matchesSearch && matchesWeight;
+                  }).toList();
                   
                   if (filteredProducts.isEmpty && !adminState.isLoading) {
                     return _EmptyState();
@@ -137,7 +148,7 @@ class AdminProductManager extends ConsumerWidget {
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.royalGold.withOpacity(0.1), width: 0.5),
+                              border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1), width: 0.5),
                             ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -148,7 +159,7 @@ class AdminProductManager extends ConsumerWidget {
                                   height: 65,
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: AppColors.pureWhite.withOpacity(0.05),
+                                    color: AppColors.pureWhite.withValues(alpha: 0.05),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: _ProductImage(imageUrl: product.image),
@@ -174,7 +185,7 @@ class AdminProductManager extends ConsumerWidget {
                                     Text(
                                       'AVAILABLE STOCK: ${product.stock} UNITS',
                                       style: AppTextStyles.caption.copyWith(
-                                        color: isLowStock ? (isCritical ? AppColors.error : AppColors.warning) : AppColors.pureWhite.withOpacity(0.3),
+                                        color: isLowStock ? (isCritical ? AppColors.error : AppColors.warning) : AppColors.pureWhite.withValues(alpha: 0.3),
                                         fontSize: 9,
                                         fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal,
                                       ),
@@ -227,9 +238,9 @@ class _StockBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -278,7 +289,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 64, color: AppColors.royalGold.withOpacity(0.2)),
+          Icon(Icons.inventory_2_outlined, size: 64, color: AppColors.royalGold.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           Text('No products found', style: AppTextStyles.labelLarge.copyWith(color: Colors.white54)),
           const SizedBox(height: 8),
@@ -465,7 +476,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
       decoration: BoxDecoration(
         color: AppColors.deepBlack,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border.all(color: AppColors.royalGold.withOpacity(0.2), width: 1.5),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2), width: 1.5),
       ),
       padding: EdgeInsets.only(
         left: 24,
@@ -517,7 +528,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.white12),
                   ),
@@ -572,7 +583,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.white12),
                         ),
@@ -685,7 +696,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
                           icon: const Icon(Icons.upload_file, size: 18),
                           label: Text(_pickedImage == null ? 'Upload' : 'Change'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.royalGold.withOpacity(0.1),
+                            backgroundColor: AppColors.royalGold.withValues(alpha: 0.1),
                             foregroundColor: AppColors.royalGold,
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -729,7 +740,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
       hintText: hint,
       hintStyle: AppTextStyles.caption.copyWith(color: Colors.white24),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.05),
+      fillColor: Colors.white.withValues(alpha: 0.05),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -775,15 +786,15 @@ class _FilterChip extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.royalGold : Colors.black.withOpacity(0.05),
+            color: isSelected ? AppColors.royalGold : Colors.black.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(25),
             border: Border.all(
-              color: isSelected ? AppColors.royalGold : Colors.black.withOpacity(0.1),
+              color: isSelected ? AppColors.royalGold : Colors.black.withValues(alpha: 0.1),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: (isSelected ? AppColors.royalGold : Colors.black).withOpacity(0.1),
+                color: (isSelected ? AppColors.royalGold : Colors.black).withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 1,
               )

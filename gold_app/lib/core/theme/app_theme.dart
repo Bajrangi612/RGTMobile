@@ -55,7 +55,7 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.pureWhite.withOpacity(0.06)),
+          side: BorderSide(color: AppColors.pureWhite.withValues(alpha: 0.06)),
         ),
       ),
 
@@ -74,10 +74,10 @@ class AppTheme {
         fillColor: AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         labelStyle: TextStyle(color: AppColors.grey),
-        hintStyle: TextStyle(color: AppColors.grey.withOpacity(0.5)),
+        hintStyle: TextStyle(color: AppColors.grey.withValues(alpha: 0.5)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: AppColors.pureWhite.withOpacity(0.12)),
+          borderSide: BorderSide(color: AppColors.pureWhite.withValues(alpha: 0.12)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),

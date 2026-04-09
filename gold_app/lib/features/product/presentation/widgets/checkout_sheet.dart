@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:razorpay_web/razorpay_web.dart';
 import '../providers/product_providers.dart';
+import '../../../../core/utils/formatters.dart';
+import '../../../../widgets/gold_button.dart';
+import '../../../../widgets/gold_card.dart';
+import '../../../profile/screens/profile_screen.dart';
 import '../../data/models/product_model.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../order/providers/order_provider.dart';
 
 class CheckoutSheet extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -20,6 +26,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
   late Razorpay _razorpay;
   int _quantity = 1;
   String? _pendingOrderId; // Database Order ID
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -37,17 +44,45 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
   }
 
   void _handlePaymentSuccess(PaymentSuccessResponse response) async {
-    // We pass our backend orderId, not razorpay's order id, as our backend maps it!
-    if (_pendingOrderId != null) {
-      await ref.read(purchaseProvider.notifier).verifyPayment(
-        orderId: _pendingOrderId!,
-      );
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
 
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment Successful! Your gold is secured.')),
+    final messenger = ScaffoldMessenger.of(context);
+    // Secure verification: send paymentId and signature to backend
+    if (_pendingOrderId != null) {
+      try {
+        await ref.read(purchaseProvider.notifier).verifyPayment(
+          orderId: _pendingOrderId!,
+          paymentId: response.paymentId ?? '',
+          signature: response.signature ?? '',
         );
+
+        // Refresh orders list to show the new order
+        await ref.read(orderProvider.notifier).loadOrders();
+
+        if (mounted) {
+          Navigator.pop(context); // Close sheet
+          
+          // Show success snackbar
+          messenger.showSnackBar(
+            const SnackBar(
+              content: Text('Payment Successful! Your gold is secured.'),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: AppColors.success,
+            ),
+          );
+        }
+      } catch (e) {
+        setState(() => _isProcessing = false);
+        if (mounted) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text('Verification failed: $e'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     }
   }
@@ -55,7 +90,11 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
   void _handlePaymentError(PaymentFailureResponse response) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Payment Failed: ${response.message}')),
+        SnackBar(
+          content: Text('Payment Failed: ${response.message}'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.error,
+        ),
       );
     }
   }
@@ -65,6 +104,43 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
   }
 
   void _startPayment() async {
+    final user = ref.read(authProvider).user;
+    if (user == null || !user.isProfileComplete) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (context) => GoldCard(
+          margin: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.info_outline, color: AppColors.royalGold, size: 48),
+              const SizedBox(height: 16),
+              const Text('Complete Profile', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              const Text(
+                'Please complete your personal and bank details to proceed with gold purchases.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              GoldButton(
+                text: 'GO TO PROFILE',
+                onPressed: () {
+                  Navigator.pop(context); // Close sheet
+                  Navigator.pop(context); // Close checkout modal
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+
     final purchaseData = await ref.read(purchaseProvider.notifier).initiatePurchase(
       widget.product.id,
       _quantity,
@@ -77,12 +153,19 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
       });
 
       try {
+        final userData = ref.read(authProvider).user;
+        debugPrint('Opening Razorpay for order: ${purchaseData['razorpayOrderId']}');
+        
         var options = {
           'key': AppConstants.razorpayKeyId,
           'amount': (purchaseData['amount'] * 100).round(), // amount in paise
           'name': 'Royal Gold',
           'description': '${_quantity}x ${widget.product.name}',
           'order_id': purchaseData['razorpayOrderId'], // Provide Razorpay Order ID from backend
+          'prefill': {
+            'contact': userData?.phone ?? '',
+            'email': userData?.email ?? '',
+          },
           'theme': {
             'color': '#D4AF37' // Match our Champagne Gold primary theme
           }
@@ -90,7 +173,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
 
         _razorpay.open(options);
       } catch (e) {
-        debugPrint('Error opening Razorpay: $e');
+        debugPrint('CRITICAL: Error opening Razorpay: $e');
       }
     }
   }
@@ -105,12 +188,15 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
     // Listen for errors and show snackbar
     ref.listen(purchaseProvider, (previous, next) {
       if (next.error != null && next.error != previous?.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${next.error}'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${next.error}'),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     });
 
@@ -150,7 +236,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(
@@ -166,7 +252,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
                       const SizedBox(height: 4),
                       Text(
                         '${widget.product.purity} Gold Coin', 
-                        style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 13),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 13),
                       ),
                     ],
                   ),
@@ -227,7 +313,7 @@ class _QuantitySelector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.24),
+        color: Colors.black.withValues(alpha: 0.24),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.white10),
       ),
@@ -277,7 +363,7 @@ class _PriceDetail extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: isTotal ? Colors.white : Colors.white.withOpacity(0.5), fontSize: isTotal ? 16 : 14, fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal)),
+          Text(label, style: TextStyle(color: isTotal ? Colors.white : Colors.white.withValues(alpha: 0.5), fontSize: isTotal ? 16 : 14, fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal)),
           Text(value, style: TextStyle(color: isTotal ? AppColors.royalGold : Colors.white, fontSize: isTotal ? 22 : 14, fontWeight: isTotal ? FontWeight.w900 : FontWeight.w600)),
         ],
       ),

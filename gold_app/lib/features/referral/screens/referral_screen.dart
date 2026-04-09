@@ -10,14 +10,24 @@ import '../../../core/utils/extensions.dart';
 import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_card.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../wallet/providers/wallet_provider.dart';
+import '../../../widgets/shimmer_loader.dart';
+import '../../../core/utils/formatters.dart';
 
 class ReferralScreen extends ConsumerWidget {
-  ReferralScreen({super.key}) ;
+  const ReferralScreen({super.key}) ;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
-    final referralCode = user?.referralCode ?? 'RGXK7M2N';
+    final walletState = ref.watch(walletProvider);
+    final referralCode = user?.referralCode ?? '----';
+    
+    // Filter for referral transactions
+    final referralTransactions = walletState.transactions
+        .where((t) => t.type.toLowerCase() == 'referral')
+        .take(5)
+        .toList();
 
     return Container(
       decoration: BoxDecoration(gradient: AppColors.darkGradient),
@@ -49,7 +59,7 @@ class ReferralScreen extends ConsumerWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.royalGold.withOpacity(0.3),
+                      color: AppColors.royalGold.withValues(alpha: 0.3),
                       blurRadius: 30,
                       spreadRadius: 3,
                     ),
@@ -71,10 +81,10 @@ class ReferralScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                       decoration: BoxDecoration(
-                        color: AppColors.royalGold.withOpacity(0.08),
+                        color: AppColors.royalGold.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: AppColors.royalGold.withOpacity(0.3),
+                          color: AppColors.royalGold.withValues(alpha: 0.3),
                           width: 1.5,
                         ),
                       ),
@@ -97,7 +107,7 @@ class ReferralScreen extends ConsumerWidget {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.royalGold.withOpacity(0.15),
+                                color: AppColors.royalGold.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(Icons.copy, color: AppColors.royalGold, size: 18),
@@ -131,7 +141,12 @@ class ReferralScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          Text('12', style: AppTextStyles.h2.copyWith(color: AppColors.royalGold)),
+                          Text(
+                            (user?.wallet?.referralRewards ?? 0.0) > 0 
+                              ? (user!.wallet!.referralRewards / 500).toInt().toString() 
+                              : '0', 
+                            style: AppTextStyles.h2.copyWith(color: AppColors.royalGold),
+                          ),
                           SizedBox(height: 4),
                           Text('Referrals', style: AppTextStyles.caption),
                         ],
@@ -144,7 +159,10 @@ class ReferralScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
-                          Text('₹6,000', style: AppTextStyles.h2.copyWith(color: AppColors.success)),
+                          Text(
+                            Formatters.currency(user?.wallet?.referralRewards ?? 0.0), 
+                            style: AppTextStyles.h2.copyWith(color: AppColors.success),
+                          ),
                           SizedBox(height: 4),
                           Text('Earned', style: AppTextStyles.caption),
                         ],
@@ -153,6 +171,19 @@ class ReferralScreen extends ConsumerWidget {
                   ),
                 ],
               ).animate(delay: 400.ms).fadeIn(duration: 400.ms),
+
+              if (referralTransactions.isNotEmpty) ...[
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Icon(Icons.history_rounded, color: AppColors.royalGold, size: 18),
+                    const SizedBox(width: 8),
+                    Text('Recent Rewards', style: AppTextStyles.labelLarge),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ...referralTransactions.map((txn) => _RewardTile(txn: txn)),
+              ],
 
               SizedBox(height: 24),
 
@@ -208,6 +239,53 @@ class _HowItWorksStep extends StatelessWidget {
           ),
           SizedBox(width: 12),
           Expanded(child: Text(text, style: AppTextStyles.bodyMedium)),
+        ],
+      ),
+    );
+  }
+}
+class _RewardTile extends StatelessWidget {
+  final dynamic txn;
+  const _RewardTile({required this.txn});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardDark.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.add_rounded, color: AppColors.success, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(txn.description, style: AppTextStyles.bodyMedium),
+                const SizedBox(height: 2),
+                Text(
+                  Formatters.relativeTime(txn.date.toIso8601String()), 
+                  style: AppTextStyles.caption.copyWith(color: AppColors.grey),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '+${Formatters.currency(txn.amount)}',
+            style: AppTextStyles.labelLarge.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

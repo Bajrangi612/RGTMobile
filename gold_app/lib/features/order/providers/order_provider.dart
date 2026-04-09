@@ -35,6 +35,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
   OrderNotifier(this._repository) : super(OrderState());
 
   Future<void> loadOrders() async {
+    if (state.isLoading) return;
     state = state.copyWith(isLoading: true, error: null);
     try {
       final orders = await _repository.getMyOrders();
@@ -45,23 +46,33 @@ class OrderNotifier extends StateNotifier<OrderState> {
   }
 
   Future<bool> cancelOrder(String orderId) async {
-    // Backend cancel not implemented yet in this task, but we can update local state
+    // Optimistic Update
+    final List<OrderModel> originalOrders = state.orders;
+    final List<OrderModel> updatedOrders = originalOrders.map<OrderModel>((o) {
+      if (o.id == orderId) {
+        return o.copyWith(status: 'CANCELLED');
+      }
+      return o;
+    }).toList();
+    
+    state = state.copyWith(orders: updatedOrders);
+
+    try {
+      await _repository.cancelOrder(orderId);
+      await loadOrders(); // Confirm with server
+      return true;
+    } catch (e) {
+      // Rollback on error
+      state = state.copyWith(orders: originalOrders, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> resellOrder(String orderId) async {
     state = state.copyWith(isLoading: true);
     try {
-      // Placeholder for backend call: await _repository.cancelOrder(orderId);
-      await Future.delayed(const Duration(seconds: 1));
-      
-      final updatedOrders = state.orders.map((o) {
-        if (o.id == orderId) {
-          return OrderModel.fromJson({
-            ...o.toJson(),
-            'status': 'CANCELLED',
-          });
-        }
-        return o;
-      }).toList();
-      
-      state = state.copyWith(orders: updatedOrders, isLoading: false);
+      await _repository.resellOrder(orderId);
+      await loadOrders(); // Refresh state
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

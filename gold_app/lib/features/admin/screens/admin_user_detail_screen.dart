@@ -38,7 +38,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundColor: AppColors.royalGold.withOpacity(0.1),
+                      backgroundColor: AppColors.royalGold.withValues(alpha: 0.1),
                       child: Icon(Icons.person, color: AppColors.royalGold, size: 30),
                     ),
                     const SizedBox(width: 20),
@@ -209,9 +209,9 @@ class _KycStatusBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         status?.toUpperCase() ?? 'PENDING',
@@ -251,17 +251,17 @@ class _DocumentCard extends StatelessWidget {
             height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: AppColors.pureWhite.withOpacity(0.05),
+              color: AppColors.pureWhite.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.pureWhite.withOpacity(0.1)),
+              border: Border.all(color: AppColors.pureWhite.withValues(alpha: 0.1)),
             ),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.image_outlined, size: 48, color: placeholderColor.withOpacity(0.3)),
+                  Icon(Icons.image_outlined, size: 48, color: placeholderColor.withValues(alpha: 0.3)),
                   const SizedBox(height: 8),
-                  Text('Official Document Photo', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.3))),
+                  Text('Official Document Photo', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3))),
                 ],
               ),
             ),

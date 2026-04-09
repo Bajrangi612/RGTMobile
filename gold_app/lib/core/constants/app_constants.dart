@@ -42,5 +42,5 @@ class AppConstants {
   static const String lastOrderTimeKey = 'last_order_time';
 
   // Payment Keys
-  static const String razorpayKeyId = 'rzp_test_SUR1HJFojazFPc';
+  static const String razorpayKeyId = 'rzp_test_SZr01grrKOhr9D';
 }

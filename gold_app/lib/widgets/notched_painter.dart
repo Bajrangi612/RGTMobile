@@ -57,7 +57,7 @@ class NotchedPainter extends CustomPainter {
     path.close();
 
     // Draw shadow
-    canvas.drawShadow(path, Colors.black.withOpacity(0.12), 12, true);
+    canvas.drawShadow(path, Colors.black.withValues(alpha: 0.12), 12, true);
     
     // Draw background
     canvas.drawPath(path, paint);

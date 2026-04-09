@@ -2,6 +2,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../services/storage_service.dart';
 import '../constants/app_constants.dart';
+import '../config/env_config.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -9,13 +11,10 @@ class ApiService {
 
   late final Dio _dio;
 
-  // Update this to your local backend IP if testing on a physical device
-  static const String baseUrl = 'http://o1qp4x36ni2pggogwxgzntcz.91.108.111.194.sslip.io/api';
-
   ApiService._internal() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: baseUrl,
+        baseUrl: EnvConfig.baseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {
@@ -30,23 +29,23 @@ class ApiService {
       InterceptorsWrapper(
         onRequest: (options, handler) async {
           final token = await StorageService.read(AppConstants.tokenKey);
-          print(
-            '🌐 [ApiService] Request: ${options.method} ${options.baseUrl}${options.path}',
-          );
+          if (kDebugMode) {
+            debugPrint('🌐 [ApiService] Request: ${options.method} ${options.baseUrl}${options.path}');
+          }
           if (token != null) {
-            print('🔑 [ApiService] Token found: ${token.substring(0, 10)}...');
+            if (kDebugMode) {
+              debugPrint('🔑 [ApiService] Token attached');
+            }
             options.headers['Authorization'] = 'Bearer $token';
-          } else {
-            print('⚠️ [ApiService] No token found for ${options.path}');
           }
           return handler.next(options);
         },
         onError: (DioException e, handler) {
-          print(
-            '❌ [ApiService] Error: ${e.response?.statusCode} - ${e.message}',
-          );
-          if (e.response?.data != null) {
-            print('📄 [ApiService] Error data: ${e.response?.data}');
+          if (kDebugMode) {
+            debugPrint('❌ [ApiService] Error: ${e.response?.statusCode} - ${e.message}');
+            if (e.response?.data != null) {
+              debugPrint('📄 [ApiService] Error data: ${e.response?.data}');
+            }
           }
           return handler.next(e);
         },
@@ -126,7 +125,10 @@ class ApiService {
   }
 
   Future<Response> updateUserBank(String userId, String status) async {
-    return await _dio.patch('/users/$userId/bank-status', data: {'status': status});
+    return await _dio.patch(
+      '/users/$userId/bank-status',
+      data: {'status': status},
+    );
   }
 
   Future<Response> updateProfile(Map<String, dynamic> data) async {
@@ -134,7 +136,15 @@ class ApiService {
   }
 
   Future<Response> getAdminStats() async {
-    return await _dio.get('/users/stats');
+    return await _dio.get('/admin/stats');
+  }
+
+  Future<Response> getAdminTransactions() async {
+    return await _dio.get('/admin/transactions');
+  }
+
+  Future<Response> updateAdminSettings(Map<String, dynamic> data) async {
+    return await _dio.post('/admin/settings', data: data);
   }
 
   Future<Response> getAdminConfigs() async {
@@ -152,7 +162,9 @@ class ApiService {
   }
 
   Future<Response> getKycStatus() async {
-    return await _dio.get('/users/kyc/status'); // Verify if this and /auth/me is enough
+    return await _dio.get(
+      '/users/kyc/status',
+    ); // Verify if this and /auth/me is enough
   }
 
   Future<Response> createCategory(Map<String, dynamic> data) async {
@@ -163,11 +175,15 @@ class ApiService {
     return await _dio.delete('/categories/$id');
   }
 
-  Future<Response> createOrder(String productId, int quantity, {String? referralCode}) async {
+  Future<Response> createOrder(
+    String productId,
+    int quantity, {
+    String? referralCode,
+  }) async {
     return await _dio.post(
       '/orders/start',
       data: {
-        'productId': productId, 
+        'productId': productId,
         'quantity': quantity,
         'referralCode': referralCode,
       },
@@ -176,13 +192,25 @@ class ApiService {
 
   Future<Response> verifyPayment({
     required String orderId,
+    required String razorpayPaymentId,
+    required String razorpaySignature,
   }) async {
     return await _dio.post(
       '/orders/verify',
       data: {
         'orderId': orderId,
+        'razorpayPaymentId': razorpayPaymentId,
+        'razorpaySignature': razorpaySignature,
       },
     );
+  }
+
+  Future<Response> cancelOrder(String orderId) async {
+    return await _dio.put('/orders/$orderId/cancel');
+  }
+
+  Future<Response> resellOrder(String orderId) async {
+    return await _dio.put('/orders/$orderId/resell');
   }
 
   Future<Response> uploadImage(Uint8List bytes, String fileName) async {
@@ -190,5 +218,25 @@ class ApiService {
       'image': MultipartFile.fromBytes(bytes, filename: fileName),
     });
     return await _dio.post('/images/upload', data: formData);
+  }
+
+  Future<Response> updateGoldPrice(double buyPrice, double sellPrice) async {
+    return await _dio.post(
+      '/products/price',
+      data: {'buyPrice': buyPrice, 'sellPrice': sellPrice},
+    );
+  }
+
+  // ─── Wallet & Transactions ──────────────────────────────────────────────
+
+  Future<Response> getWalletDetails() async {
+    return await _dio.get('/wallet/details');
+  }
+
+  Future<Response> requestWithdrawal(double amount, String type) async {
+    return await _dio.post(
+      '/wallet/withdraw',
+      data: {'amount': amount, 'type': type},
+    );
   }
 }

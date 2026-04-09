@@ -49,12 +49,38 @@ class ProductRepository {
    */
   Future<OrderModel> confirmPayment({
     required String orderId,
+    required String paymentId,
+    required String signature,
   }) async {
     try {
       final response = await _apiService.verifyPayment(
         orderId: orderId,
+        razorpayPaymentId: paymentId,
+        razorpaySignature: signature,
       );
       return OrderModel.fromJson(response.data['data']['order']);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /**
+   * Cancel an order
+   */
+  Future<void> cancelOrder(String orderId) async {
+    try {
+      await _apiService.cancelOrder(orderId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /**
+   * Resell a ready order
+   */
+  Future<void> resellOrder(String orderId) async {
+    try {
+      await _apiService.resellOrder(orderId);
     } catch (e) {
       rethrow;
     }

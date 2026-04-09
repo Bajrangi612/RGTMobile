@@ -8,6 +8,8 @@ const router = Router();
 router.post("/start", authenticate, OrderController.startPurchase);
 router.post("/verify", authenticate, OrderController.verifyPayment);
 router.get("/my", authenticate, OrderController.myOrders);
+router.put("/:id/cancel", authenticate, OrderController.cancel);
+router.put("/:id/resell", authenticate, OrderController.resell);
 
 // Admin only routes
 router.get("/", authenticate, authorize([UserRole.ADMIN]), OrderController.listAllOrders);

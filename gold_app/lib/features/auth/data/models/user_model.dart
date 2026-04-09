@@ -12,7 +12,16 @@ class UserModel {
   final String createdAt;
   final bool isAdmin;
   final bool registerRequired;
+  final String? address;
+  final String? aadharNo;
+  final String? panNo;
+  final String? dob;
   final WalletModel? wallet;
+
+  final String? bankAccountNo;
+  final String? bankHolderName;
+  final String? bankIfsc;
+  final String? bankName;
 
   UserModel({
     required this.id,
@@ -28,7 +37,15 @@ class UserModel {
     required this.createdAt,
     this.isAdmin = false,
     this.registerRequired = false,
+    this.address,
+    this.aadharNo,
+    this.panNo,
+    this.dob,
     this.wallet,
+    this.bankAccountNo,
+    this.bankHolderName,
+    this.bankIfsc,
+    this.bankName,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -44,9 +61,17 @@ class UserModel {
       totalInvestment: (json['totalInvestment'] ?? 0).toDouble(),
       passKeySet: json['passKeySet'] ?? false,
       createdAt: json['createdAt'] ?? '',
-      isAdmin: json['isAdmin'] ?? false,
+      isAdmin: json['isAdmin'] ?? (json['role'] == 'ADMIN'),
       registerRequired: json['registerRequired'] ?? false,
+      address: json['address'],
+      aadharNo: json['aadharNo'],
+      panNo: json['panNo'],
+      dob: json['dob']?.toString(),
       wallet: json['wallet'] != null ? WalletModel.fromJson(json['wallet']) : null,
+      bankAccountNo: json['bankAccountNo'],
+      bankHolderName: json['bankHolderName'],
+      bankIfsc: json['bankIfsc'],
+      bankName: json['bankName'],
     );
   }
 
@@ -64,7 +89,15 @@ class UserModel {
         'createdAt': createdAt,
         'isAdmin': isAdmin,
         'registerRequired': registerRequired,
+        'address': address,
+        'aadharNo': aadharNo,
+        'panNo': panNo,
+        'dob': dob,
         'wallet': wallet?.toJson(),
+        'bankAccountNo': bankAccountNo,
+        'bankHolderName': bankHolderName,
+        'bankIfsc': bankIfsc,
+        'bankName': bankName,
       };
 
   UserModel copyWith({
@@ -81,7 +114,15 @@ class UserModel {
     String? createdAt,
     bool? isAdmin,
     bool? registerRequired,
+    String? address,
+    String? aadharNo,
+    String? panNo,
+    String? dob,
     WalletModel? wallet,
+    String? bankAccountNo,
+    String? bankHolderName,
+    String? bankIfsc,
+    String? bankName,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -97,13 +138,27 @@ class UserModel {
       createdAt: createdAt ?? this.createdAt,
       isAdmin: isAdmin ?? this.isAdmin,
       registerRequired: registerRequired ?? this.registerRequired,
+      address: address ?? this.address,
+      aadharNo: aadharNo ?? this.aadharNo,
+      panNo: panNo ?? this.panNo,
+      dob: dob ?? this.dob,
       wallet: wallet ?? this.wallet,
+      bankAccountNo: bankAccountNo ?? this.bankAccountNo,
+      bankHolderName: bankHolderName ?? this.bankHolderName,
+      bankIfsc: bankIfsc ?? this.bankIfsc,
+      bankName: bankName ?? this.bankName,
     );
   }
 
   bool get isKycVerified => kycStatus == 'verified';
   bool get isBankVerified => bankStatus == 'verified';
   bool get isFullyVerified => isKycVerified && isBankVerified;
+
+  bool get isProfileComplete =>
+      address != null && address!.isNotEmpty &&
+      panNo != null && panNo!.isNotEmpty &&
+      dob != null && dob!.isNotEmpty &&
+      bankAccountNo != null && bankAccountNo!.isNotEmpty;
 }
 
 class WalletModel {

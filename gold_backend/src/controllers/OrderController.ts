@@ -34,16 +34,18 @@ export class OrderController {
    */
   static async verifyPayment(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { orderId } = req.body;
+      const { orderId, razorpayPaymentId, razorpaySignature } = req.body;
       const userId = req.user!.id;
 
-      if (!orderId) {
-        return errorResponse(res, "Order ID is required to verify payment", 400);
+      if (!orderId || !razorpayPaymentId || !razorpaySignature) {
+        return errorResponse(res, "Order ID, Payment ID, and Signature are required", 400);
       }
 
       const order = await OrderService.verifyAndFinalizeOrder(
         userId,
-        orderId
+        orderId,
+        razorpayPaymentId,
+        razorpaySignature
       );
 
       return successResponse(res, { order }, "Payment verified and order completed");
@@ -87,6 +89,34 @@ export class OrderController {
       const { status } = req.body;
       const order = await OrderService.updateOrderStatus(id, status);
       return successResponse(res, { order }, "Order status updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Cancel an order
+   */
+  static async cancel(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const orderId = req.params.id;
+      const userId = req.user!.id;
+      const order = await OrderService.cancelOrder(userId, orderId);
+      return successResponse(res, { order }, "Order cancelled successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Resell an order
+   */
+  static async resell(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const orderId = req.params.id;
+      const userId = req.user!.id;
+      const order = await OrderService.resellOrder(userId, orderId);
+      return successResponse(res, { order }, "Order resold successfully");
     } catch (error) {
       next(error);
     }

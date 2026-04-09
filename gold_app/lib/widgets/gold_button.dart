@@ -9,6 +9,7 @@ class GoldButton extends StatefulWidget {
   final bool isOutlined;
   final double? width;
   final IconData? icon;
+  final Color? color;
 
   GoldButton({
     super.key,
@@ -18,6 +19,7 @@ class GoldButton extends StatefulWidget {
     this.isOutlined = false,
     this.width,
     this.icon,
+    this.color,
   }) ;
 
   @override
@@ -72,19 +74,19 @@ class _GoldButtonState extends State<GoldButton>
                   borderRadius: BorderRadius.circular(26),
                   border: Border.all(
                     color: _isDisabled
-                        ? AppColors.grey.withOpacity(0.3)
-                        : AppColors.royalGold.withOpacity(0.6),
+                        ? AppColors.grey.withValues(alpha: 0.3)
+                        : (widget.color != null ? widget.color!.withValues(alpha: 0.6) : AppColors.royalGold.withValues(alpha: 0.6)),
                     width: 1.2,
                   ),
                 ) : BoxDecoration(
-                  gradient: _isDisabled ? null : AppColors.goldGradient,
-                  color: _isDisabled ? AppColors.grey.withOpacity(0.2) : null,
+                  gradient: _isDisabled ? null : (widget.color != null ? null : AppColors.goldGradient),
+                  color: _isDisabled ? AppColors.grey.withValues(alpha: 0.2) : (widget.color ?? null),
                   borderRadius: BorderRadius.circular(26),
                   boxShadow: _isDisabled
                       ? null
                       : [
                           BoxShadow(
-                            color: AppColors.royalGold.withOpacity(0.15),
+                            color: (widget.color ?? AppColors.royalGold).withValues(alpha: 0.15),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),

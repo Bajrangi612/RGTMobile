@@ -59,8 +59,8 @@ class AppColors {
   );
 
   // Glass Effect Colors — Elevated obsidian transparency
-  static Color get glassWhite => Colors.white.withOpacity(0.03);
-  static Color get glassBorder => Colors.white.withOpacity(0.08);
-  static Color get glassGold => const Color(0xFFD4AF37).withOpacity(0.05);
-  static Color get obsidianOverlay => const Color(0xFF05070A).withOpacity(0.8);
+  static Color get glassWhite => Colors.white.withValues(alpha: 0.03);
+  static Color get glassBorder => Colors.white.withValues(alpha: 0.08);
+  static Color get glassGold => const Color(0xFFD4AF37).withValues(alpha: 0.05);
+  static Color get obsidianOverlay => const Color(0xFF05070A).withValues(alpha: 0.8);
 }

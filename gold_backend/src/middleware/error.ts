@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodError } from 'zod';
 import { errorResponse } from '../utils/response';
 
 export const errorHandler = (
@@ -8,28 +7,12 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  console.error(`[ERROR] ${err.message}`, err);
+  console.error(`[ERROR] ${err.stack || err.message}`);
 
-  if (err instanceof ZodError) {
-    return errorResponse(
-      res,
-      'Validation Error',
-      400,
-      err.issues.map((e: any) => ({
-        path: e.path.join('.'),
-        message: e.message,
-      }))
-    );
-  }
-
-  // Handle Prisma Unique Constraint Errors
-  if (err.code === 'P2002') {
-    const field = err.meta?.target || 'unknown';
-    return errorResponse(res, `Unique constraint failed on field: ${field}`, 409);
-  }
-
-  const statusCode = err.status || err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
+  const statusCode = err.statusCode || 500;
+  const message = process.env.NODE_ENV === 'production' 
+    ? 'An unexpected error occurred. Please try again later.' 
+    : err.message || 'Internal Server Error';
 
   return errorResponse(res, message, statusCode);
 };

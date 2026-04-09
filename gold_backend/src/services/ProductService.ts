@@ -149,6 +149,19 @@ class ProductService {
       weight: weight,
     };
   }
+  /**
+   * Update the live gold price
+   */
+  async updateGoldPrice(buyPrice: number, sellPrice: number) {
+    return await prisma.goldPrice.create({
+      data: {
+        buyPrice: new Prisma.Decimal(buyPrice),
+        sellPrice: new Prisma.Decimal(sellPrice),
+        timestamp: new Date(),
+      },
+    });
+  }
 }
+
 
 export default new ProductService();

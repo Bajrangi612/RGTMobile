@@ -73,9 +73,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
           pageBuilder: (_, __, ___) {
-            if (user?.isAdmin == true) {
+            final latestUser = ref.read(authProvider).user;
+            if (latestUser?.isAdmin == true) {
               return const AdminDashboardScreen();
-            } else if (user?.registerRequired == true || (user?.name.isEmpty ?? true)) {
+            } else if (latestUser?.registerRequired == true || (latestUser?.name.isEmpty ?? true)) {
               return const CompleteProfileScreen();
             } else {
               return const HomeScreen();
@@ -112,12 +113,8 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       backgroundColor: AppColors.background,
       body: Container(
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFFFDF5), Color(0xFFFFFFFF)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
+        decoration: BoxDecoration(
+          gradient: AppColors.darkGradient,
         ),
         child: SafeArea(
           child: SingleChildScrollView(
@@ -125,7 +122,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
 
                 // Back button
                 GestureDetector(
@@ -135,7 +132,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.black.withOpacity(0.05)),
+                      border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
                     ),
                     child: Icon(
                       Icons.arrow_back_ios_new,
@@ -145,10 +142,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                   ),
                 ).animate().fadeIn(duration: 300.ms),
 
-                SizedBox(height: 40),
+                const SizedBox(height: 40),
 
                 // Title
-                Text('Verify OTP', style: AppTextStyles.h2.copyWith(color: AppColors.pureWhite))
+                Text('Verify OTP', style: AppTextStyles.h2.copyWith(color: AppColors.royalGold))
                     .animate().fadeIn(delay: 200.ms, duration: 500.ms).slideX(begin: -0.1),
                 SizedBox(height: 8),
                 RichText(
@@ -201,7 +198,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                           inactiveFillColor: Colors.white,
                           selectedFillColor: Colors.white,
                           activeColor: AppColors.royalGold,
-                          inactiveColor: Colors.black.withOpacity(0.05),
+                          inactiveColor: Colors.black.withValues(alpha: 0.05),
                           selectedColor: AppColors.royalGold,
                           borderWidth: 1.5,
                         ),

@@ -9,7 +9,9 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
+import { prisma } from "../lib/prisma";
+
+export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -23,6 +25,21 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
       id: string;
       role: string;
     };
+
+    // Verify user still exists in DB (to prevent stale tokens after DB wipe)
+    console.log(`🔍 [Auth] Checking existence for UID: ${decoded.id}`);
+    const userExists = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, role: true }
+    });
+
+    if (!userExists) {
+      console.log(`❌ [Auth] Stale token detected. User ${decoded.id} not found.`);
+      return errorResponse(res, "Account no longer exists. Please log in again.", 401);
+    }
+
+    console.log(`✅ [Auth] User verified: ${decoded.id}`);
+
     req.user = decoded;
     next();
   } catch (error) {

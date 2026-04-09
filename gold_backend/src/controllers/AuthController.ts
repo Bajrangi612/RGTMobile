@@ -4,6 +4,10 @@ import { UserService } from '../services/UserService';
 import { prisma } from '../lib/prisma';
 import { successResponse, errorResponse } from '../utils/response';
 
+const otpRateLimit = new Map<string, { count: number, lastRequest: number }>();
+const MAX_OTP_REQUESTS = 3;
+const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
+
 export class AuthController {
   static async me(req: any, res: Response, next: NextFunction) {
     try {
@@ -26,6 +30,14 @@ export class AuthController {
             kycStatus: user.kycStatus,
             bankStatus: user.bankStatus,
             referralCode: user.referralCode,
+            address: user.address,
+            dob: user.dob,
+            panNo: user.panNo,
+            aadharNo: user.aadharNo,
+            bankAccountNo: user.bankAccountNo,
+            bankIfsc: user.bankIfsc,
+            bankHolderName: user.bankHolderName,
+            bankName: user.bankName,
             wallet: user.wallet ? {
               balance: Number(user.wallet.balance),
               goldAdvance: Number(user.wallet.goldAdvance),
@@ -33,6 +45,7 @@ export class AuthController {
             } : null,
             goldAdvanceAmount: user.wallet ? Number(user.wallet.goldAdvance) : 0,
             registerRequired: !user.name || user.name.startsWith('User '),
+            isAdmin: user.role === 'ADMIN',
           }
         },
         'User fetched successfully'
@@ -47,8 +60,69 @@ export class AuthController {
       const phone = req.body.phone || req.body.mobile;
       if (!phone) return errorResponse(res, 'Phone/Mobile number is required', 400);
 
+      // Simple Rate Limiting
+      const now = Date.now();
+      const userLimit = otpRateLimit.get(phone);
+      if (userLimit) {
+        if (now - userLimit.lastRequest < RATE_LIMIT_WINDOW) {
+          if (userLimit.count >= MAX_OTP_REQUESTS) {
+            return errorResponse(res, `Too many OTP requests. Please wait ${Math.ceil((RATE_LIMIT_WINDOW - (now - userLimit.lastRequest)) / 1000 / 60)} minutes.`, 429);
+          }
+          userLimit.count++;
+          userLimit.lastRequest = now;
+        } else {
+          otpRateLimit.set(phone, { count: 1, lastRequest: now });
+        }
+      } else {
+        otpRateLimit.set(phone, { count: 1, lastRequest: now });
+      }
+
       const mockCode = await AuthService.sendOtp(phone);
-      return successResponse(res, { mockCode }, 'OTP sent successfully');
+      
+      return successResponse(
+        res, 
+        { 
+          // Only return mockCode in non-production environments
+          mockCode: process.env.NODE_ENV === 'production' ? undefined : mockCode 
+        }, 
+        'OTP sent successfully'
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async adminLogin(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { pin } = req.body;
+      if (!pin) return errorResponse(res, 'PIN is required', 400);
+
+      // In production, you'd fetch the admin user and check a hashed PIN.
+      // For now, since the user explicitly uses '1234' in frontend,
+      // we'll validate it against the seeded admin.
+      const admin = await prisma.user.findFirst({
+        where: { 
+          role: 'ADMIN',
+          phone: '9999999999' // Main Admin
+        }
+      });
+
+      if (!admin || pin !== '1234') {
+        return errorResponse(res, 'Invalid Admin PIN', 401);
+      }
+
+      const token = AuthService.generateToken(admin.id, admin.role);
+
+      return successResponse(res, {
+        token,
+        user: {
+          id: admin.id,
+          name: admin.name,
+          phone: admin.phone,
+          role: admin.role,
+          isAdmin: true,
+        }
+      }, 'Admin login successful');
     } catch (error) {
       next(error);
     }
@@ -89,9 +163,20 @@ export class AuthController {
             contactNo: user.phone, // Legacy compatibility
             email: user.email,
             role: user.role,
+            kycStatus: user.kycStatus,
+            bankStatus: user.bankStatus,
+            address: user.address,
+            dob: user.dob,
+            panNo: user.panNo,
+            aadharNo: user.aadharNo,
+            bankAccountNo: user.bankAccountNo,
+            bankIfsc: user.bankIfsc,
+            bankHolderName: user.bankHolderName,
+            bankName: user.bankName,
             goldAdvanceAmount: 0, // Legacy compatibility
-            referralCode: "", // Legacy compatibility
+            referralCode: user.referralCode || "", 
             registerRequired: isNewUser,
+            isAdmin: user.role === 'ADMIN',
           },
         },
         isNewUser ? 'Account created and logged in' : 'Login successful'

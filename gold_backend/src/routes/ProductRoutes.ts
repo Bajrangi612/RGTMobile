@@ -7,6 +7,12 @@ const router = Router();
 
 router.get("/", ProductController.listProducts);
 router.get("/price", ProductController.getGoldPrice);
+router.post(
+  "/price",
+  authenticate,
+  authorize([UserRole.ADMIN]),
+  ProductController.updateGoldPrice
+);
 router.get("/:id", ProductController.getProduct);
 
 // Admin only routes

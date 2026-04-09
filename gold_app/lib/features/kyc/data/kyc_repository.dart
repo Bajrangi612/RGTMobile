@@ -1,11 +1,11 @@
 import '../../../core/network/api_service.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/services/mock_data_service.dart';
 import 'models/kyc_model.dart';
 
 class KycRepository {
   final ApiService _apiService = ApiService();
 
+  // Submit Aadhaar KYC
   Future<KycModel> submitAadhaarKyc(String aadhaarNumber) async {
     final response = await _apiService.post('/users/kyc', data: {
       'aadhaarNo': aadhaarNumber,
@@ -14,20 +14,14 @@ class KycRepository {
     return KycModel.fromJson(response.data['data']['user']);
   }
 
-  // Verify Aadhaar OTP
+  // Verification is handled by admin manually in early production
   Future<KycModel> verifyAadhaarOtp(String aadhaarNumber, String otp) async {
-    await MockDataService.simulateDelay(AppConstants.apiDelayLong);
-    if (otp == '123456') { // Mock success OTP
-      return KycModel(
-        aadhaarNumber: aadhaarNumber,
-        status: 'verified',
-        name: 'Rahul Sharma',
-        submittedAt: DateTime.now().subtract(const Duration(minutes: 5)),
-        verifiedAt: DateTime.now(),
-      );
-    } else {
-      throw Exception('Invalid OTP');
-    }
+    // For now, mirroring submit but we can add a specific verification endpoint if needed
+    final response = await _apiService.post('/users/kyc', data: {
+      'aadhaarNo': aadhaarNumber,
+    });
+    
+    return KycModel.fromJson(response.data['data']['user']);
   }
 
   // Get KYC Status

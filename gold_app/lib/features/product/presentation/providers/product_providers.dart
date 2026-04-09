@@ -62,11 +62,15 @@ class PurchaseNotifier extends StateNotifier<PurchaseState> {
 
   Future<void> verifyPayment({
     required String orderId,
+    required String paymentId,
+    required String signature,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final order = await _repository.confirmPayment(
         orderId: orderId,
+        paymentId: paymentId,
+        signature: signature,
       );
       state = state.copyWith(isLoading: false, completedOrder: order);
     } catch (e) {

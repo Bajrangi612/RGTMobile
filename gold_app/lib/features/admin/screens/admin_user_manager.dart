@@ -54,7 +54,7 @@ class AdminUserManager extends ConsumerWidget {
             ),
             Expanded(
               child: users.isEmpty
-                  ? Center(child: Text('No matching records', style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite.withOpacity(0.3))))
+                  ? Center(child: Text('No matching records', style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3))))
                   : ListView.builder(
                       padding: const EdgeInsets.all(20),
                       itemCount: users.length,
@@ -69,7 +69,7 @@ class AdminUserManager extends ConsumerWidget {
                               ),
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               leading: CircleAvatar(
-                                backgroundColor: AppColors.royalGold.withOpacity(0.1),
+                                backgroundColor: AppColors.royalGold.withValues(alpha: 0.1),
                                 child: Icon(Icons.person, color: AppColors.royalGold, size: 20),
                               ),
                               title: Row(
@@ -83,7 +83,7 @@ class AdminUserManager extends ConsumerWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 4),
-                                  Text(user['email'] ?? 'N/A', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.4))),
+                                  Text(user['email'] ?? 'N/A', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.4))),
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
@@ -96,7 +96,7 @@ class AdminUserManager extends ConsumerWidget {
                                   ),
                                 ],
                               ),
-                              trailing: Icon(Icons.chevron_right, color: AppColors.pureWhite.withOpacity(0.3)),
+                              trailing: Icon(Icons.chevron_right, color: AppColors.pureWhite.withValues(alpha: 0.3)),
                             ),
                           ),
                         ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.1);
@@ -126,16 +126,16 @@ class _FilterChip extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.royalGold.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? AppColors.royalGold.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withOpacity(0.1),
+            color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withValues(alpha: 0.1),
           ),
         ),
         child: Text(
           label,
           style: AppTextStyles.caption.copyWith(
-            color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withOpacity(0.5),
+            color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withValues(alpha: 0.5),
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -154,7 +154,7 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: (isActive ? AppColors.success : AppColors.error).withOpacity(0.1),
+        color: (isActive ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -193,9 +193,9 @@ class _KYCBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: color.withOpacity(0.3), width: 0.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
       ),
       child: Text(
         status.toUpperCase(),

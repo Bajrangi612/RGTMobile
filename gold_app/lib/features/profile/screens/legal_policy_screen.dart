@@ -33,7 +33,7 @@ class LegalPolicyScreen extends StatelessWidget {
               SizedBox(height: 24),
               Text(
                 content,
-                style: AppTextStyles.bodyMedium.copyWith(height: 1.6, color: AppColors.pureWhite.withOpacity(0.9)),
+                style: AppTextStyles.bodyMedium.copyWith(height: 1.6, color: AppColors.pureWhite.withValues(alpha: 0.9)),
               ).animate(delay: 100.ms).fadeIn(),
               SizedBox(height: 48),
             ],

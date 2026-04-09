@@ -191,7 +191,7 @@ class _TimelineItem extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isCompleted
-                    ? AppColors.success.withOpacity(0.2) : AppColors.darkGrey.withOpacity(0.3),
+                    ? AppColors.success.withValues(alpha: 0.2) : AppColors.darkGrey.withValues(alpha: 0.3),
                 border: Border.all(
                   color: isCompleted ? AppColors.success : AppColors.darkGrey,
                   width: 2,
@@ -205,7 +205,7 @@ class _TimelineItem extends StatelessWidget {
               Container(
                 width: 2,
                 height: 30,
-                color: isCompleted ? AppColors.success.withOpacity(0.5) : AppColors.darkGrey,
+                color: isCompleted ? AppColors.success.withValues(alpha: 0.5) : AppColors.darkGrey,
               ),
           ],
         ),

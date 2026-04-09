@@ -33,13 +33,13 @@ class GoldCard extends StatelessWidget {
           boxShadow: [
             if (hasGlow)
               BoxShadow(
-                color: AppColors.royalGold.withOpacity(0.1),
+                color: AppColors.royalGold.withValues(alpha: 0.1),
                 blurRadius: 40,
                 spreadRadius: -10,
                 offset: const Offset(0, 20),
               ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -52,12 +52,12 @@ class GoldCard extends StatelessWidget {
             child: Container(
               padding: padding ?? const EdgeInsets.all(2),
               decoration: BoxDecoration(
-                color: AppColors.surface.withOpacity(0.8),
+                color: AppColors.surface.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(borderRadius),
                 border: Border.all(
                   color: hasGoldBorder
-                      ? AppColors.royalGold.withOpacity(0.3)
-                      : AppColors.pureWhite.withOpacity(0.1),
+                      ? AppColors.royalGold.withValues(alpha: 0.3)
+                      : AppColors.pureWhite.withValues(alpha: 0.1),
                   width: hasGoldBorder ? 1.5 : 1,
                 ),
               ),
@@ -66,7 +66,7 @@ class GoldCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(borderRadius - 2),
                   border: Border.all(
                     color: hasGoldBorder 
-                        ? AppColors.royalGold.withOpacity(0.1) 
+                        ? AppColors.royalGold.withValues(alpha: 0.1) 
                         : Colors.transparent,
                     width: 1,
                   ),

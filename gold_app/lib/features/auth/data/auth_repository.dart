@@ -43,10 +43,10 @@ class AuthRepository {
           ...Map<String, dynamic>.from(userData),
           'phone': userData['contactNo'] ?? phone,
           'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
-          'kycStatus': 'verified', // Placeholder, update as per backend schema
-          'bankStatus': 'verified',
+          'kycStatus': (userData['kycStatus'] ?? 'PENDING').toString().toLowerCase(),
+          'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',
-          'registerRequired': data['registerRequired'] ?? false,
+          'registerRequired': userData['registerRequired'] ?? false,
         };
 
         return UserModel.fromJson(mappedUser);
@@ -73,10 +73,10 @@ class AuthRepository {
           ...Map<String, dynamic>.from(userData),
           'phone': userData['contactNo'] ?? userData['phone'] ?? '',
           'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
-          'kycStatus': 'verified',
-          'bankStatus': 'verified',
+          'kycStatus': (userData['kycStatus'] ?? 'PENDING').toString().toLowerCase(),
+          'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',
-          'registerRequired': false,
+          'registerRequired': userData['registerRequired'] ?? false,
         };
         return UserModel.fromJson(mappedUser);
       }
@@ -97,11 +97,30 @@ class AuthRepository {
   }
 
   // Update Profile
-  Future<UserModel?> updateProfile({required String name, String? email}) async {
+  Future<UserModel?> updateProfile({
+    required String name,
+    String? email,
+    String? address,
+    String? dob,
+    String? aadharNo,
+    String? panNo,
+    String? bankAccountNo,
+    String? bankHolderName,
+    String? bankIfsc,
+    String? bankName,
+  }) async {
     try {
       final response = await ApiService().updateProfile({
         'name': name,
         if (email != null) 'email': email,
+        if (address != null) 'address': address,
+        if (dob != null) 'dob': dob,
+        if (aadharNo != null) 'aadharNo': aadharNo,
+        if (panNo != null) 'panNo': panNo,
+        if (bankAccountNo != null) 'bankAccountNo': bankAccountNo,
+        if (bankHolderName != null) 'bankHolderName': bankHolderName,
+        if (bankIfsc != null) 'bankIfsc': bankIfsc,
+        if (bankName != null) 'bankName': bankName,
       });
 
       if (response.statusCode == 200) {
@@ -110,8 +129,8 @@ class AuthRepository {
           ...Map<String, dynamic>.from(userData),
           'phone': userData['contactNo'] ?? userData['phone'] ?? '',
           'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
-          'kycStatus': 'verified',
-          'bankStatus': 'verified',
+          'kycStatus': (userData['kycStatus'] ?? 'PENDING').toString().toLowerCase(),
+          'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',
           'registerRequired': false,
         };

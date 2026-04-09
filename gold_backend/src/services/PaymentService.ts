@@ -33,6 +33,20 @@ class PaymentService {
       return false;
     }
   }
+
+  /**
+   * Verify signature from Razorpay response
+   */
+  verifySignature(orderId: string, paymentId: string, signature: string): boolean {
+    const crypto = require("crypto");
+    const secret = process.env.RAZORPAY_KEY_SECRET || "";
+    const generatedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(orderId + "|" + paymentId)
+      .digest("hex");
+
+    return generatedSignature === signature;
+  }
 }
 
 export default new PaymentService();

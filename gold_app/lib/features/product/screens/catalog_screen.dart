@@ -71,7 +71,7 @@ class CatalogScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Text(
                   'Failed to load products',
-                  style: TextStyle(color: Colors.white.withOpacity(0.7)),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                 ),
                 TextButton(
                   onPressed: () => ref.refresh(productsProvider),
@@ -105,12 +105,12 @@ class _CatalogProductCard extends ConsumerWidget {
         color: AppColors.cardDark,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.royalGold.withOpacity(0.1),
+          color: AppColors.royalGold.withValues(alpha: 0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -180,9 +180,9 @@ class _CatalogProductCard extends ConsumerWidget {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
+                            color: Colors.black.withValues(alpha: 0.7),
                             shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.royalGold.withOpacity(0.5)),
+                            border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.5)),
                           ),
                           child: Icon(
                             Icons.edit,
@@ -198,9 +198,9 @@ class _CatalogProductCard extends ConsumerWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.royalGold.withOpacity(0.5)),
+                        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.5)),
                       ),
                       child: Text(
                         '${product.weight}g',
@@ -238,7 +238,7 @@ class _CatalogProductCard extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     'Purity: ${product.purity}',
-                    style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10),
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10),
                   ),
                   const Spacer(), // Pushes pricing downwards
                   Text(
@@ -317,16 +317,16 @@ class _CategoryBar extends ConsumerWidget {
                 margin: const EdgeInsets.only(right: 12),
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.royalGold : AppColors.cardDark.withOpacity(0.5),
+                  color: isSelected ? AppColors.royalGold : AppColors.cardDark.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: isSelected ? AppColors.royalGold : AppColors.royalGold.withOpacity(0.2),
+                    color: isSelected ? AppColors.royalGold : AppColors.royalGold.withValues(alpha: 0.2),
                     width: 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: AppColors.royalGold.withOpacity(0.3),
+                            color: AppColors.royalGold.withValues(alpha: 0.3),
                             blurRadius: 10,
                             spreadRadius: 1,
                           )
@@ -371,9 +371,9 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
+        color: Colors.black.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.5)),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -401,7 +401,7 @@ class _PlaceholderIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return Icon(
       Icons.workspace_premium,
-      color: const Color(0xFFFFD700).withOpacity(0.2),
+      color: const Color(0xFFFFD700).withValues(alpha: 0.2),
       size: 48,
     );
   }

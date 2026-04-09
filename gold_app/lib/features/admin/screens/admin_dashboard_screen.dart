@@ -14,6 +14,8 @@ import 'admin_user_manager.dart';
 import 'admin_order_manager.dart';
 import 'admin_config_screen.dart';
 import 'admin_reports_screen.dart';
+import 'admin_gold_price_screen.dart';
+import 'admin_transactions_screen.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../home/screens/home_screen.dart';
@@ -94,7 +96,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                         const SizedBox(width: 8),
                                         Text(
                                           'SYSTEM OPERATIONAL · STABLE',
-                                          style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.4), letterSpacing: 1),
+                                          style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.4), letterSpacing: 1),
                                         ),
                                       ],
                                     ),
@@ -194,7 +196,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                             const SizedBox(height: 32),
 
                             /// 🛠 Management Suite
-                            Text('MANAGEMENT MODULES', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, color: AppColors.pureWhite.withOpacity(0.3))),
+                            Text('MANAGEMENT MODULES', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 1.5, color: AppColors.pureWhite.withValues(alpha: 0.3))),
                             const SizedBox(height: 16),
                             _ManagementGrid(),
 
@@ -220,7 +222,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
       width: 260,
       decoration: BoxDecoration(
         color: AppColors.surface,
-        border: Border(right: BorderSide(color: AppColors.royalGold.withOpacity(0.1))),
+        border: Border(right: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.1))),
       ),
       child: Column(
         children: [
@@ -238,11 +240,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text('ROYAL GOLD', style: AppTextStyles.h4),
-                Text('ADMIN TERMINAL', style: AppTextStyles.caption.copyWith(letterSpacing: 2, color: AppColors.pureWhite.withOpacity(0.4))),
+                Text('ADMIN TERMINAL', style: AppTextStyles.caption.copyWith(letterSpacing: 2, color: AppColors.pureWhite.withValues(alpha: 0.4))),
               ],
             ),
           ),
-          Divider(color: AppColors.pureWhite.withOpacity(0.1), indent: 20, endIndent: 20),
+          Divider(color: AppColors.pureWhite.withValues(alpha: 0.1), indent: 20, endIndent: 20),
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -252,6 +254,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 _SidebarItem(icon: Icons.category_outlined, label: 'Categories', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminCategoryManager()))),
                 _SidebarItem(icon: Icons.people_outline, label: 'Investors', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager()))),
                 _SidebarItem(icon: Icons.local_shipping_outlined, label: 'Orders', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager()))),
+                _SidebarItem(icon: Icons.account_balance_wallet_outlined, label: 'Transactions', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen()))),
                 _SidebarItem(icon: Icons.settings_outlined, label: 'Settings', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminConfigScreen()))),
               ],
             ),
@@ -269,9 +272,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.05),
+                  color: AppColors.error.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.error.withOpacity(0.1)),
+                  border: Border.all(color: AppColors.error.withValues(alpha: 0.1)),
                 ),
                 child: Row(
                   children: [
@@ -331,24 +334,24 @@ class _SidebarItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.royalGold.withOpacity(0.1) : Colors.transparent,
+            color: isSelected ? AppColors.royalGold.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? AppColors.royalGold.withOpacity(0.3) : Colors.transparent,
+              color: isSelected ? AppColors.royalGold.withValues(alpha: 0.3) : Colors.transparent,
             ),
           ),
           child: Row(
             children: [
               Icon(
                 icon,
-                color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withOpacity(0.5),
+                color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withValues(alpha: 0.5),
                 size: 20,
               ),
               const SizedBox(width: 12),
               Text(
                 label,
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withOpacity(0.5),
+                  color: isSelected ? AppColors.royalGold : AppColors.pureWhite.withValues(alpha: 0.5),
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -371,16 +374,16 @@ class _MarketTicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.royalGold.withOpacity(0.1)),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.royalGold.withOpacity(0.1),
+              color: AppColors.royalGold.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.public, color: AppColors.royalGold, size: 14),
@@ -402,6 +405,15 @@ class _MarketTicker extends StatelessWidget {
             style: AppTextStyles.caption.copyWith(
               color: isUp ? AppColors.success : AppColors.error,
               fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(Icons.edit_note, color: AppColors.royalGold, size: 20),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AdminGoldPriceScreen()),
             ),
           ),
         ],
@@ -435,7 +447,7 @@ class _RevenueAnalysisChart extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text('+12.5%', style: AppTextStyles.caption.copyWith(color: AppColors.success)),
@@ -468,7 +480,7 @@ class _RevenueAnalysisChart extends StatelessWidget {
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.royalGold.withOpacity(0.1),
+                      color: AppColors.royalGold.withValues(alpha: 0.1),
                     ),
                   ),
                 ],
@@ -531,7 +543,7 @@ class _EliteStatCard extends StatelessWidget {
           ),
           const Spacer(),
           Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.4), fontSize: 8, letterSpacing: 1)),
+          Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.4), fontSize: 8, letterSpacing: 1)),
         ],
       ),
     );
@@ -574,6 +586,11 @@ class _ManagementGrid extends StatelessWidget {
           icon: Icons.settings_outlined,
           label: 'System',
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminConfigScreen())),
+        ),
+        _CompactTool(
+          icon: Icons.account_balance_wallet_outlined,
+          label: 'Finance',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen())),
         ),
         _CompactTool(
           icon: Icons.analytics_outlined,
@@ -643,7 +660,7 @@ class _HeaderActions extends StatelessWidget {
           ),
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            backgroundColor: AppColors.error.withOpacity(0.05),
+            backgroundColor: AppColors.error.withValues(alpha: 0.05),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
         ),
@@ -680,7 +697,7 @@ class _OperationLogs extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(10)),
                   child: Icon(Icons.receipt_long_outlined, size: 18, color: AppColors.royalGold),
                 ),
                 const SizedBox(width: 16),
@@ -689,7 +706,7 @@ class _OperationLogs extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Order #${order['id']?.substring(0, 8)}...', style: AppTextStyles.labelSmall),
-                      Text('${order['product']?['name'] ?? 'Gold Asset'}', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.4))),
+                      Text('${order['product']?['name'] ?? 'Gold Asset'}', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.4))),
                     ],
                   ),
                 ),
@@ -717,9 +734,9 @@ class _EliteStatusPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         statusStr.toUpperCase(),

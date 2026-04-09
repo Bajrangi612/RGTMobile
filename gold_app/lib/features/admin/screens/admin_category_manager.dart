@@ -42,7 +42,7 @@ class AdminCategoryManager extends ConsumerWidget {
                     child: GoldCard(
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: AppColors.royalGold.withOpacity(0.1),
+                          backgroundColor: AppColors.royalGold.withValues(alpha: 0.1),
                           child: Text(
                             cat['name']?[0]?.toUpperCase() ?? '?',
                             style: TextStyle(color: AppColors.royalGold, fontWeight: FontWeight.bold),
@@ -88,7 +88,7 @@ class AdminCategoryManager extends ConsumerWidget {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
+          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -136,16 +136,16 @@ class AdminCategoryManager extends ConsumerWidget {
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.3)),
+      hintStyle: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3)),
       filled: true,
-      fillColor: AppColors.pureWhite.withOpacity(0.05),
+      fillColor: AppColors.pureWhite.withValues(alpha: 0.05),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.royalGold.withOpacity(0.5)),
+        borderSide: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.5)),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
@@ -159,9 +159,9 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.category_outlined, size: 64, color: AppColors.royalGold.withOpacity(0.1)),
+          Icon(Icons.category_outlined, size: 64, color: AppColors.royalGold.withValues(alpha: 0.1)),
           const SizedBox(height: 16),
-          Text('No categories found', style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite.withOpacity(0.3))),
+          Text('No categories found', style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3))),
         ],
       ),
     );

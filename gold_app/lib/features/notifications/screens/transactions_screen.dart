@@ -4,40 +4,30 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
-import '../../../core/services/mock_data_service.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/shimmer_loader.dart';
+import '../../../widgets/gold_button.dart';
+import '../../wallet/providers/wallet_provider.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
-  TransactionsScreen({super.key}) ;
+  const TransactionsScreen({super.key});
 
   @override
   ConsumerState<TransactionsScreen> createState() => _TransactionsScreenState();
 }
 
 class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
-  List<Map<String, dynamic>> _transactions = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _loadTransactions();
-  }
-
-  Future<void> _loadTransactions() async {
-    await MockDataService.simulateDelay();
-    if (mounted) {
-      setState(() {
-        _transactions = MockDataService.getTransactions();
-        _isLoading = false;
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(walletProvider.notifier).loadWalletDetails();
+    });
   }
 
   IconData _getIcon(String type) {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'purchase':
         return Icons.shopping_bag_rounded;
       case 'referral':
@@ -46,13 +36,15 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         return Icons.sell_rounded;
       case 'refund':
         return Icons.replay_rounded;
+      case 'withdrawal':
+        return Icons.account_balance_wallet_rounded;
       default:
         return Icons.receipt_long;
     }
   }
 
   Color _getColor(String type) {
-    switch (type) {
+    switch (type.toLowerCase()) {
       case 'purchase':
         return AppColors.info;
       case 'referral':
@@ -61,6 +53,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         return AppColors.success;
       case 'refund':
         return AppColors.warning;
+      case 'withdrawal':
+        return AppColors.error;
       default:
         return AppColors.grey;
     }
@@ -68,12 +62,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final walletState = ref.watch(walletProvider);
+    final transactions = walletState.transactions;
+    final isLoading = walletState.isLoading;
+
     return Scaffold(
       backgroundColor: AppColors.deepBlack,
       appBar: GoldAppBar(title: 'Transactions'),
       body: Container(
         decoration: BoxDecoration(gradient: AppColors.darkGradient),
-        child: _isLoading
+        child: isLoading && transactions.isEmpty
             ? ListView.builder(
                 padding: const EdgeInsets.all(24),
                 itemCount: 5,
@@ -81,71 +79,123 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: ShimmerLoader.orderCard(),
                 ),
-              ) : _transactions.isEmpty
+              ) 
+            : walletState.error != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.error_outline_rounded, size: 48, color: AppColors.error),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Something went wrong',
+                            style: AppTextStyles.h4.copyWith(color: AppColors.error),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            walletState.error!,
+                            textAlign: TextAlign.center,
+                            style: AppTextStyles.caption.copyWith(color: AppColors.grey),
+                          ),
+                          const SizedBox(height: 24),
+                          GoldButton(
+                            text: 'RETRY',
+                            onPressed: () => ref.read(walletProvider.notifier).loadWalletDetails(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : transactions.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.receipt_long, size: 64, color: AppColors.darkGrey),
-                        SizedBox(height: 16),
-                        Text('No transactions', style: AppTextStyles.h4.copyWith(color: AppColors.grey)),
+                        const Icon(Icons.receipt_long_rounded, size: 64, color: AppColors.darkGrey),
+                        const SizedBox(height: 16),
+                        Text('No transactions found', style: AppTextStyles.h4.copyWith(color: AppColors.grey)),
+                        const SizedBox(height: 8),
+                        Text('Your financial history will appear here', style: AppTextStyles.caption),
                       ],
                     ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(24),
-                    itemCount: _transactions.length,
-                    itemBuilder: (context, index) {
-                      final txn = _transactions[index];
-                      final amount = (txn['amount'] as num).toDouble() ;
-                      final isCredit = amount > 0;
-                      final type = txn['type'] as String;
+                : RefreshIndicator(
+                    onRefresh: () => ref.read(walletProvider.notifier).loadWalletDetails(),
+                    color: AppColors.royalGold,
+                    backgroundColor: AppColors.cardDark,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(24),
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final txn = transactions[index];
+                        final amount = txn.amount;
+                        final isCredit = ['referral', 'refund', 'resell'].contains(txn.type.toLowerCase());
+                        final type = txn.type;
 
-                      return GoldCard(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: _getColor(type).withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(12),
+                        return GoldCard(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: _getColor(type).withValues(alpha: 0.12),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(_getIcon(type), color: _getColor(type), size: 22),
                               ),
-                              child: Icon(_getIcon(type), color: _getColor(type), size: 22),
-                            ),
-                            SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      txn.description,
+                                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.pureWhite),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      Formatters.relativeTime(txn.date.toIso8601String()),
+                                      style: AppTextStyles.caption,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   Text(
-                                    txn['description'] ?? '',
-                                    style: AppTextStyles.labelMedium.copyWith(color: AppColors.pureWhite),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                    '${isCredit ? '+' : '-'}${Formatters.currency(amount)}',
+                                    style: AppTextStyles.labelLarge.copyWith(
+                                      color: isCredit ? AppColors.success : AppColors.error,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    Formatters.relativeTime(txn['date']),
-                                    style: AppTextStyles.caption,
-                                  ),
+                                  if (txn.status.toLowerCase() != 'completed')
+                                    Text(
+                                      txn.status.toUpperCase(),
+                                      style: TextStyle(
+                                        color: AppColors.warning,
+                                        fontSize: 9, 
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
                                 ],
                               ),
-                            ),
-                            Text(
-                              '${isCredit ? '+' : ''}${Formatters.currency(amount.abs())}',
-                              style: AppTextStyles.labelLarge.copyWith(
-                                color: isCredit ? AppColors.success : AppColors.error,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ).animate(delay: (200 + index * 100).ms)
-                          .fadeIn(duration: 400.ms)
-                          .slideX(begin: 0.05) ;
-                    },
+                            ],
+                          ),
+                        ).animate(delay: (index * 50).ms)
+                            .fadeIn(duration: 400.ms)
+                            .slideX(begin: 0.05);
+                      },
+                    ),
                   ),
       ),
     );

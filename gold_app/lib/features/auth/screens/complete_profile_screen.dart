@@ -83,7 +83,7 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.royalGold.withOpacity(0.1),
+                      color: AppColors.royalGold.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -139,16 +139,16 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                           },
                           decoration: InputDecoration(
                             hintText: 'e.g. Alexander Pierce',
-                            hintStyle: TextStyle(color: AppColors.grey.withOpacity(0.5)),
+                            hintStyle: TextStyle(color: AppColors.grey.withValues(alpha: 0.5)),
                             filled: true,
-                            fillColor: Colors.black.withOpacity(0.03),
+                            fillColor: Colors.black.withValues(alpha: 0.03),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: AppColors.royalGold.withOpacity(0.2)),
+                              borderSide: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.2)),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide(color: AppColors.royalGold.withOpacity(0.1)),
+                              borderSide: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.1)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),

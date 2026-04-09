@@ -122,4 +122,23 @@ export class ProductController {
       next(error);
     }
   }
+  /**
+   * Update gold price (Admin only)
+   */
+  static async updateGoldPrice(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { buyPrice, sellPrice } = req.body;
+      
+      if (buyPrice === undefined || sellPrice === undefined) {
+        return errorResponse(res, "Buy price and Sell price are required", 400);
+      }
+
+      await ProductService.updateGoldPrice(Number(buyPrice), Number(sellPrice));
+
+      return successResponse(res, null, "Gold price updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+

@@ -7,14 +7,31 @@ import '../../../core/utils/formatters.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_button.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../wallet/providers/wallet_provider.dart';
+import '../../../widgets/shimmer_loader.dart';
 
-class WalletScreen extends ConsumerWidget {
+class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+}
+
+class _WalletScreenState extends ConsumerState<WalletScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(walletProvider.notifier).loadWalletDetails();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
+    final walletState = ref.watch(walletProvider);
     final wallet = user?.wallet;
+    final transactions = walletState.transactions.take(5).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -95,8 +112,20 @@ class WalletScreen extends ConsumerWidget {
 
                       const SizedBox(height: 12),
 
-                      // Mock Transactions or Empty State
-                      _TransactionList(),
+                      // Live Transactions or Empty State
+                      walletState.isLoading && transactions.isEmpty
+                          ? ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: 3,
+                              itemBuilder: (_, __) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: ShimmerLoader.orderCard(),
+                              ),
+                            )
+                          : transactions.isEmpty
+                              ? _EmptyState()
+                              : _TransactionList(transactions: transactions),
                       
                       const SizedBox(height: 40),
                     ],
@@ -168,7 +197,7 @@ class _MainBalanceCard extends StatelessWidget {
         backgroundColor: AppColors.cardDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.royalGold.withOpacity(0.3)),
+          side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
         ),
         title: Text('Withdrawal Request', style: AppTextStyles.h4),
         content: Column(
@@ -247,31 +276,42 @@ class _StatCard extends StatelessWidget {
 }
 
 class _TransactionList extends StatelessWidget {
+  final List<dynamic> transactions;
+  const _TransactionList({required this.transactions});
+
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
-        _TransactionTile(
-          title: 'Referral Reward - User XYZ',
-          date: 'Oct 24, 2023',
-          amount: 500,
-          isCredit: true,
+      children: transactions.map((txn) {
+        final isCredit = ['referral', 'refund', 'resell', 'deposit', 'profit'].contains(txn.type.toLowerCase());
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _TransactionTile(
+            title: txn.description,
+            date: Formatters.relativeTime(txn.date.toIso8601String()),
+            amount: txn.amount,
+            isCredit: isCredit,
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Column(
+          children: [
+            Icon(Icons.history_rounded, size: 48, color: AppColors.grey.withValues(alpha: 0.3)),
+            const SizedBox(height: 12),
+            Text('No recent transactions', style: AppTextStyles.caption),
+          ],
         ),
-        const SizedBox(height: 12),
-        _TransactionTile(
-          title: 'Purchase - 1g Gold Coin',
-          date: 'Oct 22, 2023',
-          amount: 7500,
-          isCredit: false,
-        ),
-        const SizedBox(height: 12),
-        _TransactionTile(
-          title: 'Gold Advance Monthly',
-          date: 'Oct 15, 2023',
-          amount: 2000,
-          isCredit: true,
-        ),
-      ],
+      ),
     );
   }
 }
@@ -294,16 +334,16 @@ class _TransactionTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardDark.withOpacity(0.5),
+        color: AppColors.cardDark.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.royalGold.withOpacity(0.05)),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (isCredit ? AppColors.success : AppColors.error).withOpacity(0.1),
+              color: (isCredit ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(

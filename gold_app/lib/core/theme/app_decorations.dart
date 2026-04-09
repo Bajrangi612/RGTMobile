@@ -12,7 +12,7 @@ class AppDecorations {
         border: Border.all(color: AppColors.glassBorder, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: Offset(0, 8),
           ),
@@ -24,17 +24,17 @@ class AppDecorations {
         color: AppColors.cardDark,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.royalGold.withOpacity(0.3),
+          color: AppColors.royalGold.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.royalGold.withOpacity(0.08),
+            color: AppColors.royalGold.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: Offset(0, 4),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: Offset(0, 8),
           ),
@@ -46,12 +46,12 @@ class AppDecorations {
         gradient: AppColors.cardGradient,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Colors.white.withOpacity(0.06),
+          color: Colors.white.withValues(alpha: 0.06),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 16,
             offset: Offset(0, 6),
           ),
@@ -64,7 +64,7 @@ class AppDecorations {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: AppColors.royalGold.withOpacity(0.3),
+            color: AppColors.royalGold.withValues(alpha: 0.3),
             blurRadius: 16,
             offset: Offset(0, 6),
           ),
@@ -120,7 +120,7 @@ class AppDecorations {
         border: Border.all(color: AppColors.glassBorder, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 30,
             offset: Offset(0, -10),
           ),
@@ -135,7 +135,7 @@ class AppDecorations {
   // Gold glow effect
   static List<BoxShadow> get goldGlow => [
         BoxShadow(
-          color: AppColors.royalGold.withOpacity(0.2),
+          color: AppColors.royalGold.withValues(alpha: 0.2),
           blurRadius: 24,
           spreadRadius: 2,
         ),

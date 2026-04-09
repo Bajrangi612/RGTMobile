@@ -9,6 +9,7 @@ import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 import '../../home/screens/home_screen.dart';
 import '../../admin/screens/admin_dashboard_screen.dart';
+import 'complete_profile_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -39,8 +40,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     
     Widget nextScreen;
     if (authState.status == AuthStatus.authenticated) {
-      if (authState.user?.isAdmin == true) {
+      final user = authState.user;
+      if (user?.isAdmin == true) {
         nextScreen = const AdminDashboardScreen();
+      } else if (user?.registerRequired == true || (user?.name.isEmpty ?? true)) {
+        nextScreen = CompleteProfileScreen();
       } else {
         nextScreen = const HomeScreen();
       }
@@ -120,7 +124,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(1),
                     child: LinearProgressIndicator(
-                      backgroundColor: AppColors.royalGold.withOpacity(0.1),
+                      backgroundColor: AppColors.royalGold.withValues(alpha: 0.1),
                       color: AppColors.royalGold,
                     ),
                   ),
@@ -132,7 +136,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   'INVEST IN ELEGANCE. OWN THE LEGACY.',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelSmall.copyWith(
-                    color: AppColors.royalGold.withOpacity(0.7),
+                    color: AppColors.royalGold.withValues(alpha: 0.7),
                     letterSpacing: 2,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,

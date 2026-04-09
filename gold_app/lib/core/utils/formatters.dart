@@ -4,23 +4,31 @@ class Formatters {
   Formatters._();
 
   // Currency formatter (₹1,23,456.00)
-  static String currency(double amount) {
+  static String currency(dynamic amount) {
+    final double value = _toDouble(amount);
     final formatter = NumberFormat.currency(
       locale: 'en_IN',
       symbol: '₹',
       decimalDigits: 0,
     );
-    return formatter.format(amount);
+    return formatter.format(value);
   }
 
   // Currency with decimals (₹1,23,456.50)
-  static String currencyPrecise(double amount) {
+  static String currencyPrecise(dynamic amount) {
+    final double value = _toDouble(amount);
     final formatter = NumberFormat.currency(
       locale: 'en_IN',
       symbol: '₹',
       decimalDigits: 2,
     );
-    return formatter.format(amount);
+    return formatter.format(value);
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 
   // Price per gram (₹7,200/g)
@@ -36,16 +44,24 @@ class Formatters {
     return '${grams}g';
   }
 
-  // Date (15 Jan 2025)
+  // Date (15/01/2025) 
   static String date(String isoDate) {
-    final dt = DateTime.parse(isoDate);
-    return DateFormat('dd MMM yyyy').format(dt);
+    try {
+      final dt = DateTime.parse(isoDate);
+      return DateFormat('dd/MM/yyyy').format(dt);
+    } catch (e) {
+      return isoDate;
+    }
   }
 
-  // Date time (15 Jan 2025, 10:30 AM)
+  // Date time (15/01/2025, 10:30 AM)
   static String dateTime(String isoDate) {
-    final dt = DateTime.parse(isoDate);
-    return DateFormat('dd MMM yyyy, hh:mm a').format(dt);
+    try {
+      final dt = DateTime.parse(isoDate);
+      return DateFormat('dd/MM/yyyy, hh:mm a').format(dt);
+    } catch (e) {
+      return isoDate;
+    }
   }
 
   // Relative time (2 days ago, just now)
@@ -58,7 +74,7 @@ class Formatters {
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     if (diff.inDays < 30) return '${(diff.inDays / 7).floor()}w ago';
-    return DateFormat('dd MMM').format(dt);
+    return DateFormat('dd/MM').format(dt);
   }
 
   // Percentage (+2.3%, -1.5%)
@@ -82,12 +98,26 @@ class Formatters {
   }
 
   // Countdown days
-  static String deliveryCountdown(String deliveryDate) {
-    final dt = DateTime.parse(deliveryDate);
-    final diff = dt.difference(DateTime.now());
-    if (diff.isNegative) return 'Delivered';
-    if (diff.inDays == 0) return 'Today';
-    if (diff.inDays == 1) return '1 day';
-    return '${diff.inDays} days';
+  static String deliveryCountdown(dynamic deliveryDate) {
+    if (deliveryDate == null) return 'Pending';
+    
+    DateTime? dt;
+    if (deliveryDate is DateTime) {
+      dt = deliveryDate;
+    } else if (deliveryDate is String) {
+      dt = DateTime.tryParse(deliveryDate);
+    }
+    
+    if (dt == null) return 'Pending';
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final delivery = DateTime(dt.year, dt.month, dt.day);
+    final diff = delivery.difference(today).inDays;
+
+    if (diff < 0) return 'Arrived';
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Tomorrow';
+    return '$diff days left';
   }
 }

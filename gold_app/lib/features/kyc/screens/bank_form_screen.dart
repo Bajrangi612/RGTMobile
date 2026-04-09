@@ -69,9 +69,9 @@ class _BankFormScreenState extends ConsumerState<BankFormScreen> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: AppColors.royalGold.withOpacity(0.1),
+                      color: AppColors.royalGold.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.royalGold.withOpacity(0.3)),
+                      border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
                     ),
                     child: Icon(Icons.account_balance, size: 40, color: AppColors.royalGold),
                   ),
@@ -133,9 +133,9 @@ class _BankFormScreenState extends ConsumerState<BankFormScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.1),
+                            color: AppColors.success.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.success.withOpacity(0.3)),
+                            border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,

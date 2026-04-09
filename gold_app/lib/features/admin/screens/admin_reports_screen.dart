@@ -19,9 +19,9 @@ class AdminReportsScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.analytics_outlined, size: 64, color: AppColors.royalGold.withOpacity(0.5)),
+            Icon(Icons.analytics_outlined, size: 64, color: AppColors.royalGold.withValues(alpha: 0.5)),
             const SizedBox(height: 16),
-            Text('Advanced Analytics Coming Soon', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite.withOpacity(0.7))),
+            Text('Advanced Analytics Coming Soon', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.7))),
           ],
         ),
       ),

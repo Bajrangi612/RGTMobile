@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/theme/app_text_styles.dart';
 
-enum StatusType { pending, verified, rejected, processing, shipped, delivered, cancelled }
+enum StatusType { pending, confirmed, verified, rejected, processing, ready, delivered, resold, cancelled }
 
 class StatusBadge extends StatelessWidget {
   final StatusType status;
@@ -19,22 +19,26 @@ class StatusBadge extends StatelessWidget {
   Color get _color {
     switch (status) {
       case StatusType.pending:
+      case StatusType.confirmed:
       case StatusType.processing:
         return AppColors.pending;
+      case StatusType.ready:
+        return AppColors.royalGold; // Distinct gold for ready
       case StatusType.verified:
       case StatusType.delivered:
         return AppColors.success;
       case StatusType.rejected:
       case StatusType.cancelled:
         return AppColors.error;
-      case StatusType.shipped:
-        return AppColors.info;
+      case StatusType.resold:
+        return Colors.purpleAccent;
     }
   }
 
   IconData get _icon {
     switch (status) {
       case StatusType.pending:
+      case StatusType.confirmed:
         return Icons.schedule;
       case StatusType.verified:
         return Icons.verified;
@@ -42,10 +46,12 @@ class StatusBadge extends StatelessWidget {
         return Icons.cancel;
       case StatusType.processing:
         return Icons.hourglass_top;
-      case StatusType.shipped:
-        return Icons.local_shipping;
+      case StatusType.ready:
+        return Icons.store_mall_directory_rounded;
       case StatusType.delivered:
         return Icons.check_circle;
+      case StatusType.resold:
+        return Icons.currency_exchange_rounded;
       case StatusType.cancelled:
         return Icons.cancel_outlined;
     }
@@ -56,16 +62,20 @@ class StatusBadge extends StatelessWidget {
     switch (status) {
       case StatusType.pending:
         return 'Pending';
+      case StatusType.confirmed:
+        return 'Confirmed';
       case StatusType.verified:
         return 'Verified';
       case StatusType.rejected:
         return 'Rejected';
       case StatusType.processing:
         return 'Processing';
-      case StatusType.shipped:
-        return 'Shipped';
+      case StatusType.ready:
+        return 'Ready to Pickup';
       case StatusType.delivered:
         return 'Delivered';
+      case StatusType.resold:
+        return 'Resold';
       case StatusType.cancelled:
         return 'Cancelled';
     }
@@ -79,10 +89,10 @@ class StatusBadge extends StatelessWidget {
         vertical: small ? 4 : 6,
       ),
       decoration: BoxDecoration(
-        color: _color.withOpacity(0.15),
+        color: _color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: _color.withOpacity(0.3),
+          color: _color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -106,18 +116,22 @@ class StatusBadge extends StatelessWidget {
 StatusType statusFromString(String status) {
   switch (status.toLowerCase()) {
     case 'pending':
-      return StatusType.pending;
+    case 'created':
+      return StatusType.confirmed;
     case 'verified':
       return StatusType.verified;
     case 'rejected':
       return StatusType.rejected;
     case 'processing':
-    case 'confirmed':
+    case 'paid':
       return StatusType.processing;
-    case 'shipped':
-      return StatusType.shipped;
+    case 'ready':
+      return StatusType.ready;
+    case 'picked':
     case 'delivered':
       return StatusType.delivered;
+    case 'resold':
+      return StatusType.resold;
     case 'cancelled':
       return StatusType.cancelled;
     default:
