@@ -99,8 +99,8 @@ export class OrderController {
    */
   static async cancel(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const orderId = req.params.id;
-      const userId = req.user!.id;
+      const orderId = req.params.id as string;
+      const userId = req.user!.id as string;
       const order = await OrderService.cancelOrder(userId, orderId);
       return successResponse(res, { order }, "Order cancelled successfully");
     } catch (error) {
@@ -113,8 +113,8 @@ export class OrderController {
    */
   static async resell(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const orderId = req.params.id;
-      const userId = req.user!.id;
+      const orderId = req.params.id as string;
+      const userId = req.user!.id as string;
       const order = await OrderService.resellOrder(userId, orderId);
       return successResponse(res, { order }, "Order resold successfully");
     } catch (error) {
