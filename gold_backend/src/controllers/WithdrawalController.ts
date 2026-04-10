@@ -8,7 +8,7 @@ export class WithdrawalController {
    */
   static async requestWithdrawal(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = req.user!.id as string;
+      const userId = (req as any).user!.id as string;
       const { amount, bankDetails } = req.body;
 
       if (!amount || amount <= 0) {
@@ -70,7 +70,7 @@ export class WithdrawalController {
       const { status, adminNotes } = req.body;
 
       const request = await prisma.withdrawalRequest.findUnique({
-        where: { id },
+        where: { id: id as string },
         include: { user: { include: { wallet: true } } }
       });
 
@@ -80,13 +80,13 @@ export class WithdrawalController {
       if (status === "COMPLETED" && request.status !== "COMPLETED") {
         await prisma.$transaction(async (tx) => {
           await tx.withdrawalRequest.update({
-            where: { id },
-            data: { status, adminNotes }
+            where: { id: id as string },
+            data: { status, adminNotes: adminNotes as string }
           });
 
           if (request.user.wallet) {
             await tx.wallet.update({
-              where: { id: request.user.wallet.id },
+              where: { id: (request.user as any).wallet.id },
               data: { balance: { decrement: request.amount } }
             });
 
@@ -104,8 +104,8 @@ export class WithdrawalController {
         });
       } else {
         await prisma.withdrawalRequest.update({
-          where: { id },
-          data: { status, adminNotes }
+          where: { id: id as string },
+          data: { status, adminNotes: adminNotes as string }
         });
       }
 

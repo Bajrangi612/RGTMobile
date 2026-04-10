@@ -258,6 +258,7 @@ enum TransactionType {
   REFERRAL
   REWARD
   REFERRAL_REWARD
+  SELL_BACK
 
   @@map("transaction_type")
 }
