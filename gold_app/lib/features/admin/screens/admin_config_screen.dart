@@ -20,6 +20,8 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
   final _intervalController = TextEditingController();
   final _gstController = TextEditingController();
   final _lowStockController = TextEditingController();
+  final _referralController = TextEditingController();
+  final _minWithdrawalController = TextEditingController();
 
   @override
   void initState() {
@@ -30,6 +32,8 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
     _intervalController.text = state.orderIntervalMinutes.toString();
     _gstController.text = state.gstRate.toString();
     _lowStockController.text = state.lowStockThreshold.toString();
+    _referralController.text = state.referralReward.toString();
+    _minWithdrawalController.text = state.minWithdrawal.toString();
   }
 
   @override
@@ -39,23 +43,30 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
     _intervalController.dispose();
     _gstController.dispose();
     _lowStockController.dispose();
+    _referralController.dispose();
+    _minWithdrawalController.dispose();
     super.dispose();
   }
 
-  void _saveConfigs() {
-    ref.read(adminProvider.notifier).updateConfigs(
+  void _saveConfigs() async {
+    await ref.read(adminProvider.notifier).updateConfigs(
       commissionRate: double.tryParse(_commissionController.text),
       deliveryTimeDays: int.tryParse(_deliveryController.text),
       orderIntervalMinutes: int.tryParse(_intervalController.text),
       gstRate: double.tryParse(_gstController.text),
       lowStockThreshold: int.tryParse(_lowStockController.text),
+      referralReward: double.tryParse(_referralController.text),
+      minWithdrawal: double.tryParse(_minWithdrawalController.text),
     );
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Configurations updated successfully', style: AppTextStyles.caption.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.success,
-      ),
-    );
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Configurations updated successfully', style: AppTextStyles.caption.copyWith(color: Colors.white)),
+          backgroundColor: AppColors.success,
+        ),
+      );
+    }
   }
 
   @override
@@ -95,6 +106,31 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
                         controller: _gstController,
                         keyboardType: TextInputType.number,
                         hint: 'e.g., 3.0',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text('Referrals & Rewards', style: AppTextStyles.labelLarge),
+              const SizedBox(height: 16),
+              GoldCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      GoldTextField(
+                        label: 'Referral Reward (₹)',
+                        controller: _referralController,
+                        keyboardType: TextInputType.number,
+                        hint: 'e.g., 500',
+                      ),
+                      const SizedBox(height: 16),
+                      GoldTextField(
+                        label: 'Min Withdrawal (₹)',
+                        controller: _minWithdrawalController,
+                        keyboardType: TextInputType.number,
+                        hint: 'e.g., 1000',
                       ),
                     ],
                   ),

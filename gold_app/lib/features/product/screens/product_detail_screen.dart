@@ -12,6 +12,7 @@ import '../../../widgets/gold_text_field.dart';
 import '../data/models/product_model.dart';
 import '../presentation/widgets/checkout_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../profile/screens/profile_screen.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -247,7 +248,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Apply a referral code to earn ₹${AppConstants.referralCommission.toInt()} commission',
+                            'Apply a referral code to earn ₹${ref.watch(settingsProvider).referralReward.toInt()} commission',
                             style: AppTextStyles.caption,
                           ),
                         ],
@@ -305,7 +306,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Share this code to earn ₹500 fixed reward on every successful referral purchase.',
+                                'Share this code to earn ₹${ref.watch(settingsProvider).referralReward.toInt()} fixed reward on every successful referral purchase.',
                                 style: AppTextStyles.caption.copyWith(color: AppColors.success),
                               ),
                             ],

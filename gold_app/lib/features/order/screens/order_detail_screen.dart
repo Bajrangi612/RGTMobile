@@ -74,11 +74,12 @@ class OrderDetailScreen extends ConsumerWidget {
                           ),
                           SizedBox(height: 20),
                           _DetailRow('Weight', '${order.weight.toInt()} gram'),
-                          _DetailRow('Price', Formatters.currency(order.price)),
+                          _DetailRow('Gold Price', Formatters.currency(order.goldPriceAtPurchase ?? 0)),
+                          _DetailRow('Taxable Amount', Formatters.currency(order.amount)),
                           _DetailRow('GST (3%)', Formatters.currency(order.gstAmount)),
                           _DetailRow('Total Price', Formatters.currency(order.totalPrice), isBold: true),
                           _DetailRow('Payment', order.paymentMethod),
-                          _DetailRow('Order Date', DateFormat('dd/MM/yyyy').format(order.createdAt)),
+                          _DetailRow('Order Date', DateFormat('dd/MM/yyyy HH:mm').format(order.createdAt)),
                           if (order.referralCode != null && order.referralCode!.isNotEmpty)
                             _DetailRow('Referral', order.referralCode!),
                         ],
@@ -128,24 +129,42 @@ class OrderDetailScreen extends ConsumerWidget {
 
                     SizedBox(height: 16),
 
-                    // Progress Stepper
+                    // Status History Timeline
                     GoldCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Order Progress', style: AppTextStyles.labelLarge),
-                          SizedBox(height: 16),
-                          ..._getProgressSteps().asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final step = entry.value;
-                            return _ProgressStep(
-                              title: step.title,
-                              subtitle: step.subtitle,
-                              isCompleted: step.isCompleted,
-                              isFirst: index == 0,
-                              isLast: index == _getProgressSteps().length - 1,
-                            );
-                          }),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('Order Timeline', style: AppTextStyles.labelLarge),
+                              Icon(Icons.history_rounded, color: AppColors.royalGold, size: 20),
+                            ],
+                          ),
+                          SizedBox(height: 24),
+                          if (order.statusHistory.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20),
+                              child: Center(
+                                child: Text('Logging fulfillment steps...', style: AppTextStyles.bodySmall),
+                              ),
+                            )
+                          else
+                            ...order.statusHistory.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final history = entry.value;
+                              final isLast = index == order.statusHistory.length - 1;
+                              final statusType = statusFromString(history.status);
+                              
+                              return _TimelineStep(
+                                title: statusType.name.toUpperCase().replaceAll('_', ' '),
+                                subtitle: history.notes ?? 'Standard fulfillment step.',
+                                date: DateFormat('MMM dd, hh:mm a').format(history.createdAt),
+                                isCompleted: true,
+                                isLast: isLast,
+                                status: statusType,
+                              );
+                            }),
                         ],
                       ),
                     ).animate(delay: 300.ms).fadeIn(duration: 400.ms),
@@ -155,80 +174,79 @@ class OrderDetailScreen extends ConsumerWidget {
             ),
 
             // Action Buttons
-            if (order.canCancel || order.canResell)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.charcoal.withValues(alpha: 0.95),
-                  border: Border(top: BorderSide(color: AppColors.glassBorder)),
-                ),
-                child: SafeArea(
-                  child: Row(
-                    children: [
-                      if (order.canCancel)
-                        Expanded(
-                          child: GoldButton(
-                            text: 'Cancel',
-                            isOutlined: true,
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: Text('Cancel Order?'),
-                                  content: Text('This action cannot be undone. You will receive a full refund.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, false),
-                                      child: Text('No'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: Text('Yes, Cancel'),
-                                    ),
-                                  ],
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Column(
+                children: [
+                  if (order.canCancel)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text('Cancel Order?'),
+                              content: Text('This action cannot be undone. You will receive a full refund.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: Text('No'),
                                 ),
-                              ) ;
-                              if (confirm == true) {
-                                await ref.read(orderProvider.notifier).cancelOrder(order.id);
-                                if (context.mounted) {
-                                  context.showSuccessSnackBar('Order cancelled. Refund initiated.');
-                                  Navigator.of(context).pop();
-                                }
-                              }
-                            },
-                            icon: Icons.cancel_outlined,
-                          ),
-                        ),
-                      if (order.canCancel && order.canResell) SizedBox(width: 12),
-                      if (order.canResell)
-                        Expanded(
-                          child: GoldButton(
-                            text: 'Sell Back',
-                            onPressed: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>  SellBackScreen(order: order),
-                              ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                                  child: Text('Yes, Cancel'),
+                                ),
+                              ],
                             ),
-                            icon: Icons.sell_rounded,
+                          ) ;
+                          if (confirm == true) {
+                            await ref.read(orderProvider.notifier).cancelOrder(order.id);
+                            if (context.mounted) {
+                              context.showSuccessSnackBar('Order cancelled. Refund initiated.');
+                              Navigator.of(context).pop();
+                            }
+                          }
+                        },
+                        icon: Icon(Icons.cancel_outlined, color: Colors.redAccent.withValues(alpha: 0.7), size: 18),
+                        label: Text('Cancel Order', style: AppTextStyles.bodySmall.copyWith(color: Colors.redAccent.withValues(alpha: 0.7))),
+                      ),
+                    ),
+                  
+                  if (order.canResell)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GoldButton(
+                        text: 'Sell Back Gold',
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>  SellBackScreen(order: order),
                           ),
                         ),
-                    ],
-                  ),
-                ),
+                        icon: Icons.sell_rounded,
+                      ),
+                    ),
+
+                  if (order.invoiceUrl != null || !order.isCancelled)
+                    GoldButton(
+                      text: 'View Tax Invoice',
+                      isOutlined: true,
+                      onPressed: () {
+                        if (order.invoiceUrl != null) {
+                           // Open cloud invoice
+                        } else {
+                          InvoiceService.generateAndPreviewInvoice(
+                            order,
+                            user: ref.read(authProvider).user,
+                          );
+                        }
+                      },
+                      icon: Icons.receipt_long_rounded,
+                    ),
+                ],
               ),
-            if (!order.isCancelled)
-              Container(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                child: GoldButton(
-                  text: 'Download Invoice',
-                  isOutlined: true,
-                  onPressed: () => InvoiceService.generateAndPreviewInvoice(
-                    order,
-                    user: ref.read(authProvider).user,
-                  ),
-                  icon: Icons.picture_as_pdf_rounded,
-                ),
-              ),
+            ),
           ],
         ),
       ),
@@ -336,94 +354,113 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-class _CountdownBox extends StatelessWidget {
-  final String? value;
-  final String label;
-  final Widget? child;
-
-  const _CountdownBox({this.value, required this.label, this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        gradient: AppColors.goldGradient,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.royalGold.withValues(alpha: 0.3),
-            blurRadius: 16,
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          child ?? Text(
-            value ?? '',
-            style: AppTextStyles.h2.copyWith(color: AppColors.deepBlack),
-          ),
-          Text(
-            label,
-            style: AppTextStyles.caption.copyWith(color: AppColors.deepBlack.withValues(alpha: 0.7)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProgressStep extends StatelessWidget {
+class _TimelineStep extends StatelessWidget {
   final String title;
   final String subtitle;
+  final String date;
   final bool isCompleted;
-  final bool isFirst;
   final bool isLast;
+  final StatusType status;
 
-  const _ProgressStep({
+  const _TimelineStep({
     required this.title,
     required this.subtitle,
+    required this.date,
     this.isCompleted = false,
-    this.isFirst = false,
     this.isLast = false,
+    required this.status,
   });
 
   @override
   Widget build(BuildContext context) {
+    final statusBadge = StatusBadge(status: status, small: true);
+    final color = statusBadge.color;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Column(
           children: [
             Container(
-              width: 24,
-              height: 24,
+              width: 12,
+              height: 12,
+              margin: const EdgeInsets.only(top: 4, left: 6, right: 6),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isCompleted ? AppColors.success.withValues(alpha: 0.2) : AppColors.darkGrey.withValues(alpha: 0.3),
-                border: Border.all(
-                  color: isCompleted ? AppColors.success : AppColors.darkGrey,
-                  width: 2,
-                ),
+                color: color,
+                boxShadow: [
+                  BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8),
+                ],
               ),
-              child: isCompleted ? Icon(Icons.check, color: AppColors.success, size: 14) : null,
             ),
             if (!isLast)
-              Container(width: 2, height: 36, color: isCompleted ? AppColors.success.withValues(alpha: 0.5) : AppColors.darkGrey),
+              Container(
+                width: 1,
+                height: 60,
+                color: AppColors.glassBorder,
+              ),
           ],
         ),
         SizedBox(width: 12),
-        Padding(
-          padding: const EdgeInsets.only(top: 2, bottom: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTextStyles.labelLarge.copyWith(color: isCompleted ? AppColors.pureWhite : AppColors.grey)),
-              Text(subtitle, style: AppTextStyles.caption),
-            ],
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(title, style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite, fontSize: 13)),
+                    Text(date, style: AppTextStyles.caption.copyWith(fontSize: 10)),
+                  ],
+                ),
+                SizedBox(height: 4),
+                Text(subtitle, style: AppTextStyles.bodySmall.copyWith(fontSize: 11, color: AppColors.grey)),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CountdownBox extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const _CountdownBox({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      decoration: BoxDecoration(
+        color: AppColors.royalGold,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.royalGold.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.deepBlack.withValues(alpha: 0.6),
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
     );
   }
 }

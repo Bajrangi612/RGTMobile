@@ -344,7 +344,8 @@ class _HomeDashboard extends ConsumerWidget {
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          final product = homeState.products[index];
+                          final products = homeState.products.where((p) => !p.isPremium).toList();
+                          final product = products[index];
                           return _ProductCard(
                             product: product,
                             onTap: () => Navigator.of(context).push(
@@ -355,7 +356,7 @@ class _HomeDashboard extends ConsumerWidget {
                             ),
                           ).animate(delay: (600 + index * 100).ms).fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
                         },
-                        childCount: homeState.products.length > 4 ? 4 : homeState.products.length,
+                        childCount: homeState.products.where((p) => !p.isPremium).length > 4 ? 4 : homeState.products.where((p) => !p.isPremium).length,
                       ),
                     ),
             ),
@@ -598,8 +599,12 @@ class _GoldPriceCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                 child: Text(
-                  '+1.1%',
-                  style: AppTextStyles.caption.copyWith(color: AppColors.deepBlack, fontSize: 10, fontWeight: FontWeight.bold),
+                  '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)}%',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.deepBlack, 
+                    fontSize: 10, 
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -1260,10 +1265,15 @@ class _EliteProductCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Image.asset(
-                        (product.imageUrl?.isNotEmpty ?? false) ? product.imageUrl! : 'assets/images/gold_coin.png',
-                        fit: BoxFit.contain,
-                      ),
+                        child: (product.imageUrl?.startsWith('http') ?? false)
+                            ? Image.network(
+                                product.imageUrl!,
+                                fit: BoxFit.contain,
+                              )
+                            : Image.asset(
+                                (product.imageUrl?.isNotEmpty ?? false) ? product.imageUrl! : 'assets/images/gold_coin.png',
+                                fit: BoxFit.contain,
+                              ),
                     ),
                   ),
                 ),

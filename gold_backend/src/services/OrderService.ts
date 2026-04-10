@@ -2,6 +2,7 @@ import { prisma } from "../lib/prisma";
 import ProductService from "./ProductService";
 import PaymentService from "./PaymentService";
 import { Prisma } from "@prisma/client";
+import invoiceService from "./InvoiceService";
 
 class OrderService {
   /**
@@ -47,9 +48,15 @@ class OrderService {
         gst: new Prisma.Decimal(pricing.gstAmount),
         total: new Prisma.Decimal(pricing.total),
         weight: new Prisma.Decimal(pricing.weight),
-        status: "CREATED",
+        status: "PAYMENT_PENDING",
         goldPriceAtPurchase: new Prisma.Decimal(livePrice),
         referralCode: referralCode,
+        statusHistory: {
+          create: {
+            status: "PAYMENT_PENDING",
+            notes: "Order initiated and awaiting payment."
+          }
+        }
       },
     });
 
@@ -110,7 +117,7 @@ class OrderService {
     // 3. Update Order Status and Process Rewards
     const invoiceNo = `INV-${Date.now()}-${order.id.substring(0, 4).toUpperCase()}`;
 
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Get delivery settings
       const deliveryDaysSetting = await tx.setting.findUnique({ where: { key: "delivery_days" } });
       const deliveryDays = deliveryDaysSetting ? parseInt(deliveryDaysSetting.value) : 7;
@@ -122,7 +129,7 @@ class OrderService {
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: {
-          status: "PAID",
+          status: "PAYMENT_SUCCESSFUL",
           paymentStatus: "SUCCESS",
           invoiceNo: invoiceNo,
           deliveryDate: deliveryDate,
@@ -142,10 +149,20 @@ class OrderService {
         }
       });
 
-      // Transition to PENDING (Collection countdown starts)
+      // Transition to ORDER_CONFIRMED (Collection countdown starts)
       await tx.order.update({
         where: { id: orderId },
-        data: { status: "PENDING" }
+        data: { 
+          status: "ORDER_CONFIRMED",
+          statusHistory: {
+            createMany: {
+              data: [
+                { status: "PAYMENT_SUCCESSFUL", notes: "Payment verified successfully." },
+                { status: "ORDER_CONFIRMED", notes: "Order confirmed and fulfillment initiated." }
+              ]
+            }
+          }
+        }
       });
 
       // Reduce Stock
@@ -208,6 +225,15 @@ class OrderService {
 
       return updatedOrder;
     });
+
+    // 4. Generate and Sync Invoice (Non-blocking but atomic attempt)
+    try {
+      await invoiceService.generateAndSyncInvoice(orderId);
+    } catch (err) {
+      console.error(`⚠️ Invoice generation failed for order ${orderId}:`, err);
+    }
+
+    return result;
   }
 
   /**
@@ -246,10 +272,26 @@ class OrderService {
   async updateOrderStatus(orderId: string, status: string) {
     const order = await prisma.order.update({
       where: { id: orderId },
-      data: { status: status.toUpperCase() as any },
+      data: { 
+        status: status.toUpperCase() as any,
+        statusHistory: {
+          create: {
+            status: status.toUpperCase() as any,
+            notes: `Status updated by administrator.`
+          }
+        }
+      },
+      include: { statusHistory: true }
     });
+    // If status is ORDER_CONFIRMED, generate/sync invoice
+    if (status.toUpperCase() === 'ORDER_CONFIRMED' || status.toUpperCase() === 'PROCESSING') {
+      try {
+        await invoiceService.generateAndSyncInvoice(orderId);
+      } catch (err) {
+        console.error(`⚠️ Invoice generation failed for order ${orderId}:`, err);
+      }
+    }
 
-    // If status changed to READY, check for notifications (handled in Phase 4)
     return order;
   }
 
@@ -259,13 +301,21 @@ class OrderService {
   async cancelOrder(userId: string, orderId: string) {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status === "READY" || order.status === "PICKED" || order.status === "BUYBACK") {
+    if (order.status === "READY_FOR_PICKUP" || order.status === "PICKED_UP" || order.status === "BUYBACK") {
       throw new Error("Order cannot be cancelled at this stage");
     }
 
     return await prisma.order.update({
       where: { id: orderId },
-      data: { status: "CANCELLED" }
+      data: { 
+        status: "CANCELLED",
+        statusHistory: {
+          create: {
+            status: "CANCELLED",
+            notes: "Order cancelled by user."
+          }
+        }
+      }
     });
   }
 
@@ -278,7 +328,7 @@ class OrderService {
       include: { product: true } 
     });
     if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status !== "READY") throw new Error("Only READY orders can be sold back");
+    if (order.status !== "READY_FOR_PICKUP") throw new Error("Only READY orders can be sold back");
 
     const livePriceObj = await ProductService.getLatestGoldPrice();
     const purchasePrice = Number(livePriceObj.buyPrice);

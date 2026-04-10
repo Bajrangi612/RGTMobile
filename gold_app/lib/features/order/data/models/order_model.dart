@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 import '../../../product/data/models/product_model.dart';
 import '../../../../widgets/status_badge.dart';
+import 'order_status_history_model.dart';
 
 class OrderModel {
   final String id;
@@ -18,6 +19,8 @@ class OrderModel {
   final String? invoiceNo;
   final DateTime? deliveryDate;
   final double? goldPriceAtPurchase;
+  final String? invoiceUrl;
+  final List<OrderStatusHistoryModel> statusHistory;
   final DateTime createdAt;
 
   OrderModel({
@@ -36,6 +39,8 @@ class OrderModel {
     this.invoiceNo,
     this.deliveryDate,
     this.goldPriceAtPurchase,
+    this.invoiceUrl,
+    this.statusHistory = const [],
     required this.createdAt,
   });
 
@@ -63,6 +68,10 @@ class OrderModel {
       invoiceNo: json['invoiceNo'],
       deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
       goldPriceAtPurchase: json['goldPriceAtPurchase'] != null ? parseDouble(json['goldPriceAtPurchase']) : null,
+      invoiceUrl: json['invoiceUrl'],
+      statusHistory: json['statusHistory'] != null 
+        ? (json['statusHistory'] as List).map((h) => OrderStatusHistoryModel.fromJson(h)).toList()
+        : [],
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
     );
   }
@@ -82,17 +91,23 @@ class OrderModel {
   double get referralCommission => 0.0;
   String get paymentMethod => 'Online (Razorpay)';
   
-  bool get canCancel => status.toUpperCase() == 'PENDING' || status.toUpperCase() == 'CREATED';
-  bool get canResell => status.toUpperCase() == 'READY';
+  bool get canCancel => 
+    status.toUpperCase() == 'PAYMENT_PENDING' || 
+    status.toUpperCase() == 'CREATED' || 
+    status.toUpperCase() == 'PENDING';
+
+  bool get canResell => 
+    status.toUpperCase() == 'READY_FOR_PICKUP' || 
+    status.toUpperCase() == 'READY' ||
+    status.toUpperCase() == 'PICKED_UP' ||
+    status.toUpperCase() == 'PICKED';
   
   bool get isActive => 
-    status.toUpperCase() == 'PENDING' || 
-    status.toUpperCase() == 'PAID' || 
-    status.toUpperCase() == 'READY';
+    !isCancelled && !isResold && status.toUpperCase() != 'REFUNDED' && status.toUpperCase() != 'PICKED_UP' && status.toUpperCase() != 'PICKED';
     
-  bool get isDelivered => status.toUpperCase() == 'PICKED';
+  bool get isDelivered => status.toUpperCase() == 'PICKED' || status.toUpperCase() == 'PICKED_UP';
   bool get isCancelled => status.toUpperCase() == 'CANCELLED';
-  bool get isResold => status.toUpperCase() == 'RESOLD';
+  bool get isResold => status.toUpperCase() == 'RESOLD' || status.toUpperCase() == 'BUYBACK';
 
   StatusType get statusType => statusFromString(status);
 

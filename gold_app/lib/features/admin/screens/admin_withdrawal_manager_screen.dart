@@ -113,9 +113,9 @@ class _WithdrawalCard extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  _BankRow('Bank', bank['bankName'] ?? bank['bankName'] ?? 'N/A'),
-                  _BankRow('A/C No', bank['accNo'] ?? bank['bankAccountNo'] ?? 'N/A'),
-                  _BankRow('IFSC', bank['ifsc'] ?? bank['bankIfsc'] ?? 'N/A'),
+                  _BankRow('Bank', bank['bankName'] ?? 'N/A'),
+                  _BankRow('A/C No', bank['accNo'] ?? 'N/A'),
+                  _BankRow('IFSC', bank['ifsc'] ?? 'N/A'),
                 ],
               ),
             ),

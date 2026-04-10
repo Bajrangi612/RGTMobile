@@ -38,8 +38,7 @@ export class WalletController {
         createdAt: t.createdAt.toISOString()
       }));
 
-      // Normalize Orders to Transactions (only if they don't have a record in the transaction table yet)
-      // We check by invoiceNo
+      // Normalize Orders to Transactions
       const existingInvoices = new Set(tableTxns.map(t => t.invoiceNo).filter(Boolean));
       
       const orderTxns = orders
@@ -60,8 +59,6 @@ export class WalletController {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 40);
 
-      console.log(`✅ [WalletController] Returning ${combined.length} transactions`);
-
       return successResponse(res, { wallet, transactions: combined }, "Wallet data fetched");
     } catch (error) {
       console.error("❌ [WalletController] Error:", error);
@@ -70,19 +67,41 @@ export class WalletController {
   }
 
   /**
-   * Request withdrawal (Referral Rewards)
+   * Request withdrawal (Secured with dynamic thresholds)
    */
   static async requestWithdrawal(req: any, res: Response, next: NextFunction) {
     try {
       const userId = req.user.id;
       const { amount, type } = req.body; // type: 'REFERRAL' or 'WALLET'
+      const requestedAmount = Number(amount);
 
-      if (!amount || amount <= 0) {
+      if (!requestedAmount || requestedAmount <= 0) {
         return errorResponse(res, "Invalid withdrawal amount", 400);
+      }
+
+      // 1. Enforce Dynamic Minimum Withdrawal Threshold
+      const minWithdrawalSetting = await prisma.setting.findUnique({ where: { key: "min_withdrawal" } });
+      const minAmount = minWithdrawalSetting ? Number(minWithdrawalSetting.value) : 1000;
+
+      if (requestedAmount < minAmount) {
+        return errorResponse(res, `Minimum withdrawal amount is ₹${minAmount}`, 400);
       }
 
       const wallet = await prisma.wallet.findUnique({ where: { userId } });
       if (!wallet) return errorResponse(res, "Wallet not found", 404);
+
+      // 2. Strict Balance Verification
+      if (type === 'REFERRAL') {
+        const referralRewards = Number(wallet.referralRewards);
+        if (requestedAmount > referralRewards) {
+          return errorResponse(res, `Insufficient referral rewards balance (Available: ₹${referralRewards})`, 400);
+        }
+      } else {
+        const mainBalance = Number(wallet.balance);
+        if (requestedAmount > mainBalance) {
+          return errorResponse(res, `Insufficient wallet balance (Available: ₹${mainBalance})`, 400);
+        }
+      }
 
       const year = new Date().getFullYear();
       const wdrCount = await prisma.transaction.count({
@@ -93,23 +112,19 @@ export class WalletController {
       });
       const invoiceNo = `WDR/${year}/${(wdrCount + 1).toString().padStart(4, '0')}`;
 
-      // 1. Create a PENDING withdrawal transaction
+      // 3. Create a PENDING withdrawal transaction
       const transaction = await prisma.transaction.create({
         data: {
           userId,
           type: "WITHDRAWAL",
-          amount: amount,
+          amount: requestedAmount,
           status: "PENDING",
           description: `Withdrawal request for ${type}`,
           invoiceNo: invoiceNo,
         } as any,
       });
 
-      // 2. Note: We don't deduct yet. Deduct only after Admin approval.
-      // Or we can deduct and keep in a 'HELD' state. 
-      // For simplicity, let's just record the request.
-
-      return successResponse(res, { transaction }, "Withdrawal request submitted");
+      return successResponse(res, { transaction }, "Withdrawal request submitted successfully");
     } catch (error) {
       next(error);
     }

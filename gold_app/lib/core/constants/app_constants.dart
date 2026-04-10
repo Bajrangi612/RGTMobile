@@ -11,7 +11,4 @@ class AppConstants {
   
   // Payment Config
   static const String razorpayKeyId = 'rzp_live_SafL7UaY86evlY'; // Live production key
-  
-  // Referral Config
-  static const double referralCommission = 50.0;
 }

@@ -9,6 +9,7 @@ import '../../../widgets/gold_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../wallet/providers/wallet_provider.dart';
 import '../../../widgets/shimmer_loader.dart';
+import '../../../core/providers/settings_provider.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
@@ -188,7 +189,7 @@ class _MainBalanceCard extends ConsumerWidget {
                   isOutlined: true,
                   color: AppColors.deepBlack,
                   icon: Icons.payments_rounded,
-                  onPressed: () => _showWithdrawDialog(context, ref, balance),
+                  onPressed: () => _showWithdrawDialog(context, ref, balance, ref.read(settingsProvider).minWithdrawal),
                 ),
               ),
             ],
@@ -198,7 +199,7 @@ class _MainBalanceCard extends ConsumerWidget {
     );
   }
 
-  void _showWithdrawDialog(BuildContext context, WidgetRef ref, double balance) {
+  void _showWithdrawDialog(BuildContext context, WidgetRef ref, double balance, double minAmount) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -216,6 +217,11 @@ class _MainBalanceCard extends ConsumerWidget {
             Text(
               'Available: ${Formatters.currency(balance)}',
               style: AppTextStyles.caption.copyWith(color: AppColors.royalGold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Minimum: ${Formatters.currency(minAmount)}',
+              style: AppTextStyles.caption.copyWith(color: AppColors.grey),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -237,12 +243,16 @@ class _MainBalanceCard extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              final amountStr = controller.text.trim();
-              if (amountStr.isEmpty) return;
-              final amount = double.tryParse(amountStr) ?? 0.0;
-              if (amount <= 0 || amount > balance) {
+              final amount = double.tryParse(controller.text.trim()) ?? 0;
+              if (amount < minAmount) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Invalid amount')),
+                  SnackBar(content: Text('Minimum withdrawal amount is ${Formatters.currency(minAmount)}')),
+                );
+                return;
+              }
+              if (amount > balance) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Insufficient balance')),
                 );
                 return;
               }

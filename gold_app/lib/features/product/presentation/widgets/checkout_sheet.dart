@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../order/providers/order_provider.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class CheckoutSheet extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -146,6 +147,12 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
       _quantity,
       referralCode: widget.referralCode,
     );
+
+    if (purchaseData == null && mounted) {
+      final error = ref.read(purchaseProvider).error;
+      _showErrorDialog(context, error ?? 'Unable to initiate purchase. Please try again.');
+      return;
+    }
 
     if (purchaseData != null) {
       setState(() {
@@ -298,6 +305,37 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
             ),
           ),
           const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: AppColors.error),
+            SizedBox(width: 12),
+            Text('Action Required', style: AppTextStyles.h4),
+          ],
+        ),
+        content: Text(
+          message.replaceAll('Exception:', '').trim(),
+          style: AppTextStyles.bodyMedium,
+        ),
+        actions: [
+          GoldButton(
+            text: 'UNDERSTOOD',
+            onPressed: () => Navigator.pop(ctx),
+            height: 48,
+          ),
         ],
       ),
     );

@@ -5,6 +5,7 @@ import { UserRole } from "@prisma/client";
 
 const router = Router();
 
+router.get("/public", authenticate, ConfigController.getPublicConfigs);
 router.get("/", authenticate, authorize([UserRole.ADMIN]), ConfigController.getConfigs);
 router.put("/", authenticate, authorize([UserRole.ADMIN]), ConfigController.updateConfigs);
 

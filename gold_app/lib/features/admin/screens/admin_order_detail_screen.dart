@@ -117,48 +117,15 @@ class AdminOrderDetailScreen extends ConsumerWidget {
             const SizedBox(height: 32),
 
             /// 🚀 Action Center
-            Text('ADMIN ACTIONS', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
+            Text('FULFILLMENT COMMANDS', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
             const SizedBox(height: 16),
             
-            if (['CREATED', 'PAID', 'PENDING'].contains(order['status']?.toString().toUpperCase()))
-              GoldButton(
-                text: 'READY FOR PICKUP',
-                icon: Icons.store_rounded,
-                onPressed: () => _updateStatus(context, ref, 'READY'),
-              ).animate(delay: 300.ms).fadeIn(),
-            
-            if (order['status'] == 'READY')
-              GoldButton(
-                text: 'MARK AS COLLECTED',
-                icon: Icons.check_circle_rounded,
-                onPressed: () => _updateStatus(context, ref, 'PICKED'),
-              ),
-
-             if (order['status'] == 'REFUND_REQUESTED')
-              Row(
-                children: [
-                  Expanded(
-                    child: GoldButton(
-                      text: 'APPROVE REFUND',
-                      color: AppColors.success,
-                      onPressed: () => _updateStatus(context, ref, 'REFUNDED'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: GoldButton(
-                      text: 'REJECT',
-                      isOutlined: true,
-                      onPressed: () => _updateStatus(context, ref, 'PAID'),
-                    ),
-                  ),
-                ],
-              ),
+            _FulfillmentActionCenter(order: order, onUpdate: (status) => _updateStatus(context, ref, status)),
 
             const SizedBox(height: 12),
             
             GoldButton(
-              text: 'DOWNLOAD INVOICE',
+              text: 'PREVIEW TAX INVOICE',
               isOutlined: true,
               icon: Icons.receipt_long_rounded,
               onPressed: () => InvoiceService.downloadInvoice(orderModel, user: user),
@@ -176,6 +143,78 @@ class AdminOrderDetailScreen extends ConsumerWidget {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Order updated to ${newStatus.toUpperCase()}')),
+    );
+  }
+}
+
+class _FulfillmentActionCenter extends StatelessWidget {
+  final Map<String, dynamic> order;
+  final Function(String) onUpdate;
+
+  const _FulfillmentActionCenter({required this.order, required this.onUpdate});
+
+  @override
+  Widget build(BuildContext context) {
+    final status = order['status']?.toString().toUpperCase() ?? 'PENDING';
+
+    return Column(
+      children: [
+        if (status == 'PAYMENT_PENDING' || status == 'CREATED')
+          GoldButton(
+            text: 'CONFIRM PAYMENT MANUALLY',
+            icon: Icons.payments_rounded,
+            onPressed: () => onUpdate('ORDER_CONFIRMED'),
+          ),
+
+        if (status == 'ORDER_CONFIRMED')
+          GoldButton(
+            text: 'START PROCESSING',
+            icon: Icons.conveyor_belt, // Note: Use available icon
+            onPressed: () => onUpdate('PROCESSING'),
+          ),
+
+        if (status == 'PROCESSING')
+          GoldButton(
+            text: 'SEND TO QUALITY CHECK',
+            icon: Icons.fact_check_rounded,
+            onPressed: () => onUpdate('QUALITY_CHECKING'),
+          ),
+
+        if (status == 'QUALITY_CHECKING')
+          GoldButton(
+            text: 'READY FOR PICKUP',
+            icon: Icons.store_rounded,
+            onPressed: () => onUpdate('READY_FOR_PICKUP'),
+          ),
+
+        if (status == 'READY_FOR_PICKUP' || status == 'READY')
+          GoldButton(
+            text: 'MARK AS COLLECTED',
+            icon: Icons.check_circle_rounded,
+            onPressed: () => onUpdate('PICKED_UP'),
+          ),
+
+        if (status == 'REFUND_REQUESTED')
+          Row(
+            children: [
+              Expanded(
+                child: GoldButton(
+                  text: 'APPROVE REFUND',
+                  color: AppColors.success,
+                  onPressed: () => onUpdate('REFUNDED'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GoldButton(
+                  text: 'REJECT',
+                  isOutlined: true,
+                  onPressed: () => onUpdate('ORDER_CONFIRMED'),
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

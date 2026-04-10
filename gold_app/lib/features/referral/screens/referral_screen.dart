@@ -13,6 +13,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../wallet/providers/wallet_provider.dart';
 import '../../../widgets/shimmer_loader.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../core/providers/settings_provider.dart';
 
 class ReferralScreen extends ConsumerWidget {
   const ReferralScreen({super.key}) ;
@@ -21,11 +22,12 @@ class ReferralScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
     final walletState = ref.watch(walletProvider);
+    final settings = ref.watch(settingsProvider);
     final referralCode = user?.referralCode ?? '----';
     
     // Filter for referral transactions
     final referralTransactions = walletState.transactions
-        .where((t) => t.type.toLowerCase() == 'referral')
+        .where((t) => t.type.toLowerCase() == 'referral' || t.type.toLowerCase() == 'referral_reward')
         .take(5)
         .toList();
 
@@ -43,7 +45,7 @@ class ReferralScreen extends ConsumerWidget {
                   .animate().fadeIn(duration: 300.ms),
               SizedBox(height: 8),
               Text(
-                'Earn ₹${AppConstants.referralCommission.toInt()} for every successful referral',
+                'Earn ${Formatters.currency(settings.referralReward)} for every successful referral',
                 style: AppTextStyles.bodySmall,
                 textAlign: TextAlign.center,
               ).animate(delay: 100.ms).fadeIn(),
@@ -121,7 +123,7 @@ class ReferralScreen extends ConsumerWidget {
                       text: 'Share via WhatsApp',
                       onPressed: () {
                         Share.share(
-                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ₹${AppConstants.referralCommission.toInt()} cashback on your first order. Download now!',
+                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ${Formatters.currency(settings.referralReward)} cashback on your first order. Download now!',
                           subject: 'Royal Gold Store Invitation',
                         ) ;
                       },
@@ -196,7 +198,7 @@ class ReferralScreen extends ConsumerWidget {
                     SizedBox(height: 16),
                     _HowItWorksStep(number: '1', text: 'Share your referral code with friends'),
                     _HowItWorksStep(number: '2', text: 'They use it during their first purchase'),
-                    _HowItWorksStep(number: '3', text: 'You earn ₹${AppConstants.referralCommission.toInt()} per order', isLast: true),
+                    _HowItWorksStep(number: '3', text: 'You earn ${Formatters.currency(settings.referralReward)} per order', isLast: true),
                   ],
                 ),
               ).animate(delay: 500.ms).fadeIn(duration: 400.ms),

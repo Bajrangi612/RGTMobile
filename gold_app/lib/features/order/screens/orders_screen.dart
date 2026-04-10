@@ -196,7 +196,7 @@ class _OrderCard extends StatelessWidget {
                   Text(order.productName, style: AppTextStyles.labelLarge),
                   SizedBox(height: 4),
                   Text(
-                    Formatters.date(order.orderDate),
+                    'Qty: ${order.quantity} | ${Formatters.date(order.orderDate)}',
                     style: AppTextStyles.caption,
                   ),
                 ],
@@ -206,8 +206,12 @@ class _OrderCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  Formatters.currency(order.price),
+                  Formatters.currency(order.totalPrice),
                   style: AppTextStyles.priceTag.copyWith(fontSize: 15),
+                ),
+                Text(
+                  '(Incl. GST)',
+                  style: AppTextStyles.caption.copyWith(fontSize: 8, color: AppColors.success),
                 ),
                 SizedBox(height: 6),
                  StatusBadge(status: order.statusType, small: true),

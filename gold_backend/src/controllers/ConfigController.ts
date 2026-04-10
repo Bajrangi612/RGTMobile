@@ -28,6 +28,32 @@ export class ConfigController {
   }
 
   /**
+   * Get public system configurations (Public/User)
+   */
+  static async getPublicConfigs(req: Request, res: Response, next: NextFunction) {
+    try {
+      const settings = await prisma.setting.findMany({
+        where: {
+          key: {
+            in: ["referral_reward", "min_withdrawal", "gst_rate", "delivery_days"]
+          }
+        }
+      });
+
+      const config: any = {};
+      settings.forEach((s) => {
+        let val: any = s.value;
+        if (!isNaN(val as any)) val = Number(val);
+        config[s.key] = val;
+      });
+
+      return successResponse(res, config, "Public configs fetched successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Update or create system configurations (Admin only)
    */
   static async updateConfigs(req: Request, res: Response, next: NextFunction) {

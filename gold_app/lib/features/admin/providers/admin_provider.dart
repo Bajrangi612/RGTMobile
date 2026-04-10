@@ -24,6 +24,8 @@ class AdminState {
   final int lowStockThreshold;
   final List<dynamic> allTransactions;
   final List<dynamic> withdrawalRequests;
+  final double referralReward;
+  final double minWithdrawal;
   final String? error;
 
   AdminState({
@@ -46,6 +48,8 @@ class AdminState {
     this.weightFilter = 'all',
     this.lowStockThreshold = 10,
     this.withdrawalRequests = const [],
+    this.referralReward = 500.0,
+    this.minWithdrawal = 1000.0,
     this.error,
   });
 
@@ -69,6 +73,8 @@ class AdminState {
     String? weightFilter,
     int? lowStockThreshold,
     List<dynamic>? withdrawalRequests,
+    double? referralReward,
+    double? minWithdrawal,
     String? error,
   }) {
     return AdminState(
@@ -91,6 +97,8 @@ class AdminState {
       weightFilter: weightFilter ?? this.weightFilter,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       withdrawalRequests: withdrawalRequests ?? this.withdrawalRequests,
+      referralReward: referralReward ?? this.referralReward,
+      minWithdrawal: minWithdrawal ?? this.minWithdrawal,
       error: error,
     );
   }
@@ -384,11 +392,23 @@ class AdminNotifier extends StateNotifier<AdminState> {
     int? orderIntervalMinutes,
     double? gstRate,
     int? lowStockThreshold,
+    double? referralReward,
+    double? minWithdrawal,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       if (deliveryTimeDays != null) {
         await ApiService().updateAdminSettings({'delivery_days': deliveryTimeDays});
+      }
+      
+      if (referralReward != null) {
+        await ApiService().updateAdminSettings({'referral_reward': referralReward});
+      }
+      if (minWithdrawal != null) {
+        await ApiService().updateAdminSettings({'min_withdrawal': minWithdrawal});
+      }
+      if (gstRate != null) {
+        await ApiService().updateAdminSettings({'gst_rate': gstRate});
       }
       
       state = state.copyWith(
@@ -397,6 +417,8 @@ class AdminNotifier extends StateNotifier<AdminState> {
         orderIntervalMinutes: orderIntervalMinutes ?? state.orderIntervalMinutes,
         gstRate: gstRate ?? state.gstRate,
         lowStockThreshold: lowStockThreshold ?? state.lowStockThreshold,
+        referralReward: referralReward ?? state.referralReward,
+        minWithdrawal: minWithdrawal ?? state.minWithdrawal,
         isLoading: false,
       );
       

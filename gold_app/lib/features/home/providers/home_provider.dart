@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/home_repository.dart';
 import '../../product/data/models/product_model.dart';
@@ -42,8 +43,22 @@ class HomeState {
 
 class HomeNotifier extends StateNotifier<HomeState> {
   final HomeRepository _repository;
+  Timer? _timer;
 
-  HomeNotifier(this._repository) : super(HomeState());
+  HomeNotifier(this._repository) : super(HomeState()) {
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 60), (_) => refreshPrice());
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   Future<void> loadDashboard() async {
     state = state.copyWith(isLoading: true);
