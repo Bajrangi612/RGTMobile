@@ -109,14 +109,14 @@ export class OrderController {
   }
 
   /**
-   * Resell an order
+   * Sell back an order
    */
-  static async resell(req: AuthRequest, res: Response, next: NextFunction) {
+  static async sellBack(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const orderId = req.params.id as string;
       const userId = req.user!.id as string;
-      const order = await OrderService.resellOrder(userId, orderId);
-      return successResponse(res, { order }, "Order resold successfully");
+      const order = await OrderService.sellBackOrder(userId, orderId);
+      return successResponse(res, { order }, "Order sold back successfully");
     } catch (error) {
       next(error);
     }

@@ -121,8 +121,8 @@ class ReferralScreen extends ConsumerWidget {
                       text: 'Share via WhatsApp',
                       onPressed: () {
                         Share.share(
-                          'Join Royal Gold and start investing in 24K pure gold! Use my referral code: $referralCode to earn ₹${AppConstants.referralCommission.toInt()} cashback on your first purchase. Download now!',
-                          subject: 'Premium Gold Trading Referral',
+                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ₹${AppConstants.referralCommission.toInt()} cashback on your first order. Download now!',
+                          subject: 'Royal Gold Store Invitation',
                         ) ;
                       },
                       icon: Icons.share,

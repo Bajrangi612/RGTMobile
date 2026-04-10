@@ -10,6 +10,7 @@ class GoldButton extends StatefulWidget {
   final double? width;
   final IconData? icon;
   final Color? color;
+  final double? height;
 
   GoldButton({
     super.key,
@@ -20,6 +21,7 @@ class GoldButton extends StatefulWidget {
     this.width,
     this.icon,
     this.color,
+    this.height,
   }) ;
 
   @override
@@ -68,7 +70,7 @@ class _GoldButtonState extends State<GoldButton>
         },
         child: Container(
           width: widget.width ?? double.infinity,
-          height: 52,
+          height: widget.height ?? 52,
           decoration: widget.isOutlined
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(26),
@@ -125,8 +127,9 @@ class _GoldButtonState extends State<GoldButton>
                         style: AppTextStyles.button.copyWith(
                           color: widget.isOutlined
                               ? (_isDisabled ? AppColors.grey : AppColors.royalGold)
-                              : (_isDisabled ? Colors.white70 : Colors.white),
-                          fontWeight: FontWeight.w700,
+                              : (_isDisabled ? Colors.white70 : AppColors.deepBlack),
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ],

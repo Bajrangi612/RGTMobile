@@ -209,8 +209,8 @@ class ApiService {
     return await _dio.put('/orders/$orderId/cancel');
   }
 
-  Future<Response> resellOrder(String orderId) async {
-    return await _dio.put('/orders/$orderId/resell');
+  Future<Response> sellBackOrder(String orderId) async {
+    return await _dio.put('/orders/$orderId/sell-back');
   }
 
   Future<Response> uploadImage(Uint8List bytes, String fileName) async {

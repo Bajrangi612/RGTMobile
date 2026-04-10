@@ -74,6 +74,22 @@ class WalletNotifier extends StateNotifier<WalletState> {
       );
     }
   }
+
+  Future<bool> requestWithdrawal(double amount) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await _apiService.requestWithdrawal(amount, 'BANK');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await loadWalletDetails();
+        return true;
+      }
+      state = state.copyWith(isLoading: false, error: 'Withdrawal request failed');
+      return false;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
 }
 
 final walletProvider = StateNotifierProvider<WalletNotifier, WalletState>((ref) {

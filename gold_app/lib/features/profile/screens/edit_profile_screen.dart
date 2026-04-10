@@ -21,7 +21,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
   late TextEditingController _addressController;
-  late TextEditingController _dobController;
   late TextEditingController _panController;
   
   bool _isLoading = false;
@@ -34,17 +33,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _emailController = TextEditingController(text: user?.email);
     _addressController = TextEditingController(text: user?.address);
     
-    // Format DOB from backend format to DD/MM/YYYY
-    String dobText = '';
-    if (user?.dob != null && user!.dob!.isNotEmpty) {
-      try {
-        final date = DateTime.parse(user.dob!);
-        dobText = DateFormat('dd/MM/yyyy').format(date);
-      } catch (_) {
-        dobText = user.dob!;
-      }
-    }
-    _dobController = TextEditingController(text: dobText);
     _panController = TextEditingController(text: user?.panNo);
   }
 
@@ -53,45 +41,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _addressController.dispose();
-    _dobController.dispose();
     _panController.dispose();
     super.dispose();
   }
 
-  Future<void> _selectDate() async {
-    DateTime? initialDate;
-    if (_dobController.text.isNotEmpty) {
-      try {
-        initialDate = DateFormat('dd/MM/yyyy').parse(_dobController.text);
-      } catch (_) {}
-    }
-
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: initialDate ?? DateTime.now().subtract(const Duration(days: 365 * 18)),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: AppColors.royalGold,
-              onPrimary: AppColors.deepBlack,
-              surface: AppColors.surface,
-              onSurface: AppColors.pureWhite,
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (picked != null) {
-      setState(() {
-        _dobController.text = DateFormat('dd/MM/yyyy').format(picked);
-      });
-    }
-  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -103,7 +56,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         name: _nameController.text,
         email: _emailController.text,
         address: _addressController.text,
-        dob: _dobController.text,
         panNo: _panController.text,
       );
       
@@ -164,14 +116,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       _buildTextField(_addressController, "House No, Street, City, State, PIN", Icons.home_outlined, maxLines: 3),
                       const SizedBox(height: 20),
 
-                      _buildFieldTitle('Date of Birth'),
-                      _buildTextField(
-                        _dobController, 
-                        "DD/MM/YYYY", 
-                        Icons.calendar_today_outlined, 
-                        readOnly: true,
-                        onTap: _selectDate,
-                      ),
                     ],
                   ),
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),

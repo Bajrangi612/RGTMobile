@@ -96,6 +96,21 @@ async function main() {
     },
   });
 
+  console.log('Seeding Global Settings...');
+  const settings = [
+    { key: 'delivery_days', value: '7', description: 'Standard delivery days after payment' },
+    { key: 'referral_reward', value: '500', description: 'Fixed reward for successful referrals' },
+    { key: 'min_withdrawal', value: '1000', description: 'Minimum balance required to request withdrawal' }
+  ];
+
+  for (const s of settings) {
+    await prisma.setting.upsert({
+      where: { key: s.key },
+      update: {},
+      create: s,
+    });
+  }
+
   console.log('Seeding completed!');
 }
 

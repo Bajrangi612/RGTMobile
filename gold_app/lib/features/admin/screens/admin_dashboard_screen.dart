@@ -16,6 +16,7 @@ import 'admin_config_screen.dart';
 import 'admin_reports_screen.dart';
 import 'admin_gold_price_screen.dart';
 import 'admin_transactions_screen.dart';
+import 'admin_withdrawal_manager_screen.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../home/screens/home_screen.dart';
@@ -168,21 +169,21 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                       sparkData: _generateRelativeSpark(adminState.totalRevenue),
                                     ),
                                     _EliteStatCard(
-                                      label: 'ASSETS LIQUIDATED',
+                                      label: 'GOLD COLLECTED',
                                       value: '${adminState.totalWeight.toStringAsFixed(1)}g',
-                                      icon: Icons.auto_graph,
+                                      icon: Icons.check_circle_outline,
                                       color: AppColors.success,
                                       sparkData: _generateRelativeSpark(adminState.totalWeight),
                                     ),
                                     _EliteStatCard(
-                                      label: 'ACTIVE INVESTORS',
+                                      label: 'ACTIVE CUSTOMERS',
                                       value: '${adminState.users.length}',
                                       icon: Icons.group_outlined,
                                       color: Colors.blueAccent,
                                       sparkData: _generateRelativeSpark(adminState.users.length.toDouble()),
                                     ),
                                     _EliteStatCard(
-                                      label: 'PENDING LIQUIDATIONS',
+                                      label: 'PENDING PICKUPS',
                                       value: '${adminState.pendingOrdersCount}',
                                       icon: Icons.pending_actions,
                                       color: AppColors.warning,
@@ -252,7 +253,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 _SidebarItem(icon: Icons.dashboard_outlined, label: 'Dashboard', isSelected: true, onTap: () {}),
                 _SidebarItem(icon: Icons.inventory_2_outlined, label: 'Products', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminProductManager()))),
                 _SidebarItem(icon: Icons.category_outlined, label: 'Categories', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminCategoryManager()))),
-                _SidebarItem(icon: Icons.people_outline, label: 'Investors', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager()))),
+                _SidebarItem(icon: Icons.people_outline, label: 'Customers', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager()))),
                 _SidebarItem(icon: Icons.local_shipping_outlined, label: 'Orders', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager()))),
                 _SidebarItem(icon: Icons.account_balance_wallet_outlined, label: 'Transactions', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen()))),
                 _SidebarItem(icon: Icons.settings_outlined, label: 'Settings', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminConfigScreen()))),
@@ -593,9 +594,14 @@ class _ManagementGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen())),
         ),
         _CompactTool(
+          icon: Icons.payments_outlined,
+          label: 'Payouts',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminWithdrawalManagerScreen())),
+        ),
+        _CompactTool(
           icon: Icons.analytics_outlined,
           label: 'Reports',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminReportsScreen())),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminReportsScreen())),
         ),
       ],
     );
@@ -706,7 +712,7 @@ class _OperationLogs extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Order #${order['id']?.substring(0, 8)}...', style: AppTextStyles.labelSmall),
-                      Text('${order['product']?['name'] ?? 'Gold Asset'}', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.4))),
+                      Text('${order['product']?['name'] ?? 'Gold Item'}', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.4))),
                     ],
                   ),
                 ),

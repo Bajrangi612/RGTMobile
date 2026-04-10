@@ -46,26 +46,26 @@ model GoldPrice {
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  userId        String
-  productId     String
-  quantity      Int         @default(1)
-  weight        Decimal?    @db.Decimal(10, 3)
-  amount        Decimal     @db.Decimal(15, 2)
-  gst           Decimal     @db.Decimal(15, 2)
-  total         Decimal     @db.Decimal(15, 2)
-  status        OrderStatus @default(CREATED)
-  paymentId     String?     @unique(map: "Order_paymentId_key")
-  paymentStatus String?
-  deliveryDate  DateTime?
-  goldPriceAtPurchase Decimal? @db.Decimal(15, 2)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  referralCode  String?
-  invoiceNo     String?     @unique(map: "Order_invoiceNo_key")
-  product       Product     @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
-  user          User        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
-  payments      Payment[]
+  id                  String      @id @default(uuid())
+  userId              String
+  productId           String
+  quantity            Int         @default(1)
+  weight              Decimal?    @db.Decimal(10, 3)
+  amount              Decimal     @db.Decimal(15, 2)
+  gst                 Decimal     @db.Decimal(15, 2)
+  total               Decimal     @db.Decimal(15, 2)
+  status              OrderStatus @default(CREATED)
+  paymentId           String?     @unique(map: "Order_paymentId_key")
+  paymentStatus       String?
+  deliveryDate        DateTime?
+  goldPriceAtPurchase Decimal?    @db.Decimal(15, 2)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  referralCode        String?
+  invoiceNo           String?     @unique(map: "Order_invoiceNo_key")
+  product             Product     @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
+  user                User        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
+  payments            Payment[]
 
   @@index([productId], map: "Order_productId_fkey")
   @@index([status], map: "Order_status_idx")
@@ -99,11 +99,14 @@ model Product {
   updatedAt     DateTime  @updatedAt
   fixedPrice    Decimal   @default(0.00) @db.Decimal(15, 2)
   makingCharges Decimal   @default(0.00) @db.Decimal(15, 2)
+  isPremium     Boolean   @default(false)
+  isPromoted    Boolean   @default(false)
   orders        Order[]
   category      Category? @relation(fields: [categoryId], references: [id], map: "Product_categoryId_fkey")
 
   @@index([categoryId], map: "Product_categoryId_idx")
   @@index([isActive], map: "Product_isActive_idx")
+  @@index([isPremium], map: "Product_isPremium_idx")
   @@map("product")
 }
 
@@ -134,36 +137,36 @@ model Transaction {
 }
 
 model User {
-  id                               String        @id @default(uuid())
+  id                               String              @id @default(uuid())
   name                             String
-  email                            String        @unique(map: "User_email_key")
-  phone                            String        @unique(map: "User_phone_key")
+  email                            String              @unique(map: "User_email_key")
+  phone                            String              @unique(map: "User_phone_key")
   password                         String
-  role                             UserRole      @default(CUSTOMER)
-  kycStatus                        KycStatus     @default(PENDING)
+  role                             UserRole            @default(CUSTOMER)
+  kycStatus                        KycStatus           @default(PENDING)
   aadharNo                         String?
   panNo                            String?
   address                          String?
   photo                            String?
-  dob                              DateTime?
   referrerId                       String?
   staffId                          String?
-  createdAt                        DateTime      @default(now())
-  updatedAt                        DateTime      @updatedAt
-  referralCode                     String?       @unique(map: "User_referralCode_key")
+  createdAt                        DateTime            @default(now())
+  updatedAt                        DateTime            @updatedAt
+  referralCode                     String              @unique(map: "User_referralCode_key")
   bankAccountNo                    String?
   bankHolderName                   String?
   bankIfsc                         String?
   bankName                         String?
-  bankStatus                       BankStatus    @default(PENDING)
+  bankStatus                       BankStatus          @default(PENDING)
   auditLogs                        AuditLog[]
   orders                           Order[]
   transactions                     Transaction[]
-  user_user_referrerIdTouser       User?         @relation("user_referrerIdTouser", fields: [referrerId], references: [id], map: "User_referrerId_fkey")
-  other_user_user_referrerIdTouser User[]        @relation("user_referrerIdTouser")
-  user_user_staffIdTouser          User?         @relation("user_staffIdTouser", fields: [staffId], references: [id], map: "User_staffId_fkey")
-  other_user_user_staffIdTouser    User[]        @relation("user_staffIdTouser")
+  user_user_referrerIdTouser       User?               @relation("user_referrerIdTouser", fields: [referrerId], references: [id], map: "User_referrerId_fkey")
+  other_user_user_referrerIdTouser User[]              @relation("user_referrerIdTouser")
+  user_user_staffIdTouser          User?               @relation("user_staffIdTouser", fields: [staffId], references: [id], map: "User_staffId_fkey")
+  other_user_user_staffIdTouser    User[]              @relation("user_staffIdTouser")
   wallet                           Wallet?
+  withdrawalRequests               WithdrawalRequest[]
 
   @@index([phone], map: "User_phone_idx")
   @@index([referrerId], map: "User_referrerId_fkey")
@@ -197,6 +200,7 @@ model Payment {
   updatedAt         DateTime @updatedAt
   order             Order    @relation(fields: [orderId], references: [id])
 
+  @@index([orderId], map: "payment_orderId_fkey")
   @@map("payment")
 }
 
@@ -207,15 +211,19 @@ model AppConfig {
   @@map("app_config")
 }
 
-enum TransactionType {
-  DEPOSIT
-  PURCHASE
-  WITHDRAWAL
-  PROFIT
-  REFERRAL
-  REWARD
+model WithdrawalRequest {
+  id          String   @id @default(uuid())
+  userId      String
+  amount      Decimal  @db.Decimal(15, 2)
+  status      String   @default("PENDING")
+  bankDetails Json?
+  adminNotes  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
 
-  @@map("transaction_type")
+  @@index([userId], map: "WithdrawalRequest_userId_idx")
+  @@map("withdrawal_request")
 }
 
 enum UserRole {
@@ -242,13 +250,25 @@ enum BankStatus {
   @@map("user_bankStatus")
 }
 
+enum TransactionType {
+  DEPOSIT
+  PURCHASE
+  WITHDRAWAL
+  CREDIT
+  REFERRAL
+  REWARD
+  REFERRAL_REWARD
+
+  @@map("transaction_type")
+}
+
 enum OrderStatus {
   CREATED
   PAID
   PENDING
   READY
   PICKED
-  RESOLD
+  BUYBACK
   CANCELLED
   REFUND_REQUESTED
   REFUNDED

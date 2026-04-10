@@ -7,7 +7,7 @@ class UserModel {
   final String kycStatus;
   final String bankStatus;
   final int orderCount;
-  final double totalInvestment;
+  final double totalCollectionValue;
   final bool passKeySet;
   final String createdAt;
   final bool isAdmin;
@@ -32,7 +32,7 @@ class UserModel {
     required this.kycStatus,
     required this.bankStatus,
     required this.orderCount,
-    required this.totalInvestment,
+    required this.totalCollectionValue,
     required this.passKeySet,
     required this.createdAt,
     this.isAdmin = false,
@@ -58,7 +58,7 @@ class UserModel {
       kycStatus: json['kycStatus'] ?? 'pending',
       bankStatus: json['bankStatus'] ?? 'pending',
       orderCount: json['orderCount'] ?? 0,
-      totalInvestment: (json['totalInvestment'] ?? 0).toDouble(),
+      totalCollectionValue: (json['totalCollectionValue'] ?? 0).toDouble(),
       passKeySet: json['passKeySet'] ?? false,
       createdAt: json['createdAt'] ?? '',
       isAdmin: json['isAdmin'] ?? (json['role'] == 'ADMIN'),
@@ -84,7 +84,7 @@ class UserModel {
         'kycStatus': kycStatus,
         'bankStatus': bankStatus,
         'orderCount': orderCount,
-        'totalInvestment': totalInvestment,
+        'totalCollectionValue': totalCollectionValue,
         'passKeySet': passKeySet,
         'createdAt': createdAt,
         'isAdmin': isAdmin,
@@ -109,7 +109,7 @@ class UserModel {
     String? kycStatus,
     String? bankStatus,
     int? orderCount,
-    double? totalInvestment,
+    double? totalCollectionValue,
     bool? passKeySet,
     String? createdAt,
     bool? isAdmin,
@@ -133,7 +133,7 @@ class UserModel {
       kycStatus: kycStatus ?? this.kycStatus,
       bankStatus: bankStatus ?? this.bankStatus,
       orderCount: orderCount ?? this.orderCount,
-      totalInvestment: totalInvestment ?? this.totalInvestment,
+      totalCollectionValue: totalCollectionValue ?? this.totalCollectionValue,
       passKeySet: passKeySet ?? this.passKeySet,
       createdAt: createdAt ?? this.createdAt,
       isAdmin: isAdmin ?? this.isAdmin,
@@ -156,9 +156,7 @@ class UserModel {
 
   bool get isProfileComplete =>
       address != null && address!.isNotEmpty &&
-      panNo != null && panNo!.isNotEmpty &&
-      dob != null && dob!.isNotEmpty &&
-      bankAccountNo != null && bankAccountNo!.isNotEmpty;
+      panNo != null && panNo!.isNotEmpty;
 }
 
 class WalletModel {

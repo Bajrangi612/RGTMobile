@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:razorpay_web/razorpay_web.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../providers/product_providers.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../widgets/gold_button.dart';
@@ -269,6 +269,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
           _PriceDetail(label: 'Price per gram', value: '₹${pricing.goldValue / widget.product.weight}'),
           _PriceDetail(label: 'Base Amount (${_quantity}x)', value: '₹${pricing.goldValue * _quantity}'),
           _PriceDetail(label: 'GST (3%)', value: '₹${(pricing.gstAmount * _quantity).toStringAsFixed(2)}'),
+          _PriceDetail(label: 'Collection', value: 'Pickup at Store'),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 16.0),
             child: Divider(color: Colors.white12, thickness: 1),

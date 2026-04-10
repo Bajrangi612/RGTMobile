@@ -10,7 +10,7 @@ class AppConstants {
   static const int passKeyLength = 4;
   
   // Payment Config
-  static const String razorpayKeyId = 'rzp_test_5p3nJSy2kXmRLo'; // Default test key
+  static const String razorpayKeyId = 'rzp_live_SafL7UaY86evlY'; // Live production key
   
   // Referral Config
   static const double referralCommission = 50.0;

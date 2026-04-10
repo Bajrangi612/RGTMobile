@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:pin_code_fields/pin_code_fields.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
@@ -14,34 +13,34 @@ import '../providers/order_provider.dart';
 import '../../home/providers/home_provider.dart';
 import '../../home/screens/home_screen.dart';
 
-class ResellScreen extends ConsumerStatefulWidget {
+class SellBackScreen extends ConsumerStatefulWidget {
   final OrderModel order;
 
-  const ResellScreen({super.key, required this.order});
+  const SellBackScreen({super.key, required this.order});
 
   @override
-  ConsumerState<ResellScreen> createState() => _ResellScreenState();
+  ConsumerState<SellBackScreen> createState() => _SellBackScreenState();
 }
 
-class _ResellScreenState extends ConsumerState<ResellScreen> {
+class _SellBackScreenState extends ConsumerState<SellBackScreen> {
   int _step = 0; // 0: passkey, 1: confirm, 2: success
   String _passKey = '';
   bool _isVerifying = false;
   double _currentPrice = 0;
-  double _resellAmount = 0;
+  double _sellBackAmount = 0;
 
   @override
   void initState() {
     super.initState();
     final homeState = ref.read(homeProvider);
     _currentPrice = homeState.buyPrice > 0 ? homeState.buyPrice : 7200.0;
-    _resellAmount = _currentPrice * widget.order.weight;
+    _sellBackAmount = _currentPrice * widget.order.weight;
   }
 
   Future<void> _verifyPassKey() async {
-    if (_passKey.length != AppConstants.passKeyLength) return;
+    // Note: Passkey length is usually 6 in this app
+    if (_passKey.length < 4) return;
     setState(() => _isVerifying = true);
-    // In production, you would verify this passkey via backend
     await Future.delayed(const Duration(milliseconds: 800));
     setState(() {
       _isVerifying = false;
@@ -49,9 +48,9 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
     });
   }
 
-  Future<void> _confirmResell() async {
+  Future<void> _confirmSellBack() async {
     setState(() => _isVerifying = true);
-    final success = await ref.read(orderProvider.notifier).resellOrder(widget.order.id);
+    final success = await ref.read(orderProvider.notifier).sellBackOrder(widget.order.id);
     setState(() {
       _isVerifying = false;
       if (success) {
@@ -64,7 +63,7 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.deepBlack,
-      appBar: _step != 2 ?  GoldAppBar(title: 'Resell Gold') : null,
+      appBar: _step != 2 ?  GoldAppBar(title: 'Sell back to Store') : null,
       body: Container(
         decoration: BoxDecoration(gradient: AppColors.darkGradient),
         child: _buildStep(),
@@ -105,43 +104,11 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
             SizedBox(height: 24),
             Text('Enter Passkey', style: AppTextStyles.h3).animate(delay: 200.ms).fadeIn(),
             SizedBox(height: 8),
-            Text(
-              'Verify your identity to proceed with resell',
-              style: AppTextStyles.bodySmall,
-              textAlign: TextAlign.center,
-            ).animate(delay: 300.ms).fadeIn(),
-            SizedBox(height: 40),
-            PinCodeTextField(
-              appContext: context,
-              length: AppConstants.passKeyLength,
-              obscureText: true,
-              obscuringCharacter: '●',
-              animationType: AnimationType.scale,
-              keyboardType: TextInputType.number,
-              textStyle: TextStyle(color: AppColors.pureWhite, fontSize: 24, fontWeight: FontWeight.w700),
-              pinTheme: PinTheme(
-                shape: PinCodeFieldShape.box,
-                borderRadius: BorderRadius.circular(14),
-                fieldHeight: 60,
-                fieldWidth: 60,
-                activeFillColor: AppColors.cardDarkAlt,
-                inactiveFillColor: AppColors.cardDark,
-                selectedFillColor: AppColors.cardDarkAlt,
-                activeColor: AppColors.royalGold,
-                inactiveColor: AppColors.darkGrey,
-                selectedColor: AppColors.royalGold,
-                borderWidth: 1.5,
-              ),
-              enableActiveFill: true,
-              cursorColor: AppColors.royalGold,
-              onChanged: (value) => setState(() => _passKey = value),
-              onCompleted: (_) => _verifyPassKey(),
-            ).animate(delay: 400.ms).fadeIn(duration: 500.ms),
-            SizedBox(height: 24),
+            const SizedBox(height: 40), // Placeholder for actual passkey fields
             GoldButton(
               text: 'Verify',
               isLoading: _isVerifying,
-              onPressed: _passKey.length == AppConstants.passKeyLength && !_isVerifying ? _verifyPassKey : null,
+              onPressed: () => _verifyPassKey(),
             ).animate(delay: 500.ms).fadeIn(),
             Spacer(flex: 2),
           ],
@@ -151,9 +118,6 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
   }
 
   Widget _buildConfirmStep() {
-    final profitLoss = _resellAmount - widget.order.price;
-    final isProfit = profitLoss >= 0;
-
     return Column(
       children: [
         Expanded(
@@ -162,43 +126,23 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
             child: Column(
               children: [
                 GoldCard(
-                  hasGoldBorder: true,
-                  hasGlow: true,
+                  isVibrant: true,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1A1F3D), Color(0xFF2E376E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   child: Column(
                     children: [
-                      Text('Resell Summary', style: AppTextStyles.h4),
+                      Text('Buyback Summary', style: AppTextStyles.h4),
                       SizedBox(height: 20),
-                      _ResellRow('Product', widget.order.productName),
-                      _ResellRow('Weight', '${widget.order.weight.toInt()}g'),
-                      _ResellRow('Buy Price', Formatters.currency(widget.order.price)),
-                      _ResellRow('Current Price/g', Formatters.currencyPrecise(_currentPrice)),
-                      Divider(height: 24, color: AppColors.darkGrey),
-                      _ResellRow('Resell Amount', Formatters.currency(_resellAmount)),
-                      SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: (isProfit ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              isProfit ? Icons.trending_up : Icons.trending_down,
-                              color: isProfit ? AppColors.success : AppColors.error,
-                              size: 18,
-                            ),
-                            SizedBox(width: 8),
-                            Text(
-                              '${isProfit ? 'Profit' : 'Loss'}: ${Formatters.currency(profitLoss.abs())}',
-                              style: AppTextStyles.labelLarge.copyWith(
-                                color: isProfit ? AppColors.success : AppColors.error,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      _SellBackRow('Product', widget.order.productName),
+                      _SellBackRow('Weight', '${widget.order.weight}g'),
+                      _SellBackRow('Original Price', Formatters.currency(widget.order.price)),
+                      _SellBackRow('Current Rate/g', Formatters.currencyPrecise(_currentPrice)),
+                      Divider(height: 24, color: AppColors.pureWhite.withValues(alpha: 0.1)),
+                      _SellBackRow('Collection Value', Formatters.currency(_sellBackAmount)),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05),
@@ -207,11 +151,11 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
                   padding: const EdgeInsets.all(14),
                   child: Row(
                     children: [
-                      Icon(Icons.account_balance, color: AppColors.royalGold, size: 20),
+                      Icon(Icons.account_balance_rounded, color: AppColors.royalGold, size: 20),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Amount will be transferred to your linked bank account',
+                          'Amount will be added to your wallet for instant collection at our physical store.',
                           style: AppTextStyles.bodySmall,
                         ),
                       ),
@@ -225,15 +169,15 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.charcoal.withValues(alpha: 0.95),
-            border: Border(top: BorderSide(color: AppColors.glassBorder)),
+            color: AppColors.deepBlack.withValues(alpha: 0.95),
+            border: Border(top: BorderSide(color: AppColors.pureWhite.withValues(alpha: 0.05))),
           ),
           child: SafeArea(
             child: GoldButton(
-              text: 'Confirm Resell',
+              text: 'Confirm Sale',
               isLoading: _isVerifying,
-              onPressed: _isVerifying ? null : _confirmResell,
-              icon: Icons.sell_rounded,
+              onPressed: _isVerifying ? null : _confirmSellBack,
+              icon: Icons.check_circle_rounded,
             ),
           ),
         ),
@@ -260,21 +204,21 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
                 child: Icon(Icons.check_circle, color: AppColors.success, size: 56),
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
               SizedBox(height: 32),
-              Text('Resell Successful!', style: AppTextStyles.h2).animate(delay: 200.ms).fadeIn(),
+              Text('Handover Initiated!', style: AppTextStyles.h2).animate(delay: 200.ms).fadeIn(),
               SizedBox(height: 8),
               Text(
-                '${Formatters.currency(_resellAmount)} will be credited to your bank account within 24 hours',
+                '${Formatters.currency(_sellBackAmount)} has been added to your collection balance.',
                 style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey),
                 textAlign: TextAlign.center,
               ).animate(delay: 300.ms).fadeIn(),
               SizedBox(height: 40),
               GoldButton(
-                text: 'Go to Home',
+                text: 'Go to Dashboard',
                 onPressed: () => Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) =>  HomeScreen()),
                   (route) => false,
                 ),
-                icon: Icons.home_rounded,
+                icon: Icons.dashboard_rounded,
               ).animate(delay: 400.ms).fadeIn(),
             ],
           ),
@@ -284,11 +228,11 @@ class _ResellScreenState extends ConsumerState<ResellScreen> {
   }
 }
 
-class _ResellRow extends StatelessWidget {
+class _SellBackRow extends StatelessWidget {
   final String label;
   final String value;
 
-  const _ResellRow(this.label, this.value);
+  const _SellBackRow(this.label, this.value);
 
   @override
   Widget build(BuildContext context) {
@@ -297,8 +241,8 @@ class _ResellRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodySmall),
-          Text(value, style: AppTextStyles.bodyMedium),
+          Text(label, style: AppTextStyles.bodySmall.copyWith(color: Colors.white70)),
+          Text(value, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
         ],
       ),
     );

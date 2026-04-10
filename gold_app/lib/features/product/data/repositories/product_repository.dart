@@ -76,11 +76,11 @@ class ProductRepository {
   }
 
   /**
-   * Resell a ready order
+   * Sell back a ready order
    */
-  Future<void> resellOrder(String orderId) async {
+  Future<void> sellBackOrder(String orderId) async {
     try {
-      await _apiService.resellOrder(orderId);
+      await _apiService.sellBackOrder(orderId);
     } catch (e) {
       rethrow;
     }

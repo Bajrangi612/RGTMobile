@@ -32,16 +32,19 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json* ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts ./scripts
 
 # Install ONLY production dependencies
 RUN npm install --omit=dev
 
 # RE-GENERATE Prisma client in the final environment to ensure binaries match
-# Note: Since prisma is a devDependency, we rely on the cached npx version or global
 RUN npx prisma generate
 
 # Expose Port
 EXPOSE 4000
 
-# Run the compiled JS directly (Bypasses npm for better signal handling)
-CMD ["node", "dist/index.js"]
+# Permissions for start script
+RUN chmod +x scripts/start.sh
+
+# Run the automated production entrypoint
+CMD ["bash", "scripts/start.sh"]

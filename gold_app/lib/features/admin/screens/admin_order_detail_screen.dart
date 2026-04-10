@@ -81,10 +81,10 @@ class AdminOrderDetailScreen extends ConsumerWidget {
                   const Divider(height: 24),
                   _InfoRow(icon: Icons.phone, label: 'Phone', value: user?.phone ?? 'Unknown'),
                   const Divider(height: 24),
-                  _InfoRow(icon: Icons.location_on, label: 'Delivery Address', 
+                  _InfoRow(icon: Icons.location_on, label: 'Customer Address', 
                     value: user?.address ?? 'Not provided'),
                   const Divider(height: 24),
-                  _InfoRow(icon: Icons.calendar_month_rounded, label: 'Delivery Countdown', 
+                  _InfoRow(icon: Icons.calendar_month_rounded, label: 'Collection Countdown', 
                     value: Formatters.deliveryCountdown(order['deliveryDate'])),
                 ],
               ),
@@ -122,14 +122,14 @@ class AdminOrderDetailScreen extends ConsumerWidget {
             
             if (['CREATED', 'PAID', 'PENDING'].contains(order['status']?.toString().toUpperCase()))
               GoldButton(
-                text: 'READY FOR DISPATCH',
-                icon: Icons.local_shipping_rounded,
+                text: 'READY FOR PICKUP',
+                icon: Icons.store_rounded,
                 onPressed: () => _updateStatus(context, ref, 'READY'),
               ).animate(delay: 300.ms).fadeIn(),
             
             if (order['status'] == 'READY')
               GoldButton(
-                text: 'MARK AS DELIVERED',
+                text: 'MARK AS COLLECTED',
                 icon: Icons.check_circle_rounded,
                 onPressed: () => _updateStatus(context, ref, 'PICKED'),
               ),

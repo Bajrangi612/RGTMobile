@@ -400,7 +400,7 @@ class _OrderSuccessView extends StatelessWidget {
                         const SizedBox(height: 8),
                         _SuccessRow('Total (Incl. 3% GST)', Formatters.currency(amount)),
                         const SizedBox(height: 8),
-                        _SuccessRow('Delivery', '5-7 Business Days'),
+                        _SuccessRow('Status', 'Ready for Pickup'),
                       ],
                     ),
                   ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.1),

@@ -4,12 +4,15 @@ import '../core/theme/app_colors.dart';
 
 class GoldCard extends StatelessWidget {
   final Widget child;
-  final EdgeInsets? padding;
-  final EdgeInsets? margin;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
   final bool hasGoldBorder;
   final bool hasGlow;
   final VoidCallback? onTap;
   final double borderRadius;
+  final bool isVibrant;
+  final LinearGradient? gradient;
+  final double blurSigma;
 
   GoldCard({
     super.key,
@@ -20,7 +23,10 @@ class GoldCard extends StatelessWidget {
     this.hasGlow = false,
     this.onTap,
     this.borderRadius = 20,
-  }) ;
+    this.isVibrant = false,
+    this.gradient,
+    this.blurSigma = 40,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -31,16 +37,17 @@ class GoldCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
           boxShadow: [
-            if (hasGlow)
+            if (hasGlow || isVibrant)
               BoxShadow(
-                color: AppColors.royalGold.withValues(alpha: 0.1),
+                color: (gradient?.colors.first ?? AppColors.royalGold)
+                    .withValues(alpha: isVibrant ? 0.15 : 0.08),
                 blurRadius: 40,
-                spreadRadius: -10,
-                offset: const Offset(0, 20),
+                spreadRadius: isVibrant ? 2 : -10,
+                offset: const Offset(0, 15),
               ),
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 20,
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 25,
               offset: const Offset(0, 10),
             ),
           ],
@@ -48,26 +55,33 @@ class GoldCard extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(borderRadius),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+            filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
             child: Container(
-              padding: padding ?? const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(1), // Outer glass border
               decoration: BoxDecoration(
-                color: AppColors.surface.withValues(alpha: 0.8),
+                color: isVibrant 
+                    ? Colors.transparent 
+                    : AppColors.surface.withValues(alpha: 0.65),
+                gradient: gradient,
                 borderRadius: BorderRadius.circular(borderRadius),
                 border: Border.all(
-                  color: hasGoldBorder
-                      ? AppColors.royalGold.withValues(alpha: 0.3)
-                      : AppColors.pureWhite.withValues(alpha: 0.1),
-                  width: hasGoldBorder ? 1.5 : 1,
+                  color: isVibrant
+                      ? (gradient?.colors.last.withValues(alpha: 0.3) ?? AppColors.royalGold.withValues(alpha: 0.4))
+                      : (hasGoldBorder
+                          ? AppColors.royalGold.withValues(alpha: 0.3)
+                          : AppColors.pureWhite.withValues(alpha: 0.08)),
+                  width: (hasGoldBorder || isVibrant) ? 1.5 : 0.8,
                 ),
               ),
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(borderRadius - 2),
                   border: Border.all(
-                    color: hasGoldBorder 
-                        ? AppColors.royalGold.withValues(alpha: 0.1) 
-                        : Colors.transparent,
+                    color: isVibrant
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : (hasGoldBorder 
+                            ? AppColors.royalGold.withValues(alpha: 0.05) 
+                            : Colors.transparent),
                     width: 1,
                   ),
                 ),

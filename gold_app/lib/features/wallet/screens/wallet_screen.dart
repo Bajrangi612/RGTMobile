@@ -52,7 +52,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
                   title: Text(
-                    'MY WALLET',
+                    'ACCOUNT BALANCE',
                     style: AppTextStyles.h4.copyWith(
                       color: AppColors.royalGold,
                       letterSpacing: 2,
@@ -140,47 +140,55 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
   }
 }
 
-class _MainBalanceCard extends StatelessWidget {
+class _MainBalanceCard extends ConsumerWidget {
   final double balance;
 
   const _MainBalanceCard({required this.balance});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GoldCard(
-      padding: const EdgeInsets.all(24),
+      isVibrant: true,
+      gradient: const LinearGradient(
+        colors: [Color(0xFF00C853), Color(0xFF00E5FF)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      padding: const EdgeInsets.all(28),
       hasGlow: true,
       child: Column(
         children: [
           Text(
-            'Total Cash Balance',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey),
+            'AVAILABLE FUNDS',
+            style: AppTextStyles.labelSmall.copyWith(color: Colors.black.withValues(alpha: 0.5), fontWeight: FontWeight.bold, letterSpacing: 1),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             Formatters.currency(balance),
             style: AppTextStyles.h1.copyWith(
-              color: AppColors.pureWhite,
-              fontSize: 36,
+              color: AppColors.deepBlack,
+              fontSize: 42,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           Row(
             children: [
               Expanded(
                 child: GoldButton(
-                  text: 'Deposit',
-                  icon: Icons.add_circle_outline,
+                  text: 'Add Funds',
+                  icon: Icons.add_circle_rounded,
                   onPressed: () {},
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: GoldButton(
-                  text: 'Withdraw',
+                  text: 'Request Payout',
                   isOutlined: true,
-                  icon: Icons.arrow_outward_rounded,
-                  onPressed: () => _showWithdrawDialog(context),
+                  color: AppColors.deepBlack,
+                  icon: Icons.payments_rounded,
+                  onPressed: () => _showWithdrawDialog(context, ref, balance),
                 ),
               ),
             ],
@@ -190,7 +198,8 @@ class _MainBalanceCard extends StatelessWidget {
     );
   }
 
-  void _showWithdrawDialog(BuildContext context) {
+  void _showWithdrawDialog(BuildContext context, WidgetRef ref, double balance) {
+    final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -210,6 +219,7 @@ class _MainBalanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: controller,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
@@ -226,14 +236,29 @@ class _MainBalanceCard extends StatelessWidget {
             child: Text('CANCEL', style: TextStyle(color: AppColors.grey)),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Withdrawal request submitted!')),
-              );
+            onPressed: () async {
+              final amountStr = controller.text.trim();
+              if (amountStr.isEmpty) return;
+              final amount = double.tryParse(amountStr) ?? 0.0;
+              if (amount <= 0 || amount > balance) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Invalid amount')),
+                );
+                return;
+              }
+              
+              final success = await ref.read(walletProvider.notifier).requestWithdrawal(amount);
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Withdrawal request submitted!')),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.royalGold),
-            child: const Text('SUBMIT', style: TextStyle(color: Colors.black)),
+            child: const Text('SUBMIT', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -257,17 +282,27 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GoldCard(
-      padding: const EdgeInsets.all(16),
+      isVibrant: true,
+      gradient: LinearGradient(
+        colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.05)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 12),
-          Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 16),
+          Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.5), fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text(
             Formatters.currency(value),
-            style: AppTextStyles.h4.copyWith(color: AppColors.pureWhite, fontSize: 16),
+            style: AppTextStyles.h4.copyWith(color: AppColors.pureWhite, fontSize: 18, fontWeight: FontWeight.w900),
           ),
         ],
       ),
@@ -334,22 +369,22 @@ class _TransactionTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardDark.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
+        color: AppColors.cardDark.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.pureWhite.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: (isCredit ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+              color: (isCredit ? AppColors.success : AppColors.error).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               isCredit ? Icons.add_rounded : Icons.remove_rounded,
               color: isCredit ? AppColors.success : AppColors.error,
-              size: 20,
+              size: 22,
             ),
           ),
           const SizedBox(width: 16),
@@ -357,9 +392,9 @@ class _TransactionTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.bodyMedium),
+                Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text(date, style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
+                Text(date, style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontWeight: FontWeight.w500)),
               ],
             ),
           ),
@@ -367,7 +402,7 @@ class _TransactionTile extends StatelessWidget {
             '${isCredit ? "+" : "-"} ₹${amount.toInt()}',
             style: AppTextStyles.labelLarge.copyWith(
               color: isCredit ? AppColors.success : AppColors.error,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],

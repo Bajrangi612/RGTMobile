@@ -27,8 +27,9 @@ class AdminUserDetailScreen extends ConsumerWidget {
       body: Container(
         decoration: BoxDecoration(color: AppColors.background),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               /// 👤 User Info Card
@@ -57,7 +58,63 @@ class AdminUserDetailScreen extends ConsumerWidget {
                 ),
               ).animate().fadeIn().slideY(begin: 0.1),
 
+              const SizedBox(height: 16),
+              
+              /// 🏠 Residential Intelligence
+              GoldCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.home_work_outlined, color: AppColors.royalGold, size: 18),
+                        const SizedBox(width: 8),
+                        Text('RESIDENTIAL INTELLIGENCE', style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold, letterSpacing: 1.2)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      user['address'] ?? 'Address not updated by user',
+                      style: AppTextStyles.bodyMedium.copyWith(height: 1.5),
+                    ),
+                  ],
+                ),
+              ).animate(delay: 100.ms).fadeIn(),
+
               const SizedBox(height: 24),
+
+              /// 💰 Financial Intelligence
+              Text('FINANCIAL INTELLIGENCE', style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, letterSpacing: 1.2)),
+              const SizedBox(height: 16),
+              GoldCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _InfoRow('Wallet Balance', '₹${user['wallet']?['balance'] ?? '0.00'}'),
+                    _InfoRow('Referral Earnings', '₹${user['wallet']?['referralRewards'] ?? '0.00'}', isGold: true),
+                    const Divider(color: Colors.white10),
+                    _InfoRow('Total Assets', '₹${user['totalCollectionValue'] ?? '0.00'}'),
+                  ],
+                ),
+              ).animate(delay: 200.ms).fadeIn(),
+
+              const SizedBox(height: 24),
+
+              /// 👥 Referral Genealogy
+              Text('REFERRAL GENEALOGY', style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, letterSpacing: 1.2)),
+              const SizedBox(height: 16),
+              GoldCard(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _InfoRow('Personal Code', user['referralCode'] ?? 'N/A', isGold: true),
+                    _InfoRow('Invited By (ID)', user['referrerId'] ?? 'DIRECT', isItalic: user['referrerId'] == null),
+                  ],
+                ),
+              ).animate(delay: 300.ms).fadeIn(),
+
+              const SizedBox(height: 32),
 
               /// 📄 Document Review Section
               Text('COMPLIANCE DOCUMENTS', style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, letterSpacing: 1.2)),
@@ -172,8 +229,9 @@ class AdminUserDetailScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _updateKyc(BuildContext context, WidgetRef ref, String status) async {
     await ref.read(adminProvider.notifier).updateKycStatus(user['id'], status);
@@ -275,7 +333,9 @@ class _DocumentCard extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
-  const _InfoRow(this.label, this.value);
+  final bool isGold;
+  final bool isItalic;
+  const _InfoRow(this.label, this.value, {this.isGold = false, this.isItalic = false});
 
   @override
   Widget build(BuildContext context) {
@@ -285,7 +345,13 @@ class _InfoRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: AppTextStyles.bodySmall),
-          Text(value, style: AppTextStyles.labelLarge),
+          Text(
+            value, 
+            style: AppTextStyles.labelLarge.copyWith(
+              color: isGold ? AppColors.royalGold : null,
+              fontStyle: isItalic ? FontStyle.italic : null,
+            ),
+          ),
         ],
       ),
     );

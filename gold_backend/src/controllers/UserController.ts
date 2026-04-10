@@ -16,6 +16,17 @@ export class UserController {
           email: true,
           role: true,
           kycStatus: true,
+          aadharNo: true,
+          panNo: true,
+          address: true,
+          referralCode: true,
+          referrerId: true,
+          bankAccountNo: true,
+          bankIfsc: true,
+          bankName: true,
+          bankHolderName: true,
+          bankStatus: true,
+          wallet: true,
           createdAt: true,
         },
         orderBy: { createdAt: "desc" },
@@ -117,7 +128,6 @@ export class UserController {
         name, 
         email, 
         address, 
-        dob, 
         panNo, 
         aadharNo,
         bankAccountNo, 
@@ -133,16 +143,6 @@ export class UserController {
       };
 
       if (address !== undefined) updateData.address = address;
-      if (dob !== undefined) {
-        if (dob && dob !== "") {
-          const parsedDate = new Date(dob);
-          if (!isNaN(parsedDate.getTime())) {
-            updateData.dob = parsedDate;
-          }
-        } else {
-          updateData.dob = null;
-        }
-      }
       if (panNo !== undefined) updateData.panNo = panNo;
       if (aadharNo !== undefined) updateData.aadharNo = aadharNo;
       

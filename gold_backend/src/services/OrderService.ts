@@ -19,7 +19,22 @@ class OrderService {
     const livePriceObj = await ProductService.getLatestGoldPrice();
     const livePrice = Number(livePriceObj.sellPrice);
 
-    // 2. Calculate Pricing (Weight * Price * 1.03)
+    // 2. Validate Referral Logic (Cannot use own code on 1st order)
+    const paidOrderCount = await prisma.order.count({
+      where: { userId, status: "PAID" }
+    });
+    
+    if (referralCode) {
+      const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (dbUser) {
+        const isSelf = dbUser.referralCode === referralCode.trim().toUpperCase();
+        if (isSelf && paidOrderCount === 0) {
+          throw new Error("You cannot use your own referral code for the first order.");
+        }
+      }
+    }
+
+    // 3. Calculate Pricing (Weight * Price * 1.03)
     const pricing = ProductService.calculateEffectivePrice(product, livePrice);
 
     // 3. Create Database Order (Pending)
@@ -127,7 +142,7 @@ class OrderService {
         }
       });
 
-      // Transition to PENDING (Delivery starts)
+      // Transition to PENDING (Collection countdown starts)
       await tx.order.update({
         where: { id: orderId },
         data: { status: "PENDING" }
@@ -145,20 +160,22 @@ class OrderService {
           userId,
           type: "PURCHASE",
           amount: order.total,
-          description: `Gold Purchase - ${order.product.name} (Qty: ${order.quantity})`,
+          description: `Gold Collection - ${order.product.name} (Qty: ${order.quantity})`,
           status: "COMPLETED",
           invoiceNo: invoiceNo,
         }
       });
 
-      // Handle Referral Reward (1% commission to referrer)
+      // Handle Referral Reward (Fixed amount set by admin)
       if (order.referralCode) {
         const referrer = await tx.user.findUnique({
           where: { referralCode: order.referralCode }
         });
 
-        if (referrer && referrer.id !== userId) {
-          const rewardAmount = Number(order.total) * 0.01; // Professional 1% commission
+        if (referrer) {
+          // Fetch reward setting (default ₹500 if not found)
+          const rewardSetting = await tx.setting.findUnique({ where: { key: "referral_reward" } });
+          const rewardAmount = rewardSetting ? Number(rewardSetting.value) : 500;
           
           await tx.wallet.update({
             where: { userId: referrer.id },
@@ -171,9 +188,9 @@ class OrderService {
           await tx.transaction.create({
             data: {
               userId: referrer.id,
-              type: "REFERRAL",
+              type: "REFERRAL_REWARD",
               amount: new Prisma.Decimal(rewardAmount),
-              description: `Referral reward for order ${orderId}`,
+              description: `Referral reward for facilitating Order #${orderId}`,
               status: "COMPLETED"
             }
           });
@@ -242,7 +259,7 @@ class OrderService {
   async cancelOrder(userId: string, orderId: string) {
     const order = await prisma.order.findUnique({ where: { id: orderId } });
     if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status === "READY" || order.status === "PICKED" || order.status === "RESOLD") {
+    if (order.status === "READY" || order.status === "PICKED" || order.status === "BUYBACK") {
       throw new Error("Order cannot be cancelled at this stage");
     }
 
@@ -253,15 +270,15 @@ class OrderService {
   }
 
   /**
-   * Resell logic - Buy back based on current purchase price
+   * Buyback logic - Store buyback based on current purchase price
    */
-  async resellOrder(userId: string, orderId: string) {
+  async sellBackOrder(userId: string, orderId: string) {
     const order = await prisma.order.findUnique({ 
       where: { id: orderId },
       include: { product: true } 
     });
     if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status !== "READY") throw new Error("Only READY orders can be resold");
+    if (order.status !== "READY") throw new Error("Only READY orders can be sold back");
 
     const livePriceObj = await ProductService.getLatestGoldPrice();
     const purchasePrice = Number(livePriceObj.buyPrice);
@@ -270,10 +287,10 @@ class OrderService {
     const resellAmount = purchasePrice * weight * quantity;
 
     return await prisma.$transaction(async (tx) => {
-      // 1. Mark order as RESOLD
+      // 1. Mark order as BUYBACK
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
-        data: { status: "RESOLD" }
+        data: { status: "BUYBACK" } // Logic key remains BUYBACK for DB compatibility, text is Buyback
       });
 
       // 2. Add amount to user wallet
@@ -286,9 +303,9 @@ class OrderService {
       await tx.transaction.create({
         data: {
           userId,
-          type: "PROFIT",
+          type: "SELL_BACK",
           amount: new Prisma.Decimal(resellAmount),
-          description: `Resell credit for order ${orderId}`,
+          description: `Order Buyback - #${orderId}`,
           status: "COMPLETED"
         }
       });

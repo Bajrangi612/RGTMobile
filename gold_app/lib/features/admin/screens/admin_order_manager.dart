@@ -179,7 +179,7 @@ class _OrderList extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Est. Delivery', style: AppTextStyles.caption),
+                            Text('Est. Readiness', style: AppTextStyles.caption),
                             Text(
                               Formatters.deliveryCountdown(order['deliveryDate']),
                               style: AppTextStyles.bodySmall.copyWith(color: AppColors.royalGold),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../product/data/models/product_model.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_button.dart';
@@ -18,7 +19,7 @@ import '../../referral/screens/referral_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../kyc/screens/aadhaar_kyc_screen.dart';
 import '../../notifications/screens/transactions_screen.dart';
-import '../../order/screens/resell_screen.dart';
+import '../../order/screens/sell_back_screen.dart';
 import '../../wallet/screens/wallet_screen.dart';
 import '../../admin/screens/admin_gold_price_screen.dart';
 
@@ -147,8 +148,8 @@ class _HomeDashboard extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: _PortfolioCard(
-                  holdings: (authState.user?.totalInvestment ?? 0.0) / (homeState.goldPrice > 0 ? homeState.goldPrice : 7000.0),
-                  value: authState.user?.totalInvestment ?? 0.0,
+                  holdings: (authState.user?.totalCollectionValue ?? 0.0) / (homeState.goldPrice > 0 ? homeState.goldPrice : 7000.0),
+                  value: authState.user?.totalCollectionValue ?? 0.0,
                   isLoading: homeState.isLoading,
                 ),
               ),
@@ -174,15 +175,15 @@ class _HomeDashboard extends ConsumerWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: GoldButton(
-                        text: 'Sell Gold',
+                        text: 'Buyback Program',
                         isOutlined: true,
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Select an order to resell')),
+                            const SnackBar(content: Text('Select an item to sell back')),
                           );
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => OrdersScreen()),
+                            MaterialPageRoute(builder: (_) => const OrdersScreen()),
                           );
                         },
                       ),
@@ -194,34 +195,23 @@ class _HomeDashboard extends ConsumerWidget {
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
-            // Side-by-Side: Asset Allocation & Spot Price
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Asset Allocation
-                    Expanded(
-                      flex: 4,
-                      child: _AssetAllocationCard(),
-                    ),
-                    const SizedBox(width: 16),
-                    // Gold Spot Price
-                    Expanded(
-                      flex: 5,
-                      child: _GoldPriceCard(
-                        price: homeState.goldPrice,
-                        change: homeState.priceChange,
-                        isLoading: homeState.isLoading,
-                        isAdmin: authState.user?.isAdmin ?? false,
-                        onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
-                      ),
-                    ),
-                  ],
+                child: _GoldPriceCard(
+                  price: homeState.goldPrice,
+                  change: homeState.priceChange,
+                  isLoading: homeState.isLoading,
+                  isAdmin: authState.user?.isAdmin ?? false,
+                  onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
                 ),
               ),
             ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
+            // 🏆 The Elite Collection (Premium Filtered Assets)
+            const SliverToBoxAdapter(child: _EliteCollection()),
 
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
@@ -393,7 +383,13 @@ class _PortfolioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GoldCard(
-      hasGoldBorder: true,
+      isVibrant: true,
+      gradient: const LinearGradient(
+        colors: [Color(0xFF1A1F3D), Color(0xFF2E376E), Color(0xFF151B40)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      hasGoldBorder: false,
       hasGlow: true,
       padding: const EdgeInsets.all(28),
       child: Column(
@@ -402,18 +398,19 @@ class _PortfolioCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Portfolio Balance',
-                style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey),
+                'Collection Value',
+                style: AppTextStyles.labelMedium.copyWith(color: Colors.white70),
               ),
               Row(
                 children: [
-                   const Icon(Icons.shield_rounded, color: Color(0xFFD4AF37), size: 14),
+                   const Icon(Icons.shield_rounded, color: Color(0xFFFFD700), size: 14),
                    const SizedBox(width: 4),
                    Text(
-                    'ROYAL GOLD',
+                    'ROYAL STORE',
                     style: AppTextStyles.labelSmall.copyWith(
-                      color: const Color(0xFFB8860B),
+                      color: const Color(0xFFFFD700),
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
                   ),
                 ],
@@ -426,24 +423,26 @@ class _PortfolioCard extends StatelessWidget {
             style: AppTextStyles.goldPrice.copyWith(
               fontSize: 34,
               color: AppColors.pureWhite,
+              fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.05),
+              color: const Color(0xFF00E5FF).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.trending_up, color: AppColors.success, size: 12),
+                const Icon(Icons.verified_rounded, color: Color(0xFF00E5FF), size: 12),
                 const SizedBox(width: 4),
                 Text(
-                  '+3.2% (+₹7,810) daily',
+                  'Physically Secured & Insured',
                   style: AppTextStyles.caption.copyWith(
-                    color: AppColors.success,
+                    color: const Color(0xFF00E5FF),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -456,9 +455,9 @@ class _PortfolioCard extends StatelessWidget {
             children: [
               Text(
                 '**** **** **** 9012',
-                style: AppTextStyles.caption.copyWith(color: AppColors.grey),
+                style: AppTextStyles.caption.copyWith(color: Colors.white38),
               ),
-              const Icon(Icons.credit_card, color: Colors.grey, size: 20), // Visa/Mastercard placeholder
+              const Icon(Icons.credit_card_rounded, color: Colors.white24, size: 20), 
             ],
           ),
         ],
@@ -474,7 +473,7 @@ class _AssetAllocationCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
-    final total = user?.totalInvestment ?? 0.0;
+    final total = user?.totalCollectionValue ?? 0.0;
     
     return GoldCard(
       padding: const EdgeInsets.all(16),
@@ -565,23 +564,25 @@ class _GoldPriceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GoldCard(
-      padding: const EdgeInsets.all(16),
+      isVibrant: true,
+      gradient: const LinearGradient(
+        colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Gold Spot Price', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
-              if (isAdmin)
-                IconButton(
-                  icon: Icon(Icons.edit_note_rounded, color: AppColors.royalGold, size: 22),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AdminGoldPriceScreen()),
-                  ),
-                ),
+              Text('Live Gold Rate', style: AppTextStyles.labelMedium.copyWith(color: AppColors.deepBlack.withValues(alpha: 0.6), fontWeight: FontWeight.bold)),
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: Icon(Icons.trending_up_rounded, color: AppColors.deepBlack, size: 14),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -590,12 +591,16 @@ class _GoldPriceCard extends StatelessWidget {
             children: [
               Text(
                 Formatters.currency(price),
-                style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.bold, color: AppColors.pureWhite),
+                style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.w900, color: AppColors.deepBlack),
               ),
-              const SizedBox(width: 4),
-              Text(
-                '+1.1%',
-                style: AppTextStyles.caption.copyWith(color: AppColors.success, fontSize: 10),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
+                child: Text(
+                  '+1.1%',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.deepBlack, fontSize: 10, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -605,13 +610,13 @@ class _GoldPriceCard extends StatelessWidget {
             height: 40,
             width: double.infinity,
             child: CustomPaint(
-              painter: _SparklinePainter(),
+              painter: _SparklinePainter(color: AppColors.deepBlack.withValues(alpha: 0.3)),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: ['1D', '1W', '1M'].map((t) => Text(t, style: AppTextStyles.caption.copyWith(fontSize: 10))).toList(),
+            children: ['1D', '1W', '1M'].map((t) => Text(t, style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.deepBlack.withValues(alpha: 0.5), fontWeight: FontWeight.bold))).toList(),
           ),
         ],
       ),
@@ -620,10 +625,13 @@ class _GoldPriceCard extends StatelessWidget {
 }
 
 class _SparklinePainter extends CustomPainter {
+  final Color color;
+  _SparklinePainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.royalGold.withValues(alpha: 0.5)
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
@@ -1144,6 +1152,150 @@ class _CategoryItem extends StatelessWidget {
               size: 16,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+class _EliteCollection extends ConsumerWidget {
+  const _EliteCollection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final products = ref.watch(homeProvider).products.where((p) => p.isPremium).toList();
+    
+    if (products.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text('ELITE COLLECTION', style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold, letterSpacing: 2, fontWeight: FontWeight.bold)),
+                   const SizedBox(height: 4),
+                   Text('Curated Masterpieces', style: AppTextStyles.h4),
+                ],
+              ),
+              TextButton(
+                onPressed: () {
+                   Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CatalogScreen()));
+                },
+                child: Text('View All', style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold)),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          height: 260,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: products.length,
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return _EliteProductCard(product: product);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _EliteProductCard extends StatelessWidget {
+  final ProductModel product;
+  const _EliteProductCard({required this.product});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 220,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3), width: 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.royalGold.withValues(alpha: 0.1),
+            AppColors.deepBlack,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.royalGold.withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: -5,
+          ),
+        ],
+      ),
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Center(
+                  child: Hero(
+                    tag: 'elite_${product.id}',
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.royalGold.withValues(alpha: 0.3),
+                            blurRadius: 40,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Image.asset(
+                        (product.imageUrl?.isNotEmpty ?? false) ? product.imageUrl! : 'assets/images/gold_coin.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(product.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('${product.weight}g · ${product.purity}', style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
+                  Text(
+                    Formatters.currency(product.price),
+                    style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.royalGold.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
+                ),
+                child: Center(
+                  child: Text('BUY ELITE', style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

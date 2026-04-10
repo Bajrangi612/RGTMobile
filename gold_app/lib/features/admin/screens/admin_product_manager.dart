@@ -319,6 +319,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
   late final TextEditingController _imageUrlController;
   String _purity = '24K';
   String? _selectedCategoryId;
+  bool _isPremium = false;
   bool _isSaving = false;
   
   XFile? _pickedImage;
@@ -336,6 +337,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
     _imageUrlController = TextEditingController(text: widget.product?.imageUrl);
     _purity = widget.product?.purity ?? '24K';
     _selectedCategoryId = widget.product?.categoryId;
+    _isPremium = widget.product?.isPremium ?? false;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final categories = ref.read(adminProvider).categories;
@@ -401,6 +403,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
         'stock': int.tryParse(_stockController.text) ?? 0,
         'imageUrl': imageUrl,
         'categoryId': _selectedCategoryId,
+        'isPremium': _isPremium,
       };
 
       bool success;
@@ -654,7 +657,27 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  const Expanded(child: SizedBox()),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                         Text('Status', style: AppTextStyles.caption.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold)),
+                         const SizedBox(height: 8),
+                         Container(
+                           decoration: BoxDecoration(
+                             color: Colors.white.withValues(alpha: 0.05),
+                             borderRadius: BorderRadius.circular(12),
+                           ),
+                           child: SwitchListTile(
+                             title: Text('Premium', style: AppTextStyles.caption),
+                             value: _isPremium,
+                             activeColor: AppColors.royalGold,
+                             onChanged: (v) => setState(() => _isPremium = v),
+                           ),
+                         ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
 

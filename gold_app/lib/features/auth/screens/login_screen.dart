@@ -64,16 +64,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ),
           child: Stack(
             children: [
-              /// 🔥 Background Glow
+              /// 🔥 Background Glows (Aurora Effect)
               Positioned(
                 top: -120,
                 left: -80,
                 child: Container(
-                  width: 300,
-                  height: 300,
+                  width: 400,
+                  height: 400,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.royalGold.withValues(alpha: 0.04),
+                    color: const Color(0xFF2E376E).withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: -150,
+                right: -100,
+                child: Container(
+                  width: 350,
+                  height: 350,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF00E5FF).withValues(alpha: 0.08),
                   ),
                 ),
               ),
@@ -109,20 +121,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ).animate().fadeIn(delay: 200.ms),
 
                       Text(
-                        'Royal Gold Traders',
+                        'Royal Gold Store',
                         style: AppTextStyles.goldTitle.copyWith(
                           fontSize: 28,
-                          letterSpacing: 1.5,
+                          letterSpacing: 2,
                         ),
                       ).animate().fadeIn(delay: 300.ms),
 
                       const SizedBox(height: 12),
 
                       Text(
-                        'Buy • Sell • Invest in Gold Coins',
+                        'Buy • Sell Back • Collect Gold Coins',
                         style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.pureWhite.withValues(alpha: 0.6),
-                          letterSpacing: 1.1,
+                          color: AppColors.pureWhite.withValues(alpha: 0.7),
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.w600,
                         ),
                       ).animate().fadeIn(delay: 400.ms),
 
@@ -130,8 +143,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                       /// 💠 Frosted Glassmorphism Card
                       GoldCard(
-                        hasGoldBorder: true,
-                        hasGlow: true,
+                        isVibrant: true,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF151B2E), Color(0xFF0E121F)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         padding: const EdgeInsets.all(24),
                         child: Form(
                           key: _formKey,

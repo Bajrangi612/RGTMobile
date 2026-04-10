@@ -37,7 +37,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       case 'refund':
         return Icons.replay_rounded;
       case 'withdrawal':
-        return Icons.account_balance_wallet_rounded;
+        return Icons.account_balance_rounded;
       default:
         return Icons.receipt_long;
     }
@@ -117,7 +117,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                         const SizedBox(height: 16),
                         Text('No transactions found', style: AppTextStyles.h4.copyWith(color: AppColors.grey)),
                         const SizedBox(height: 8),
-                        Text('Your financial history will appear here', style: AppTextStyles.caption),
+                        Text('Your transaction record will appear here', style: AppTextStyles.caption),
                       ],
                     ),
                   )

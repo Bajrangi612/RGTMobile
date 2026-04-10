@@ -256,6 +256,66 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
                     SizedBox(height: 24),
 
+                    // 🏆 Your Status / Referral Benefit
+                    Builder(
+                      builder: (context) {
+                        final currentUser = ref.watch(authProvider).user;
+                        if (currentUser == null) return const SizedBox.shrink();
+                        
+                        return GoldCard(
+                          hasGoldBorder: true,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.stars, color: AppColors.royalGold, size: 20),
+                                  SizedBox(width: 8),
+                                  Text('Your Referral Benefit', style: AppTextStyles.labelLarge),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.glassBorder),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Personal Code', style: AppTextStyles.caption),
+                                        Text(currentUser.referralCode, style: AppTextStyles.h4.copyWith(color: AppColors.royalGold)),
+                                      ],
+                                    ),
+                                    GoldButton(
+                                      text: 'SHARE',
+                                      width: 80,
+                                      height: 36,
+                                      onPressed: () {
+                                        // Handle Share logic (e.g., share_plus)
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Share this code to earn ₹500 fixed reward on every successful referral purchase.',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.success),
+                              ),
+                            ],
+                          ),
+                        ).animate(delay: 600.ms).fadeIn();
+                      },
+                    ),
+
+                    const SizedBox(height: 24),
+
                     // Description
                     Text('About this coin', style: AppTextStyles.labelLarge),
                     SizedBox(height: 8),

@@ -21,5 +21,5 @@ class ThemeNotifier extends StateNotifier<ThemeMode> {
 // Helper to provide the current palette
 final paletteProvider = Provider<ThemePalette>((ref) {
   final mode = ref.watch(themeProvider);
-  return mode == ThemeMode.light ? ThemePalette.light : ThemePalette.dark;
+  return mode == ThemeMode.light ? ThemePalette.light : ThemePalette.vibrant;
 });

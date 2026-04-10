@@ -116,7 +116,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                                   Text('No orders yet', style: AppTextStyles.h4.copyWith(color: AppColors.grey)),
                                   SizedBox(height: 8),
                                   Text(
-                                    'Start investing in gold coins',
+                                    'Start collecting gold coins',
                                     style: AppTextStyles.bodySmall,
                                   ),
                                 ],

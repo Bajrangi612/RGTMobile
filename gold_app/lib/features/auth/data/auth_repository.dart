@@ -44,7 +44,7 @@ class AuthRepository {
         final Map<String, dynamic> mappedUser = {
           ...Map<String, dynamic>.from(userData),
           'phone': userData['contactNo'] ?? phone,
-          'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
+          'totalCollectionValue': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
           'kycStatus': (userData['kycStatus'] ?? 'PENDING').toString().toLowerCase(),
           'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',
@@ -74,7 +74,7 @@ class AuthRepository {
         final Map<String, dynamic> mappedUser = {
           ...Map<String, dynamic>.from(userData),
           'phone': userData['contactNo'] ?? userData['phone'] ?? '',
-          'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
+          'totalCollectionValue': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
           'kycStatus': (userData['kycStatus'] ?? 'PENDING').toString().toLowerCase(),
           'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',
@@ -87,7 +87,7 @@ class AuthRepository {
       // Return empty user on error
       return UserModel(
         id: '', name: '', phone: '', referralCode: '', kycStatus: '', 
-        bankStatus: '', orderCount: 0, totalInvestment: 0, 
+        bankStatus: '', orderCount: 0, totalCollectionValue: 0, 
         passKeySet: false, createdAt: ''
       );
     }
@@ -103,7 +103,6 @@ class AuthRepository {
     required String name,
     String? email,
     String? address,
-    String? dob,
     String? aadharNo,
     String? panNo,
     String? bankAccountNo,
@@ -116,7 +115,6 @@ class AuthRepository {
         'name': name,
         if (email != null) 'email': email,
         if (address != null) 'address': address,
-        if (dob != null) 'dob': dob,
         if (aadharNo != null) 'aadharNo': aadharNo,
         if (panNo != null) 'panNo': panNo,
         if (bankAccountNo != null) 'bankAccountNo': bankAccountNo,
@@ -130,7 +128,7 @@ class AuthRepository {
         final Map<String, dynamic> mappedUser = {
           ...Map<String, dynamic>.from(userData),
           'phone': userData['contactNo'] ?? userData['phone'] ?? '',
-          'totalInvestment': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
+          'totalCollectionValue': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
           'kycStatus': (userData['kycStatus'] ?? 'PENDING').toString().toLowerCase(),
           'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { AdminController } from "../controllers/AdminController";
+import { WithdrawalController } from "../controllers/WithdrawalController";
 import { authenticate, authorize } from "../middleware/auth";
 import { UserRole } from "@prisma/client";
 
@@ -22,5 +23,9 @@ router.post("/gold-price", AdminController.updateGoldPrice);
 router.put("/stock", AdminController.updateStock);
 router.get("/transactions", AdminController.getAllTransactions);
 router.post("/settings", AdminController.updateSettings);
+
+// Withdrawal Management
+router.get("/withdrawals", WithdrawalController.listWithdrawals);
+router.patch("/withdrawals/:id/status", WithdrawalController.updateStatus);
 
 export default router;

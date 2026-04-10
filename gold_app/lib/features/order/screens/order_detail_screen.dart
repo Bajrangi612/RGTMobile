@@ -13,7 +13,7 @@ import '../../../widgets/status_badge.dart';
 import '../data/models/order_model.dart';
 import '../providers/order_provider.dart';
 import '../../auth/providers/auth_provider.dart';
-import 'resell_screen.dart';
+import 'sell_back_screen.dart';
 import '../../../core/services/invoice_service.dart';
 import '../../../widgets/live_countdown.dart';
 
@@ -96,9 +96,9 @@ class OrderDetailScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.local_shipping_rounded, color: AppColors.royalGold, size: 22),
+                                Icon(Icons.store_rounded, color: AppColors.royalGold, size: 22),
                                 SizedBox(width: 10),
-                                Text('Delivery Estimate', style: AppTextStyles.labelLarge),
+                                Text('Collection Estimate', style: AppTextStyles.labelLarge),
                               ],
                             ),
                             SizedBox(height: 16),
@@ -109,7 +109,7 @@ class OrderDetailScreen extends ConsumerWidget {
                                   label: 'Remaining',
                                   child: order.deliveryDate != null 
                                     ? LiveCountdown(targetDate: order.deliveryDate!)
-                                    : Text('5-7 Days', style: AppTextStyles.h2.copyWith(color: AppColors.deepBlack)),
+                                    : Text('Ready for Pickup', style: AppTextStyles.h4.copyWith(color: AppColors.deepBlack)),
                                 ),
                               ],
                             ),
@@ -118,7 +118,7 @@ class OrderDetailScreen extends ConsumerWidget {
                               child: Text(
                                 order.deliveryDate != null 
                                   ? 'Expected by ${DateFormat('dd/MM/yyyy').format(order.deliveryDate!)}'
-                                  : 'Scheduling delivery...',
+                                  : 'Arranging handover...',
                                 style: AppTextStyles.bodySmall,
                               ),
                             ),
@@ -203,10 +203,10 @@ class OrderDetailScreen extends ConsumerWidget {
                       if (order.canResell)
                         Expanded(
                           child: GoldButton(
-                            text: 'Resell',
+                            text: 'Sell Back',
                             onPressed: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) =>  ResellScreen(order: order),
+                                builder: (_) =>  SellBackScreen(order: order),
                               ),
                             ),
                             icon: Icons.sell_rounded,
@@ -267,8 +267,8 @@ class OrderDetailScreen extends ConsumerWidget {
         isCompleted: true,
       ));
       steps.add(_ProgressStepData(
-        title: 'Resold',
-        subtitle: 'Order successfully resold',
+        title: 'Buyback',
+        subtitle: 'Order successfully collected by store',
         isCompleted: true,
       ));
       return steps;
@@ -288,8 +288,8 @@ class OrderDetailScreen extends ConsumerWidget {
     ));
 
     steps.add(_ProgressStepData(
-      title: 'Delivered',
-      subtitle: status == 'PICKED' ? 'Complete' : 'Estimated ${order.estimatedDelivery}',
+      title: 'Collected',
+      subtitle: status == 'PICKED' ? 'Handover Complete' : 'Awaiting Collection',
       isCompleted: status == 'PICKED',
     ));
 

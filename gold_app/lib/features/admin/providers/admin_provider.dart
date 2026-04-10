@@ -23,6 +23,7 @@ class AdminState {
   final String weightFilter;
   final int lowStockThreshold;
   final List<dynamic> allTransactions;
+  final List<dynamic> withdrawalRequests;
   final String? error;
 
   AdminState({
@@ -44,6 +45,7 @@ class AdminState {
     this.orderSearchQuery = '',
     this.weightFilter = 'all',
     this.lowStockThreshold = 10,
+    this.withdrawalRequests = const [],
     this.error,
   });
 
@@ -66,6 +68,7 @@ class AdminState {
     String? orderSearchQuery,
     String? weightFilter,
     int? lowStockThreshold,
+    List<dynamic>? withdrawalRequests,
     String? error,
   }) {
     return AdminState(
@@ -87,6 +90,7 @@ class AdminState {
       orderSearchQuery: orderSearchQuery ?? this.orderSearchQuery,
       weightFilter: weightFilter ?? this.weightFilter,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
+      withdrawalRequests: withdrawalRequests ?? this.withdrawalRequests,
       error: error,
     );
   }
@@ -421,6 +425,36 @@ class AdminNotifier extends StateNotifier<AdminState> {
   double _toDouble(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '0') ?? 0.0;
+  }
+
+  // --- Withdrawal Management ---
+
+  Future<void> fetchWithdrawals() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await ApiService().get('/admin/withdrawals');
+      state = state.copyWith(
+        withdrawalRequests: response.data['data']['requests'],
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<bool> updateWithdrawalStatus(String id, String status, {String? notes}) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await ApiService().patch('/admin/withdrawals/$id/status', data: {
+        'status': status,
+        if (notes != null) 'adminNotes': notes,
+      });
+      await fetchWithdrawals(); // Refresh
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
   }
 }
 

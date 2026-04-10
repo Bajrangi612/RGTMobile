@@ -68,10 +68,10 @@ class OrderNotifier extends StateNotifier<OrderState> {
     }
   }
 
-  Future<bool> resellOrder(String orderId) async {
+  Future<bool> sellBackOrder(String orderId) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _repository.resellOrder(orderId);
+      await _repository.sellBackOrder(orderId);
       await loadOrders(); // Refresh state
       return true;
     } catch (e) {

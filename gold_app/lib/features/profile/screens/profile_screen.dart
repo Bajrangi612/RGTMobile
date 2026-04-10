@@ -40,22 +40,27 @@ class ProfileScreen extends ConsumerWidget {
                 
                 // Avatar & Name
                 Container(
-                  width: 80,
-                  height: 80,
+                  width: 90,
+                  height: 90,
                   decoration: BoxDecoration(
-                    gradient: AppColors.goldGradient,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.royalGold.withValues(alpha: 0.25),
-                        blurRadius: 20,
+                        color: const Color(0xFFFFD700).withValues(alpha: 0.3),
+                        blurRadius: 30,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
                   child: Center(
                     child: Text(
                       user?.name.isNotEmpty == true ? user!.name[0].toUpperCase() : 'R',
-                      style: AppTextStyles.h1.copyWith(color: AppColors.deepBlack),
+                      style: AppTextStyles.h1.copyWith(color: AppColors.deepBlack, fontWeight: FontWeight.w900, fontSize: 36),
                     ),
                   ),
                 ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
@@ -74,15 +79,21 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: GoldCard(
-                        padding: const EdgeInsets.all(16),
+                        isVibrant: true,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF2E376E), Color(0xFF151B40)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
                             Text(
                               '${user?.orderCount ?? 0}',
-                              style: AppTextStyles.h3.copyWith(color: AppColors.royalGold),
+                              style: AppTextStyles.h3.copyWith(color: Color(0xFF00E5FF), fontWeight: FontWeight.w900),
                             ),
                             const SizedBox(height: 4),
-                            Text('Orders', style: AppTextStyles.caption),
+                            Text('Purchases', style: AppTextStyles.caption.copyWith(color: Colors.white70, fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -90,15 +101,21 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: GoldCard(
-                        padding: const EdgeInsets.all(16),
+                        isVibrant: true,
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF00C853), Color(0xFF00E5FF)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
                             Text(
-                              Formatters.currency(user?.totalInvestment ?? 0),
-                              style: AppTextStyles.h3.copyWith(color: AppColors.success, fontSize: 18),
+                              Formatters.currency(user?.totalCollectionValue ?? 0),
+                              style: AppTextStyles.h3.copyWith(color: AppColors.deepBlack, fontSize: 16, fontWeight: FontWeight.w900),
                             ),
                             const SizedBox(height: 4),
-                            Text('Invested', style: AppTextStyles.caption),
+                            Text('Total Value', style: AppTextStyles.caption.copyWith(color: AppColors.deepBlack.withValues(alpha: 0.6), fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
