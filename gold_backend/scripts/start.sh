@@ -12,11 +12,11 @@ npx prisma migrate deploy
 
 # 2. Seed Global Settings & Admin
 echo "🌱 Seeding global configurations..."
-npx prisma db seed
+npx prisma db seed || echo "⚠️  Seeding skipped or failed (non-critical)"
 
 # 3. Heal Dirty Data (Purge empty strings/NULLs)
 echo "🛡️  Healing database integrity..."
-npx tsx src/repair-data.ts
+npx tsx src/repair-data.ts || echo "⚠️  Data healing skipped or failed (non-critical)"
 
 # 4. Start the Production Server
 echo "🔥 Igniting Obsidian Elite Terminal..."

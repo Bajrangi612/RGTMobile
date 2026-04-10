@@ -33,6 +33,7 @@ COPY --from=builder /app/package-lock.json* ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/src ./src
 
 # Install ONLY production dependencies
 RUN npm install --omit=dev
