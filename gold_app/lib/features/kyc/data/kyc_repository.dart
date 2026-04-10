@@ -74,7 +74,7 @@ class KycRepository {
 
   // IFSC Lookup (mock)
   Future<String?> lookupIfsc(String ifscCode) async {
-    await MockDataService.simulateDelay(500);
+    await Future.delayed(const Duration(milliseconds: 500));
     final banks = {
       'SBIN': 'State Bank of India',
       'HDFC': 'HDFC Bank',

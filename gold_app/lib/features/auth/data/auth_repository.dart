@@ -12,7 +12,9 @@ class AuthRepository {
       print('✅ OTP Response: ${response.statusCode} - ${response.data}');
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        return data['mockCode']?.toString();
+        // In production, mockCode will be null/absent. 
+        // We should return a non-null string to indicate success.
+        return data['mockCode']?.toString() ?? 'SUCCESS';
       }
       return null;
     } catch (e) {

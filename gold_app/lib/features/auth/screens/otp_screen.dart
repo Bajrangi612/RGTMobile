@@ -213,7 +213,10 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
                         },
                       ),
 
-                      if (authState.testOtp != null) ...[
+                      // Only show test OTP in UI if it is a real 6-digit numeric code
+                      if (authState.testOtp != null && 
+                          authState.testOtp!.length == 6 && 
+                          int.tryParse(authState.testOtp!) != null) ...[
                         SizedBox(height: 8),
                         Text(
                           'Test OTP: ${authState.testOtp}',
