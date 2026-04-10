@@ -14,6 +14,10 @@ npx prisma migrate deploy
 echo "🌱 Seeding global configurations..."
 npx prisma db seed
 
-# 3. Start the Production Server
+# 3. Heal Dirty Data (Purge empty strings/NULLs)
+echo "🛡️  Healing database integrity..."
+npx tsx src/repair-data.ts
+
+# 4. Start the Production Server
 echo "🔥 Igniting Obsidian Elite Terminal..."
 node dist/index.js
