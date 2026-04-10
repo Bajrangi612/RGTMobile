@@ -133,7 +133,16 @@ export class UserController {
       };
 
       if (address !== undefined) updateData.address = address;
-      if (dob !== undefined) updateData.dob = dob ? new Date(dob) : null;
+      if (dob !== undefined) {
+        if (dob && dob !== "") {
+          const parsedDate = new Date(dob);
+          if (!isNaN(parsedDate.getTime())) {
+            updateData.dob = parsedDate;
+          }
+        } else {
+          updateData.dob = null;
+        }
+      }
       if (panNo !== undefined) updateData.panNo = panNo;
       if (aadharNo !== undefined) updateData.aadharNo = aadharNo;
       

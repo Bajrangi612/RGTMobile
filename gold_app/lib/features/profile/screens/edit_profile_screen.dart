@@ -33,7 +33,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController = TextEditingController(text: user?.name);
     _emailController = TextEditingController(text: user?.email);
     _addressController = TextEditingController(text: user?.address);
-    _dobController = TextEditingController(text: user?.dob);
+    
+    // Format DOB from backend format to DD/MM/YYYY
+    String dobText = '';
+    if (user?.dob != null && user!.dob!.isNotEmpty) {
+      try {
+        final date = DateTime.parse(user.dob!);
+        dobText = DateFormat('dd/MM/yyyy').format(date);
+      } catch (_) {
+        dobText = user.dob!;
+      }
+    }
+    _dobController = TextEditingController(text: dobText);
     _panController = TextEditingController(text: user?.panNo);
   }
 
