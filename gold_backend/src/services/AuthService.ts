@@ -14,7 +14,29 @@ export class AuthService {
       create: { phone, code, expiresAt },
     });
 
-    console.log(`[SMS MOCK] OTP for ${phone}: ${code}`);
+    console.log(`[OTP] Sending ${code} to ${phone}`);
+
+    // Real SMS integration via 2Factor.in
+    const apiKey = process.env.TWOFACTOR_API_KEY;
+    if (apiKey) {
+      try {
+        const url = `https://2factor.in/API/V1/${apiKey}/SMS/${phone}/${code}/OTP1`;
+        const response = await fetch(url);
+        const result = await response.json() as any;
+        
+        if (result.Status !== 'Success') {
+          console.error(`❌ [2Factor] SMS delivery failed: ${result.Details}`);
+        } else {
+          console.log(`✅ [2Factor] SMS sent successfully: ${result.Details}`);
+        }
+      } catch (err) {
+        console.error('❌ [2Factor] Network error during SMS delivery:', err);
+      }
+    } else {
+      console.log('⚠️ [2Factor] API Key missing. Skipping real SMS delivery.');
+    }
+
+    // Always return code for consistency (or handled in controller)
     return code;
   }
 
