@@ -54,7 +54,7 @@ model Order {
   amount              Decimal     @db.Decimal(15, 2)
   gst                 Decimal     @db.Decimal(15, 2)
   total               Decimal     @db.Decimal(15, 2)
-  status              OrderStatus @default(CREATED)
+  status              OrderStatus @default(PAYMENT_PENDING)
   paymentId           String?     @unique(map: "Order_paymentId_key")
   paymentStatus       String?
   deliveryDate        DateTime?
