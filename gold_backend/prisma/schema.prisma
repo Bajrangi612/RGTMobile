@@ -63,9 +63,11 @@ model Order {
   updatedAt           DateTime    @updatedAt
   referralCode        String?
   invoiceNo           String?     @unique(map: "Order_invoiceNo_key")
+  invoiceUrl          String?
   product             Product     @relation(fields: [productId], references: [id], map: "Order_productId_fkey")
   user                User        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
   payments            Payment[]
+  statusHistory       OrderStatusHistory[]
 
   @@index([productId], map: "Order_productId_fkey")
   @@index([status], map: "Order_status_idx")
@@ -276,4 +278,16 @@ enum OrderStatus {
   REFUNDED
 
   @@map("order_status")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  notes     String?     @db.Text
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_status_history")
 }

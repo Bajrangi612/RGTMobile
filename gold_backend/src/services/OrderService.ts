@@ -22,7 +22,7 @@ class OrderService {
 
     // 2. Validate Referral Logic (Cannot use own code on 1st order)
     const paidOrderCount = await prisma.order.count({
-      where: { userId, status: "PAID" }
+      where: { userId, status: "PAYMENT_SUCCESSFUL" }
     });
     
     if (referralCode) {
@@ -105,7 +105,7 @@ class OrderService {
     });
 
     if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status === "PAID") return order; // Already processed
+    if (order.status === "PAYMENT_SUCCESSFUL") return order; // Already processed
 
     // 2. Verify Payment via Razorpay Signature
     if (!order.paymentId) throw new Error("Order has no active payment session");
@@ -372,7 +372,7 @@ class OrderService {
 
     // Get oldest PENDING orders for this product
     const pendingOrders = await prisma.order.findMany({
-      where: { productId, status: "PENDING" },
+      where: { productId, status: "ORDER_CONFIRMED" },
       orderBy: { createdAt: "asc" },
       take: readyStockCount
     });
@@ -381,7 +381,15 @@ class OrderService {
       for (const order of pendingOrders) {
         await tx.order.update({
           where: { id: order.id },
-          data: { status: "READY" }
+          data: { 
+            status: "READY_FOR_PICKUP",
+            statusHistory: {
+              create: {
+                status: "READY_FOR_PICKUP",
+                notes: "Inventory available. Ready for store collection."
+              }
+            }
+          }
         });
       }
 

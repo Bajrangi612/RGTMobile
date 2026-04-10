@@ -18,7 +18,7 @@ class ProductService {
         _count: {
           select: {
             orders: {
-              where: { status: 'PENDING' }
+              where: { status: 'ORDER_CONFIRMED' }
             }
           }
         }

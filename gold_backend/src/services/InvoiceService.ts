@@ -3,8 +3,6 @@ import QRCode from 'qrcode';
 import { PrismaClient } from '@prisma/client';
 import r2Service from './R2Service';
 import { format } from 'date-fns';
-
-import { format } from 'date-fns';
 import path from 'path';
 
 const prisma = new PrismaClient();

@@ -19,7 +19,7 @@ export class WalletController {
           take: 40 
         }),
         prisma.order.findMany({
-          where: { userId, status: { in: ["CREATED", "PAID", "PENDING", "READY", "PICKED", "BUYBACK", "CANCELLED", "REFUND_REQUESTED", "REFUNDED"] } },
+          where: { userId, status: { in: ["PAYMENT_PENDING", "PAYMENT_SUCCESSFUL", "ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP", "BUYBACK", "CANCELLED", "REFUNDED"] } },
           orderBy: { createdAt: "desc" },
           include: { product: true },
           take: 40
@@ -49,7 +49,7 @@ export class WalletController {
           type: "PURCHASE",
           amount: Number(order.total),
           description: `Gold Purchase - ${(order as any).product?.name || 'Gold'} (Qty: ${order.quantity})`,
-          status: order.status === "PAID" ? "COMPLETED" : order.status,
+          status: order.status === "PAYMENT_SUCCESSFUL" ? "COMPLETED" : order.status,
           invoiceNo: order.invoiceNo,
           createdAt: order.createdAt.toISOString()
         }));

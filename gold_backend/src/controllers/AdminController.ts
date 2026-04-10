@@ -34,16 +34,16 @@ export class AdminController {
   static async getDashboardStats(req: Request, res: Response, next: NextFunction) {
     try {
       const userCount = await prisma.user.count();
-      const orderCount = await prisma.order.count({ where: { status: "PAID" } });
+      const orderCount = await prisma.order.count({ where: { status: "PAYMENT_SUCCESSFUL" } });
       const totalVolume = await prisma.order.aggregate({
-        where: { status: "PAID" },
+        where: { status: "PAYMENT_SUCCESSFUL" },
         _sum: { total: true }
       });
 
       const stats = {
         totalUsers: userCount,
         totalPaidOrders: orderCount,
-        totalRevenue: totalVolume._sum.total || 0,
+        totalRevenue: Number(totalVolume._sum.total || 0),
       };
 
       return successResponse(res, stats, "Dashboard stats fetched successfully");
