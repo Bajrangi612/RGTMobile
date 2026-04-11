@@ -194,7 +194,7 @@ class OrderService {
           userId,
           type: "PURCHASE",
           amount: total,
-          description: `Gold Collection - ${newOrder.product.name} (Qty: ${quantity})`,
+          description: `Gold Collection - ${(newOrder as any).product.name} (Qty: ${quantity})`,
           status: "COMPLETED",
           invoiceNo: invoiceNo,
           createdAt: nowIST,
