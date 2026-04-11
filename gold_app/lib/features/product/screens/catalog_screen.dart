@@ -244,7 +244,7 @@ class _CategoryBarState extends ConsumerState<_CategoryBar> {
                       style: TextStyle(
                         color: isSelected
                             ? Colors.black
-                            : Colors.white,
+                            : Colors.orange,
                         fontWeight: isSelected
                             ? FontWeight.bold
                             : FontWeight.w500,

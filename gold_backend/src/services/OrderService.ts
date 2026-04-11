@@ -23,7 +23,7 @@ class OrderService {
 
     // 2. Validate Referral Logic (Cannot use own code on 1st order)
     const paidOrderCount = await prisma.order.count({
-      where: { userId, status: "PAYMENT_SUCCESSFUL" }
+      where: { userId, status: "ORDER_CONFIRMED" }
     });
     
     if (referralCode) {
@@ -443,36 +443,34 @@ class OrderService {
 
       const buybackAmount = Number(order.weight) * Number(latestPrice.buyPrice);
 
-      // 1. Update Order Status to BUYBACK_PENDING
-      await tx.order.update({
-        where: { id: orderId },
-        data: { 
-          status: "BUYBACK_PENDING",
-          statusHistory: {
-            create: { status: "BUYBACK_PENDING", notes: "Buyback request submitted for approval." }
-          }
+      // 3. Create actual Transaction Record
+      const txn = await tx.transaction.create({
+        data: {
+          userId,
+          type: "SELL_BACK",
+          amount: new Prisma.Decimal(latestPrice.buyPrice),
+          description: `Sell back request initiated for order #${order.invoiceNo || orderId}`,
+          status: "PENDING"
         }
       });
 
-      // 2. Create BuybackRequest record
+      // 4. Update Order Status
+      await tx.order.update({
+        where: { id: orderId },
+        data: { 
+          status: "PREPARING_ORDER", // Indicating it's being processed for buyback
+          statusHistory: { create: { status: "PREPARING_ORDER", notes: "Sell back request initiated. Gold ready for pickup/verification." } }
+        }
+      });
+
+      // 5. Create Buyback Request
       const request = await tx.buybackRequest.create({
         data: {
           orderId,
           userId,
           amount: new Prisma.Decimal(buybackAmount),
           buyPrice: latestPrice.buyPrice,
-          status: "PENDING"
-        }
-      });
-
-      // 3. Create Transaction record for Payout (Tracking)
-      await tx.transaction.create({
-        data: {
-          userId,
-          type: "SELL_BACK",
-          amount: new Prisma.Decimal(buybackAmount),
-          description: `Buyback Payout Request for ${order.product.name}. Approval pending.`,
-          status: "PENDING"
+          status: "SELL_BACK_APPLIED"
         }
       });
 
@@ -511,23 +509,27 @@ class OrderService {
       });
 
       if (!request) throw new Error("Buyback request not found.");
-      if (request.status !== "PENDING") throw new Error("Request already processed.");
+      if (request.status !== "SELL_BACK_APPLIED" && request.status !== "APPROVED") throw new Error("Request already processed.");
 
       if (action === 'APPROVE') {
-        // 1. Mark Request as Completed
+        const nextStatus = request.status === "SELL_BACK_APPLIED" ? "APPROVED" : "PAYMENT_SETTLED";
+        
+        // 1. Mark Request as Approved or Settled
         await tx.buybackRequest.update({
           where: { id: requestId },
-          data: { status: "COMPLETED", adminNotes }
+          data: { status: nextStatus, adminNotes }
         });
 
-        // 2. Update Order Status
-        await tx.order.update({
-          where: { id: request.orderId },
-          data: { 
-            status: "SOLD_BACK",
-            statusHistory: { create: { status: "SOLD_BACK", notes: adminNotes || "Buyback approved and processed." } }
-          }
-        });
+        // 2. If settled, update Order Status
+        if (nextStatus === "PAYMENT_SETTLED") {
+          await tx.order.update({
+            where: { id: request.orderId },
+            data: { 
+              status: "SOLD_BACK",
+              statusHistory: { create: { status: "SOLD_BACK", notes: adminNotes || "Buyback payment settled." } }
+            }
+          });
+        }
 
         // 3. Update Transaction status
         // Find the pending transaction for this user/amount

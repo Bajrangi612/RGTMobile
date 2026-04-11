@@ -35,9 +35,9 @@ export class AdminController {
     try {
       const [userCount, orderCount, financialTotals] = await Promise.all([
         prisma.user.count(),
-        prisma.order.count({ where: { status: { notIn: ["PAYMENT_PENDING", "CANCELLED"] } } }),
+        prisma.order.count({ where: { status: { notIn: ["ORDER_PLACED", "ORDER_CANCELLED"] } } }),
         prisma.order.aggregate({
-          where: { status: { notIn: ["PAYMENT_PENDING", "CANCELLED"] } },
+          where: { status: { notIn: ["ORDER_PLACED", "ORDER_CANCELLED"] } },
           _sum: { total: true, amount: true, gst: true, weight: true }
         })
       ]);
@@ -57,7 +57,7 @@ export class AdminController {
         const daySum = await prisma.order.aggregate({
           where: {
             createdAt: { gte: date, lt: nextDate },
-            status: { in: ["ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP"] }
+            status: { in: ["ORDER_CONFIRMED", "PREPARING_ORDER", "QUALITY_CHECKING", "READY_FOR_PICKUP", "DELIVERED"] }
           },
           _sum: { total: true }
         });

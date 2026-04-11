@@ -17,6 +17,7 @@ import 'admin_reports_screen.dart';
 import 'admin_gold_price_screen.dart';
 import 'admin_transactions_screen.dart';
 import 'admin_withdrawal_manager_screen.dart';
+import 'admin_buyback_manager_screen.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../home/screens/home_screen.dart';
@@ -704,13 +705,13 @@ class _ManagementGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminCategoryManager())),
         ),
         _CompactTool(
-          icon: Icons.verified_user_outlined,
-          label: 'Compliance',
+          icon: Icons.people_outline,
+          label: 'Users',
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager())),
         ),
         _CompactTool(
           icon: Icons.local_shipping_outlined,
-          label: 'Logistics',
+          label: 'Orders',
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager())),
         ),
         _CompactTool(
@@ -720,7 +721,7 @@ class _ManagementGrid extends StatelessWidget {
         ),
         _CompactTool(
           icon: Icons.account_balance_wallet_outlined,
-          label: 'Finance',
+          label: 'Transactions',
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen())),
         ),
         _CompactTool(

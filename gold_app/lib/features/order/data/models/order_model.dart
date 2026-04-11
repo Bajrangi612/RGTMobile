@@ -101,22 +101,20 @@ class OrderModel {
   String get paymentMethod => 'Online (Razorpay)';
   
   bool get canCancel => 
-    status.toUpperCase() == 'PAYMENT_PENDING' || 
-    status.toUpperCase() == 'CREATED' || 
-    status.toUpperCase() == 'PENDING';
+    status.toUpperCase() == 'ORDER_PLACED' || 
+    status.toUpperCase() == 'ORDER_CONFIRMED' || 
+    status.toUpperCase() == 'PREPARING_ORDER';
 
   bool get canResell => 
     status.toUpperCase() == 'READY_FOR_PICKUP' || 
-    status.toUpperCase() == 'READY' ||
-    status.toUpperCase() == 'PICKED_UP' ||
-    status.toUpperCase() == 'PICKED';
+    status.toUpperCase() == 'DELIVERED';
   
   bool get isActive => 
     !isCancelled && !isResold && status.toUpperCase() != 'REFUNDED' && status.toUpperCase() != 'PICKED_UP' && status.toUpperCase() != 'PICKED';
     
-  bool get isDelivered => status.toUpperCase() == 'PICKED' || status.toUpperCase() == 'PICKED_UP';
-  bool get isCancelled => status.toUpperCase() == 'CANCELLED';
-  bool get isResold => status.toUpperCase() == 'RESOLD' || status.toUpperCase() == 'BUYBACK';
+  bool get isDelivered => status.toUpperCase() == 'DELIVERED';
+  bool get isCancelled => status.toUpperCase() == 'ORDER_CANCELLED';
+  bool get isResold => status.toUpperCase() == 'SOLD_BACK' || status.toUpperCase() == 'RESOLD';
 
   StatusType get statusType => statusFromString(status);
 

@@ -35,13 +35,15 @@ class ReferralScreen extends ConsumerWidget {
         .take(5)
         .toList();
 
-    return Container(
-      decoration: BoxDecoration(gradient: AppColors.darkGradient),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
               SizedBox(height: 16),
 
               // Header
@@ -289,7 +291,8 @@ class ReferralScreen extends ConsumerWidget {
               ).animate(delay: 500.ms).fadeIn(duration: 400.ms),
 
               SizedBox(height: 40),
-            ],
+              ],
+            ),
           ),
         ),
       ),

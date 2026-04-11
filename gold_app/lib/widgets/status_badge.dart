@@ -130,33 +130,30 @@ class StatusBadge extends StatelessWidget {
 // Helper to convert string status to StatusType
 StatusType statusFromString(String status) {
   switch (status.toUpperCase()) {
-    case 'PAYMENT_PENDING':
-    case 'CREATED':
+    case 'ORDER_PLACED':
       return StatusType.pending;
-    case 'PAYMENT_SUCCESSFUL':
-    case 'PAID':
-      return StatusType.verified;
     case 'ORDER_CONFIRMED':
-    case 'PENDING':
       return StatusType.confirmed;
-    case 'PROCESSING':
+    case 'PREPARING_ORDER':
       return StatusType.processing;
     case 'QUALITY_CHECKING':
       return StatusType.qualityChecking;
     case 'READY_FOR_PICKUP':
-    case 'READY':
       return StatusType.ready;
-    case 'PICKED_UP':
-    case 'PICKED':
     case 'DELIVERED':
+    case 'PICKED_UP':
       return StatusType.delivered;
-    case 'BUYBACK':
+    case 'SELL_BACK_APPLIED':
+      return StatusType.processing;
+    case 'APPROVED':
+      return StatusType.confirmed;
+    case 'PAYMENT_SETTLED':
+    case 'SOLD_BACK':
     case 'RESOLD':
       return StatusType.resold;
+    case 'ORDER_CANCELLED':
     case 'CANCELLED':
       return StatusType.cancelled;
-    case 'REFUNDED':
-      return StatusType.rejected;
     default:
       return StatusType.pending;
   }

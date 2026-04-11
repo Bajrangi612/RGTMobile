@@ -48,9 +48,9 @@ class AdminUserDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(user['name'] ?? 'N/A', style: AppTextStyles.h4),
-                          Text(user['email'] ?? 'N/A', style: AppTextStyles.caption),
+                          Text(user['phone'] ?? (user['email'] ?? 'N/A'), style: AppTextStyles.caption),
                           const SizedBox(height: 8),
-                          _KycStatusBanner(status: user['kycStatus']),
+                          // KYC Status Banner removed
                         ],
                       ),
                     ),
@@ -116,59 +116,13 @@ class AdminUserDetailScreen extends ConsumerWidget {
 
               const SizedBox(height: 32),
 
-              /// 📄 Document Review Section
-              Text('COMPLIANCE DOCUMENTS', style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, letterSpacing: 1.2)),
-              const SizedBox(height: 16),
+              // Compliance Documents section removed
               
-              _DocumentCard(
-                label: 'Aadhaar Card',
-                idValue: user['aadharNo'] ?? 'Not provided',
-                placeholderColor: Colors.blueAccent,
-              ),
+              const SizedBox(height: 32),
+
+              // KYC Actions Row removed
+              
               const SizedBox(height: 16),
-              _DocumentCard(
-                label: 'PAN Card',
-                idValue: user['panNo'] ?? 'Not provided',
-                placeholderColor: Colors.orangeAccent,
-              ),
-
-              const SizedBox(height: 32),
-
-              /// ✅ KYC Actions
-              if (user['kycStatus'] != 'VERIFIED')
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: adminState.isLoading 
-                          ? null 
-                          : () => _updateKyc(context, ref, 'REJECTED'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.redAccent,
-                          side: const BorderSide(color: Colors.redAccent),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text('REJECT KYC'),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: adminState.isLoading 
-                          ? null 
-                          : () => _updateKyc(context, ref, 'VERIFIED'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.success,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                        ),
-                        child: const Text('VERIFY KYC', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ],
-                ).animate().fadeIn(delay: 400.ms),
-
-              const SizedBox(height: 32),
 
               /// 🏦 Bank Details Review
               Text('BANK ACCOUNT VERIFICATION', style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, letterSpacing: 1.2)),
@@ -233,15 +187,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
   );
 }
 
-  Future<void> _updateKyc(BuildContext context, WidgetRef ref, String status) async {
-    await ref.read(adminProvider.notifier).updateKycStatus(user['id'], status);
-    if (context.mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('User KYC set to $status')),
-      );
-    }
-  }
+// _updateKyc method removed as part of KYC cleanup.
 
   Future<void> _updateBank(BuildContext context, WidgetRef ref, String status) async {
     await ref.read(adminProvider.notifier).updateBankStatus(user['id'], status);
@@ -254,81 +200,9 @@ class AdminUserDetailScreen extends ConsumerWidget {
   }
 }
 
-class _KycStatusBanner extends StatelessWidget {
-  final String? status;
-  const _KycStatusBanner({required this.status});
+// _KycStatusBanner removed.
 
-  @override
-  Widget build(BuildContext context) {
-    Color color = AppColors.royalGold;
-    if (status?.toUpperCase() == 'VERIFIED') color = AppColors.success;
-    if (status?.toUpperCase() == 'REJECTED') color = AppColors.error;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Text(
-        status?.toUpperCase() ?? 'PENDING',
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-      ),
-    );
-  }
-}
-
-class _DocumentCard extends StatelessWidget {
-  final String label;
-  final String idValue;
-  final Color placeholderColor;
-
-  const _DocumentCard({
-    required this.label,
-    required this.idValue,
-    required this.placeholderColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GoldCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(label, style: AppTextStyles.labelMedium),
-              Text(idValue, style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold)),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.pureWhite.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.pureWhite.withValues(alpha: 0.1)),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.image_outlined, size: 48, color: placeholderColor.withValues(alpha: 0.3)),
-                  const SizedBox(height: 8),
-                  Text('Official Document Photo', style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3))),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// _DocumentCard removed.
 
 class _InfoRow extends StatelessWidget {
   final String label;

@@ -13,7 +13,8 @@ import '../data/models/order_model.dart';
 import 'order_detail_screen.dart';
 
 class OrdersScreen extends ConsumerStatefulWidget {
-  const OrdersScreen({super.key}) ;
+  final bool onlyEligible;
+  const OrdersScreen({super.key, this.onlyEligible = false}) ;
 
   @override
   ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
@@ -32,15 +33,29 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
   Widget build(BuildContext context) {
     final orderState = ref.watch(orderProvider);
 
-    return Container(
-      decoration: BoxDecoration(gradient: AppColors.darkGradient),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Container(
+        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-              child: Text('My Orders', style: AppTextStyles.h2),
+              child: Row(
+                children: [
+                  if (Navigator.of(context).canPop())
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  Text(
+                    widget.onlyEligible ? 'Buyback Eligible' : 'My Orders',
+                    style: AppTextStyles.h2,
+                  ),
+                ],
+              ),
             ).animate().fadeIn(duration: 300.ms),
 
             SizedBox(height: 4),
@@ -48,7 +63,9 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'Track and manage your gold orders',
+                widget.onlyEligible 
+                  ? 'Select an item to sell back to Royal Gold'
+                  : 'Track and manage your gold orders',
                 style: AppTextStyles.bodySmall,
               ),
             ).animate().fadeIn(delay: 100.ms),
@@ -101,49 +118,68 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                               ),
                             ),
                           ) : orderState.orders.isEmpty
-                        ? Center(
-                            child: SingleChildScrollView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.receipt_long_rounded,
-                                    size: 64,
-                                    color: AppColors.darkGrey,
-                                  ),
-                                  SizedBox(height: 16),
-                                  Text('No orders yet', style: AppTextStyles.h4.copyWith(color: AppColors.grey)),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Start collecting gold coins',
-                                    style: AppTextStyles.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        : ListView.builder(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(horizontal: 24),
-                            itemCount: orderState.orders.length,
-                            itemBuilder: (context, index) {
-                              final order = orderState.orders[index];
-                              return _OrderCard(
-                                order: order,
-                                onTap: () => Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => OrderDetailScreen(order: order),
+                        : () {
+                            final displayOrders = widget.onlyEligible 
+                                ? orderState.orders.where((o) => o.status.toUpperCase() == 'READY_FOR_PICKUP').toList()
+                                : orderState.orders;
+
+                            if (displayOrders.isEmpty) {
+                              return Center(
+                                child: SingleChildScrollView(
+                                  physics: const AlwaysScrollableScrollPhysics(),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        widget.onlyEligible ? Icons.sell_rounded : Icons.receipt_long_rounded,
+                                        size: 64,
+                                        color: AppColors.darkGrey,
+                                      ).animate().scale(duration: 500.ms),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        widget.onlyEligible ? 'No eligible orders' : 'No orders yet',
+                                        style: AppTextStyles.h4.copyWith(color: AppColors.grey),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                                        child: Text(
+                                          widget.onlyEligible 
+                                              ? 'Orders must be "READY FOR PICKUP" to be eligible for the buyback program.'
+                                              : 'Start collecting gold coins',
+                                          style: AppTextStyles.bodySmall,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ).animate(delay: (200 + index * 100).ms)
-                                  .fadeIn(duration: 400.ms)
-                                  .slideX(begin: 0.05);
-                            },
-                          ),
+                              );
+                            }
+
+                            return ListView.builder(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(horizontal: 24),
+                                itemCount: displayOrders.length,
+                                itemBuilder: (context, index) {
+                                  final order = displayOrders[index];
+                                  return _OrderCard(
+                                    order: order,
+                                    onTap: () => Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => OrderDetailScreen(order: order),
+                                      ),
+                                    ),
+                                  ).animate(delay: (200 + index * 100).ms)
+                                      .fadeIn(duration: 400.ms)
+                                      .slideX(begin: 0.05);
+                                },
+                              );
+                          }(),
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -54,7 +54,7 @@ model Order {
   amount              Decimal     @db.Decimal(15, 2)
   gst                 Decimal     @db.Decimal(15, 2)
   total               Decimal     @db.Decimal(15, 2)
-  status              OrderStatus @default(PAYMENT_PENDING)
+  status              OrderStatus @default(ORDER_PLACED)
   paymentId           String?     @unique(map: "Order_paymentId_key")
   paymentStatus       String?
   deliveryDate        DateTime?
@@ -253,7 +253,7 @@ model BuybackRequest {
   userId      String
   amount      Decimal  @db.Decimal(15, 2)
   buyPrice    Decimal  @db.Decimal(15, 2)
-  status      String   @default("PENDING") // PENDING, COMPLETED, REJECTED
+  status      SellBackStatus @default(SELL_BACK_APPLIED)
   adminNotes  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -303,20 +303,21 @@ enum TransactionType {
 }
 
 enum OrderStatus {
-  PAYMENT_PENDING
-  PAYMENT_SUCCESSFUL
+  ORDER_PLACED
   ORDER_CONFIRMED
-  PROCESSING
+  PREPARING_ORDER
   QUALITY_CHECKING
   READY_FOR_PICKUP
-  PICKED_UP
-  BUYBACK_PENDING
-  BUYBACK
+  DELIVERED
+  ORDER_CANCELLED
   SOLD_BACK
-  CANCELLED
-  REFUNDED
+}
 
-  @@map("order_status")
+enum SellBackStatus {
+  SELL_BACK_APPLIED
+  APPROVED
+  PAYMENT_SETTLED
+  REJECTED
 }
 
 model OrderStatusHistory {

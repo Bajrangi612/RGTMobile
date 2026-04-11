@@ -13,6 +13,7 @@ import '../../../auth/providers/auth_provider.dart';
 import '../../../order/providers/order_provider.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../../core/providers/navigation_provider.dart';
 
 class CheckoutSheet extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -63,6 +64,8 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
         await ref.read(orderProvider.notifier).loadOrders();
 
         if (mounted) {
+          // Switch to My Orders tab before popping
+          ref.read(navigationProvider.notifier).state = 1;
           Navigator.pop(context); // Close sheet
           
           // Show success snackbar

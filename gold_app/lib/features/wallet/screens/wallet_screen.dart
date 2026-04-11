@@ -363,8 +363,7 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _TransactionTile extends StatelessWidget {
-
+class _TransactionTile extends StatefulWidget {
   final String title;
   final String date;
   final double amount;
@@ -388,81 +387,129 @@ class _TransactionTile extends StatelessWidget {
   });
 
   @override
+  State<_TransactionTile> createState() => _TransactionTileState();
+}
+
+class _TransactionTileState extends State<_TransactionTile> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => TransactionDetailScreen(
-                title: title,
-                date: date,
-                amount: amount,
-                isCredit: isCredit,
-                txnId: txnId,
-                status: status,
-                invoiceNo: invoiceNo,
-                mode: mode,
-                metadata: metadata,
-              ),
-            ),
-          );
-        },
+        onTap: () => setState(() => _isExpanded = !_isExpanded),
         borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: AppColors.cardDark.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.pureWhite.withValues(alpha: 0.05)),
+            border: Border.all(color: AppColors.pureWhite.withValues(alpha: _isExpanded ? 0.15 : 0.05)),
           ),
-          child: Row(
+          child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: (isCredit ? AppColors.success : AppColors.error).withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  isCredit ? Icons.add_rounded : Icons.remove_rounded,
-                  color: isCredit ? AppColors.success : AppColors.error,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(height: 2),
-                    if (txnId != null) 
-                       Text('ID: ${txnId!.substring(0, 8).toUpperCase()}', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.royalGold.withValues(alpha: 0.6))),
-                    Text(date, style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontSize: 10)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
                 children: [
-                  Text(
-                    '${isCredit ? "+" : "-"} ${Formatters.currency(amount)}',
-                    style: AppTextStyles.labelLarge.copyWith(
-                      color: isCredit ? AppColors.success : AppColors.error,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 14,
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: (widget.isCredit ? AppColors.success : AppColors.error).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      widget.isCredit ? Icons.add_rounded : Icons.remove_rounded,
+                      color: widget.isCredit ? AppColors.success : AppColors.error,
+                      size: 22,
                     ),
                   ),
-                  if (mode != null)
-                    Text(mode!.toUpperCase(), style: AppTextStyles.caption.copyWith(fontSize: 9, letterSpacing: 1)),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(widget.title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+                        const SizedBox(height: 2),
+                        if (widget.txnId != null) 
+                           Text('ID: ${widget.txnId!.substring(0, 8).toUpperCase()}', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.royalGold.withValues(alpha: 0.6))),
+                        Text(widget.date, style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontSize: 10)),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${widget.isCredit ? "+" : "-"} ${Formatters.currency(widget.amount)}',
+                        style: AppTextStyles.labelLarge.copyWith(
+                          color: widget.isCredit ? AppColors.success : AppColors.error,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          if (widget.mode != null)
+                            Text(widget.mode!.toUpperCase(), style: AppTextStyles.caption.copyWith(fontSize: 9, letterSpacing: 1)),
+                          const SizedBox(width: 4),
+                          Icon(_isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, size: 14, color: AppColors.grey),
+                        ],
+                      ),
+                    ],
+                  ),
                 ],
               ),
+              
+              if (_isExpanded) ...[
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(color: Colors.white10),
+                ),
+                _ExpandableDetailRow(label: 'Full ID', value: widget.txnId ?? 'N/A'),
+                _ExpandableDetailRow(label: 'Status', value: widget.status.toUpperCase(), valueColor: widget.status.toUpperCase() == 'COMPLETED' ? AppColors.success : AppColors.warning),
+                _ExpandableDetailRow(label: 'Date & Time', value: widget.date),
+                if (widget.invoiceNo != null) _ExpandableDetailRow(label: 'Invoice', value: widget.invoiceNo!),
+                if (widget.metadata != null && widget.metadata!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text('ADDITIONAL DETAILS', style: AppTextStyles.caption.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold, fontSize: 8, letterSpacing: 1)),
+                  const SizedBox(height: 8),
+                  ...widget.metadata!.entries.map((e) => _ExpandableDetailRow(
+                        label: e.key[0].toUpperCase() + e.key.substring(1), 
+                        value: e.value.toString(),
+                      )),
+                ],
+              ],
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ExpandableDetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  const _ExpandableDetailRow({required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey)),
+          Flexible(
+            child: Text(
+              value, 
+              style: AppTextStyles.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.bold, color: valueColor),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -137,7 +137,7 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              Text('Logistics & Delivery', style: AppTextStyles.labelLarge),
+              Text('Orders & Delivery', style: AppTextStyles.labelLarge),
               const SizedBox(height: 16),
               GoldCard(
                 child: Padding(

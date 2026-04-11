@@ -30,6 +30,7 @@ import '../../wallet/screens/wallet_screen.dart';
 import '../../admin/screens/admin_gold_price_screen.dart';
 import '../../admin/screens/admin_withdrawal_manager_screen.dart';
 import '../../admin/screens/admin_buyback_manager_screen.dart';
+import '../../../core/providers/navigation_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -39,7 +40,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _currentIndex = 0;
   late final List<Widget> _screens;
 
   @override
@@ -47,7 +47,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.initState();
     _screens = [
       _HomeDashboard(onTabChange: (index) {
-        setState(() => _currentIndex = index);
+        ref.read(navigationProvider.notifier).state = index;
         _handleRefresh(index);
       }),
       const OrdersScreen(),
@@ -85,9 +85,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(navigationProvider);
+    
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _currentIndex == 0 ? AppBar(
+      appBar: currentIndex == 0 ? AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: Builder(
@@ -127,7 +129,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               leading: Icon(Icons.dashboard_rounded, color: AppColors.royalGold),
               title: Text('Dashboard', style: AppTextStyles.bodyMedium),
               onTap: () {
-                setState(() => _currentIndex = 0);
+                ref.read(navigationProvider.notifier).state = 0;
                 _handleRefresh(0);
                 Navigator.pop(context);
               },
@@ -136,7 +138,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               leading: Icon(Icons.shopping_bag_rounded, color: AppColors.royalGold),
               title: Text('Catalog', style: AppTextStyles.bodyMedium),
               onTap: () {
-                setState(() => _currentIndex = 4);
+                ref.read(navigationProvider.notifier).state = 4;
                 _handleRefresh(4);
                 Navigator.pop(context);
               },
@@ -145,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               leading: Icon(Icons.history_rounded, color: AppColors.royalGold),
               title: Text('Orders', style: AppTextStyles.bodyMedium),
               onTap: () {
-                setState(() => _currentIndex = 1);
+                ref.read(navigationProvider.notifier).state = 1;
                 _handleRefresh(1);
                 Navigator.pop(context);
               },
@@ -194,17 +196,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
       body: IndexedStack(
-        index: _currentIndex,
+        index: currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: BottomNavBar(
-        currentIndex: _currentIndex,
+        currentIndex: currentIndex,
         onTap: (index) {
-          if (_currentIndex == index) return;
-          
-          setState(() => _currentIndex = index);
-              break;
-          }
+          ref.read(navigationProvider.notifier).state = index;
+          _handleRefresh(index);
         },
       ),
     ) ;
@@ -361,7 +360,7 @@ class _HomeDashboard extends ConsumerWidget {
                             );
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                              MaterialPageRoute(builder: (_) => const OrdersScreen(onlyEligible: true)),
                             );
                           },
                         ),

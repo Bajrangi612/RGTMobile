@@ -71,79 +71,119 @@ class AdminTransactionsScreen extends ConsumerWidget {
   }
 }
 
-class _TransactionCard extends StatelessWidget {
+class _TransactionCard extends StatefulWidget {
   final Map<String, dynamic> txn;
   const _TransactionCard({required this.txn});
 
   @override
+  State<_TransactionCard> createState() => _TransactionCardState();
+}
+
+class _TransactionCardState extends State<_TransactionCard> {
+  bool _isExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
-    final type = txn['type']?.toString().toLowerCase() ?? '';
+    final type = widget.txn['type']?.toString().toLowerCase() ?? '';
     final isPurchase = type == 'purchase';
+    final user = widget.txn['user'] ?? {};
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardDark.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: _isExpanded ? 0.2 : 0.05)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: _getColor(type).withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(_getIcon(type), color: _getColor(type), size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _isExpanded = !_isExpanded),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  txn['user']?['name'] ?? 'User Activity',
-                  style: AppTextStyles.labelSmall.copyWith(color: AppColors.grey),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _getColor(type).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(_getIcon(type), color: _getColor(type), size: 20),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            user['name'] ?? 'User Activity',
+                            style: AppTextStyles.labelSmall.copyWith(color: AppColors.grey),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.txn['description'] ?? 'No description',
+                            style: AppTextStyles.bodyMedium,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            Formatters.dateTime(widget.txn['createdAt'].toString()),
+                            style: AppTextStyles.caption.copyWith(fontSize: 9),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          Formatters.currency(double.tryParse(widget.txn['amount']?.toString() ?? '0.0') ?? 0.0),
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: isPurchase ? AppColors.pureWhite : AppColors.success,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (widget.txn['status'] != null)
+                          Row(
+                            children: [
+                              Text(
+                                widget.txn['status'].toString().toUpperCase(),
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: _getColor(type).withValues(alpha: 0.7),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(_isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded, size: 12, color: AppColors.grey),
+                            ],
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  txn['description'] ?? 'No description',
-                  style: AppTextStyles.bodyMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  Formatters.dateTime(txn['createdAt'].toString()),
-                  style: AppTextStyles.caption.copyWith(fontSize: 9),
-                ),
+                
+                if (_isExpanded) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Divider(color: Colors.white10),
+                  ),
+                  _DetailRow(label: 'Full Transaction ID', value: widget.txn['id']?.toString() ?? 'N/A'),
+                  _DetailRow(label: 'Customer Name', value: user['name'] ?? 'N/A'),
+                  _DetailRow(label: 'Customer Phone', value: user['phone'] ?? 'N/A'),
+                  _DetailRow(label: 'Transaction Type', value: widget.txn['type']?.toString().toUpperCase() ?? 'N/A'),
+                  _DetailRow(label: 'Payment Mode', value: widget.txn['provider']?.toString().toUpperCase() ?? 'WALLET'),
+                  _DetailRow(label: 'Precise Timestamp', value: widget.txn['createdAt'] != null ? Formatters.dateTime(widget.txn['createdAt']) : 'N/A'),
+                ],
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                Formatters.currency(double.tryParse(txn['amount']?.toString() ?? '0.0') ?? 0.0),
-                style: AppTextStyles.labelLarge.copyWith(
-                  color: isPurchase ? AppColors.pureWhite : AppColors.success,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              if (txn['status'] != null)
-                Text(
-                  txn['status'].toString().toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 8,
-                    color: _getColor(type).withValues(alpha: 0.7),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -168,6 +208,34 @@ class _TransactionCard extends StatelessWidget {
       case 'withdrawal': return AppColors.warning;
       default: return AppColors.grey;
     }
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey)),
+          const SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              value, 
+              style: AppTextStyles.bodySmall.copyWith(fontSize: 10, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.end,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
