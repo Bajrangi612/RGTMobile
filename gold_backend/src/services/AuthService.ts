@@ -44,9 +44,24 @@ export class AuthService {
     const phone = normalizeMobile(rawPhone);
     const otpRecord = await prisma.otp.findUnique({ where: { phone } });
 
-    if (!otpRecord || otpRecord.code !== code || otpRecord.expiresAt < new Date()) {
+    console.log(`[OTP] Verifying for ${phone}. Input: ${code}`);
+
+    if (!otpRecord) {
+      console.error(`❌ [OTP] No record found for ${phone}`);
       throw new Error('Invalid or expired OTP');
     }
+
+    if (otpRecord.code !== code) {
+      console.error(`❌ [OTP] Code mismatch for ${phone}. Expected ${otpRecord.code}, Got ${code}`);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    if (otpRecord.expiresAt < new Date()) {
+      console.error(`❌ [OTP] Code expired for ${phone}. Expired at: ${otpRecord.expiresAt}`);
+      throw new Error('Invalid or expired OTP');
+    }
+
+    console.log(`✅ [OTP] Verification successful for ${phone}`);
 
     await prisma.otp.update({
       where: { phone },

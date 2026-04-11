@@ -7,6 +7,13 @@ import '../../../widgets/gold_card.dart';
 import '../providers/admin_provider.dart';
 import 'admin_user_detail_screen.dart';
 
+class AdminUserManager extends ConsumerWidget {
+  const AdminUserManager({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final adminState = ref.watch(adminProvider);
+
     return DefaultTabController(
       length: 2,
       child: Scaffold(

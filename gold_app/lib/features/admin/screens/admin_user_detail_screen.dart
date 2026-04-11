@@ -140,7 +140,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
                     Row(
                       children: [
                         Text('Bank Status: ', style: AppTextStyles.caption),
-                        _KycStatusBanner(status: user['bankStatus']),
+                        _BankBadge(status: user['bankStatus']),
                       ],
                     ),
                   ],
@@ -200,7 +200,45 @@ class AdminUserDetailScreen extends ConsumerWidget {
   }
 }
 
-// _KycStatusBanner removed.
+class _BankBadge extends StatelessWidget {
+  final String status;
+  const _BankBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    Color color;
+    switch (status.toUpperCase()) {
+      case 'VERIFIED':
+        color = AppColors.success;
+        break;
+      case 'PENDING':
+        color = AppColors.royalGold;
+        break;
+      case 'REJECTED':
+        color = AppColors.error;
+        break;
+      default:
+        color = AppColors.grey;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: AppTextStyles.caption.copyWith(
+          color: color,
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
 
 // _DocumentCard removed.
 

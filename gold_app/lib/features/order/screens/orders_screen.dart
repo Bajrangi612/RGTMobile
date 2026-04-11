@@ -77,111 +77,118 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 onRefresh: () => ref.read(orderProvider.notifier).loadOrders(),
                 color: AppColors.royalGold,
                 backgroundColor: AppColors.surface,
-                child: orderState.isLoading && orderState.orders.isEmpty
-                    ? ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        itemCount: 3,
-                        itemBuilder: (_, __) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: ShimmerLoader.orderCard(),
-                        ),
-                      ) : orderState.error != null
-                        ? Center(
-                            child: SingleChildScrollView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(horizontal: 32),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Failed to load orders',
-                                    style: AppTextStyles.h4.copyWith(color: Colors.white),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    orderState.error!,
-                                    style: AppTextStyles.bodySmall,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 24),
-                                  ElevatedButton(
-                                    onPressed: () => ref.read(orderProvider.notifier).loadOrders(),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.royalGold,
-                                      foregroundColor: Colors.black,
-                                    ),
-                                    child: const Text('RETRY'),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ) : orderState.orders.isEmpty
-                        : () {
-                            final displayOrders = widget.onlyEligible 
-                                ? orderState.orders.where((o) => o.status.toUpperCase() == 'READY_FOR_PICKUP').toList()
-                                : orderState.orders;
-
-                            if (displayOrders.isEmpty) {
-                              return Center(
-                                child: SingleChildScrollView(
-                                  physics: const AlwaysScrollableScrollPhysics(),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        widget.onlyEligible ? Icons.sell_rounded : Icons.receipt_long_rounded,
-                                        size: 64,
-                                        color: AppColors.darkGrey,
-                                      ).animate().scale(duration: 500.ms),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        widget.onlyEligible ? 'No eligible orders' : 'No orders yet',
-                                        style: AppTextStyles.h4.copyWith(color: AppColors.grey),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                                        child: Text(
-                                          widget.onlyEligible 
-                                              ? 'Orders must be "READY FOR PICKUP" to be eligible for the buyback program.'
-                                              : 'Start collecting gold coins',
-                                          style: AppTextStyles.bodySmall,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }
-
-                            return ListView.builder(
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(horizontal: 24),
-                                itemCount: displayOrders.length,
-                                itemBuilder: (context, index) {
-                                  final order = displayOrders[index];
-                                  return _OrderCard(
-                                    order: order,
-                                    onTap: () => Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => OrderDetailScreen(order: order),
-                                      ),
-                                    ),
-                                  ).animate(delay: (200 + index * 100).ms)
-                                      .fadeIn(duration: 400.ms)
-                                      .slideX(begin: 0.05);
-                                },
-                              );
-                          }(),
+                child: _buildBody(ref, orderState),
               ),
             ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+  Widget _buildBody(WidgetRef ref, dynamic orderState) {
+    if (orderState.isLoading && orderState.orders.isEmpty) {
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: 3,
+        itemBuilder: (_, __) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: ShimmerLoader.orderCard(),
+        ),
+      );
+    }
+
+    if (orderState.error != null) {
+      return Center(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load orders',
+                style: AppTextStyles.h4.copyWith(color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                orderState.error!,
+                style: AppTextStyles.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => ref.read(orderProvider.notifier).loadOrders(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.royalGold,
+                  foregroundColor: Colors.black,
+                ),
+                child: const Text('RETRY'),
+              ),
             ],
           ),
         ),
-      ),
+      );
+    }
+
+    final displayOrders = widget.onlyEligible
+        ? orderState.orders.where((o) => o.status.toUpperCase() == 'READY_FOR_PICKUP').toList()
+        : orderState.orders;
+
+    if (displayOrders.isEmpty) {
+      return Center(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                widget.onlyEligible ? Icons.sell_rounded : Icons.receipt_long_rounded,
+                size: 64,
+                color: AppColors.darkGrey,
+              ).animate().scale(duration: 500.ms),
+              const SizedBox(height: 16),
+              Text(
+                widget.onlyEligible ? 'No eligible orders' : 'No orders yet',
+                style: AppTextStyles.h4.copyWith(color: AppColors.grey),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Text(
+                  widget.onlyEligible
+                      ? 'Orders must be "READY FOR PICKUP" to be eligible for the buyback program.'
+                      : 'Start collecting gold coins',
+                  style: AppTextStyles.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      itemCount: displayOrders.length,
+      itemBuilder: (context, index) {
+        final order = displayOrders[index];
+        return _OrderCard(
+          order: order,
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => OrderDetailScreen(order: order),
+            ),
+          ),
+        ).animate(delay: (200 + index * 100).ms)
+            .fadeIn(duration: 400.ms)
+            .slideX(begin: 0.05);
+      },
     );
   }
 }
