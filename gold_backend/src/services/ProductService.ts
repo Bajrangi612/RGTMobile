@@ -27,6 +27,7 @@ class ProductService {
             }
           }
         }
+        }
       }),
       prisma.product.count({ where })
     ]);
