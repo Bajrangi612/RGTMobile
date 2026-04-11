@@ -31,7 +31,7 @@ model Category {
   updatedAt DateTime  @updatedAt
   products  Product[]
 
-  @@index([isActive], map: "Category_isActive_idx")
+  @@index([isActive], map: "idx_category_active_status")
   @@map("category")
 }
 
