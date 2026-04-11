@@ -6,7 +6,7 @@ import { authenticate } from "../middleware/auth";
 const router = Router();
 
 router.get("/details", authenticate, WalletController.getWalletDetails);
-router.post("/withdraw", authenticate, WalletController.requestWithdrawal);
+router.post("/withdraw", authenticate, WithdrawalController.requestWithdrawal);
 router.get("/my-withdrawals", authenticate, WithdrawalController.myWithdrawals);
 
 export default router;

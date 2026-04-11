@@ -39,10 +39,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     final isEnabled = prefs.getBool('biometric_enabled') ?? false;
     if (isEnabled) {
-      final canCheck = await _auth.canCheckBiometrics;
+      final canCheck = await _auth.canCheckBiometrics || await _auth.isDeviceSupported();
       if (canCheck) {
         setState(() => _canBiometric = true);
-        _loginWithBiometrics(); // Auto-suggest on open
+        // Delay slightly to give UI time to settle
+        Future.delayed(const Duration(milliseconds: 500), () => _loginWithBiometrics());
       }
     }
   }
@@ -51,13 +52,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final didAuth = await _auth.authenticate(
         localizedReason: 'Sign in to Royal Gold',
-        options: const AuthenticationOptions(stickyAuth: true),
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false, // Allows PIN/Pattern as requested
+        ),
       );
       if (didAuth && mounted) {
-        // Logic for biometric login: 
-        // In a real app, you'd exchange a secure token stored in Keychain/Keystore.
-        // For this finalization, we'll navigate a session restored from token or trigger OTP flow pre-filled.
-        context.showSuccessSnackBar('Biometric verification successful');
+        final success = await ref.read(authProvider.notifier).checkAuthStatus();
+        // If status becomes authenticated, the landing screen will automatically switch
+        if (ref.read(authProvider).status == AuthStatus.authenticated) {
+           context.showSuccessSnackBar('Welcome back!');
+        } else {
+           // If token expired, fall back to OTP
+           context.showErrorSnackBar('Session expired. Please use OTP.');
+        }
       }
     } catch (e) {
       debugPrint('Biometric error: $e');

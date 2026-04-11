@@ -14,5 +14,7 @@ router.put("/:id/sell-back", authenticate, OrderController.sellBack);
 // Admin only routes
 router.get("/", authenticate, authorize([UserRole.ADMIN]), OrderController.listAllOrders);
 router.patch("/:id/status", authenticate, authorize([UserRole.ADMIN]), OrderController.updateStatus);
+router.get("/buybacks", authenticate, authorize([UserRole.ADMIN]), OrderController.listBuybackRequests);
+router.patch("/buybacks/:id", authenticate, authorize([UserRole.ADMIN]), OrderController.updateBuybackStatus);
 
 export default router;

@@ -16,7 +16,7 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/providers/settings_provider.dart';
 
 class ReferralScreen extends ConsumerWidget {
-  const ReferralScreen({super.key}) ;
+  const ReferralScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,10 +24,14 @@ class ReferralScreen extends ConsumerWidget {
     final walletState = ref.watch(walletProvider);
     final settings = ref.watch(settingsProvider);
     final referralCode = user?.referralCode ?? '----';
-    
+
     // Filter for referral transactions
     final referralTransactions = walletState.transactions
-        .where((t) => t.type.toLowerCase() == 'referral' || t.type.toLowerCase() == 'referral_reward')
+        .where(
+          (t) =>
+              t.type.toLowerCase() == 'referral' ||
+              t.type.toLowerCase() == 'referral_reward',
+        )
         .take(5)
         .toList();
 
@@ -41,8 +45,10 @@ class ReferralScreen extends ConsumerWidget {
               SizedBox(height: 16),
 
               // Header
-              Text('Refer & Earn', style: AppTextStyles.h2)
-                  .animate().fadeIn(duration: 300.ms),
+              Text(
+                'Refer & Earn',
+                style: AppTextStyles.h2,
+              ).animate().fadeIn(duration: 300.ms),
               SizedBox(height: 8),
               Text(
                 'Earn ${Formatters.currency(settings.referralReward)} for every successful referral',
@@ -67,7 +73,11 @@ class ReferralScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-                child: Icon(Icons.card_giftcard_rounded, size: 50, color: AppColors.deepBlack),
+                child: Icon(
+                  Icons.card_giftcard_rounded,
+                  size: 50,
+                  color: AppColors.deepBlack,
+                ),
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
 
               SizedBox(height: 32),
@@ -78,10 +88,16 @@ class ReferralScreen extends ConsumerWidget {
                 hasGlow: true,
                 child: Column(
                   children: [
-                    Text('Your Referral Code', style: AppTextStyles.labelMedium),
+                    Text(
+                      'Your Referral Code',
+                      style: AppTextStyles.labelMedium,
+                    ),
                     SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.royalGold.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
@@ -103,16 +119,26 @@ class ReferralScreen extends ConsumerWidget {
                           SizedBox(width: 12),
                           GestureDetector(
                             onTap: () {
-                              Clipboard.setData(ClipboardData(text: referralCode)) ;
-                              context.showSuccessSnackBar('Referral code copied!');
+                              Clipboard.setData(
+                                ClipboardData(text: referralCode),
+                              );
+                              context.showSuccessSnackBar(
+                                'Referral code copied!',
+                              );
                             },
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.royalGold.withValues(alpha: 0.15),
+                                color: AppColors.royalGold.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: Icon(Icons.copy, color: AppColors.royalGold, size: 18),
+                              child: Icon(
+                                Icons.copy,
+                                color: AppColors.royalGold,
+                                size: 18,
+                              ),
                             ),
                           ),
                         ],
@@ -125,7 +151,7 @@ class ReferralScreen extends ConsumerWidget {
                         Share.share(
                           'Join Royal Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ${Formatters.currency(settings.referralReward)} cashback on your first order. Download now!',
                           subject: 'Royal Gold Store Invitation',
-                        ) ;
+                        );
                       },
                       icon: Icons.share,
                     ),
@@ -144,10 +170,14 @@ class ReferralScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Text(
-                            (user?.wallet?.balance ?? 0.0) > 0 
-                              ? (user!.wallet!.balance / 500).toInt().toString() 
-                              : '0', 
-                            style: AppTextStyles.h2.copyWith(color: AppColors.royalGold),
+                            (user?.wallet?.balance ?? 0.0) > 0
+                                ? (user!.wallet!.balance / 500)
+                                      .toInt()
+                                      .toString()
+                                : '0',
+                            style: AppTextStyles.h2.copyWith(
+                              color: AppColors.royalGold,
+                            ),
                           ),
                           SizedBox(height: 4),
                           Text('Referrals', style: AppTextStyles.caption),
@@ -162,8 +192,10 @@ class ReferralScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Text(
-                            Formatters.currency(user?.wallet?.balance ?? 0.0), 
-                            style: AppTextStyles.h2.copyWith(color: AppColors.success),
+                            Formatters.currency(user?.wallet?.balance ?? 0.0),
+                            style: AppTextStyles.h2.copyWith(
+                              color: AppColors.success,
+                            ),
                           ),
                           SizedBox(height: 4),
                           Text('Account Balance', style: AppTextStyles.caption),
@@ -175,20 +207,29 @@ class ReferralScreen extends ConsumerWidget {
               ).animate(delay: 400.ms).fadeIn(duration: 400.ms),
 
               const SizedBox(height: 24),
-              
+
               // Withdrawal Action
               GoldButton(
                 text: 'Withdraw Rewards',
                 isOutlined: true,
                 icon: Icons.payments_rounded,
-                onPressed: () => _showWithdrawDialog(context, ref, user?.wallet?.balance ?? 0.0, settings.minWithdrawal),
+                onPressed: () => _showWithdrawDialog(
+                  context,
+                  ref,
+                  user?.wallet?.balance ?? 0.0,
+                  settings.minWithdrawal,
+                ),
               ).animate(delay: 450.ms).fadeIn(),
 
               if (referralTransactions.isNotEmpty) ...[
                 const SizedBox(height: 32),
                 Row(
                   children: [
-                    Icon(Icons.history_rounded, color: AppColors.royalGold, size: 18),
+                    Icon(
+                      Icons.history_rounded,
+                      color: AppColors.royalGold,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text('Recent Rewards', style: AppTextStyles.labelLarge),
                   ],
@@ -201,13 +242,19 @@ class ReferralScreen extends ConsumerWidget {
                 const SizedBox(height: 32),
                 Row(
                   children: [
-                    Icon(Icons.account_balance_rounded, color: AppColors.royalGold, size: 18),
+                    Icon(
+                      Icons.account_balance_rounded,
+                      color: AppColors.royalGold,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text('Withdrawal History', style: AppTextStyles.labelLarge),
                   ],
                 ),
                 const SizedBox(height: 16),
-                ...walletState.withdrawalRequests.map((req) => _WithdrawalTile(req: req)),
+                ...walletState.withdrawalRequests.map(
+                  (req) => _WithdrawalTile(req: req),
+                ),
               ],
 
               SizedBox(height: 24),
@@ -219,9 +266,24 @@ class ReferralScreen extends ConsumerWidget {
                   children: [
                     Text('How it works', style: AppTextStyles.labelLarge),
                     SizedBox(height: 16),
-                    _HowItWorksStep(number: '1', text: 'Share your referral code with friends'),
-                    _HowItWorksStep(number: '2', text: 'They use it during their first purchase'),
-                    _HowItWorksStep(number: '3', text: 'You earn ${Formatters.currency(settings.referralReward)} per order', isLast: true),
+                    _HowItWorksStep(
+                      number: '1',
+                      text: 'Share your code with friends & family',
+                    ),
+                    _HowItWorksStep(
+                      number: '2',
+                      text: 'They use your code during gold purchase',
+                    ),
+                    _HowItWorksStep(
+                      number: '3',
+                      text:
+                          'You get flat ${Formatters.currency(settings.referralReward)} for every gram purchased',
+                    ),
+                    _HowItWorksStep(
+                      number: '4',
+                      text: 'Withdraw your rewards to bank account anytime',
+                      isLast: true,
+                    ),
                   ],
                 ),
               ).animate(delay: 500.ms).fadeIn(duration: 400.ms),
@@ -234,7 +296,12 @@ class ReferralScreen extends ConsumerWidget {
     );
   }
 
-  void _showWithdrawDialog(BuildContext context, WidgetRef ref, double balance, double minAmount) {
+  void _showWithdrawDialog(
+    BuildContext context,
+    WidgetRef ref,
+    double balance,
+    double minAmount,
+  ) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -257,7 +324,7 @@ class ReferralScreen extends ConsumerWidget {
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: Color.fromARGB(255, 238, 160, 44)),
               decoration: InputDecoration(
                 hintText: 'Enter amount',
                 prefixText: '₹ ',
@@ -267,7 +334,10 @@ class ReferralScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               'Minimum withdrawal: ${Formatters.currency(minAmount)}',
-              style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontSize: 10),
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.grey,
+                fontSize: 10,
+              ),
             ),
           ],
         ),
@@ -280,27 +350,41 @@ class ReferralScreen extends ConsumerWidget {
             onPressed: () async {
               final amountStr = controller.text.trim();
               if (amountStr.isEmpty) return;
-              
+
               final amount = double.tryParse(amountStr) ?? 0.0;
               if (amount < minAmount) {
-                context.showErrorSnackBar('Minimum withdrawal is ${Formatters.currency(minAmount)}');
+                context.showErrorSnackBar(
+                  'Minimum withdrawal is ${Formatters.currency(minAmount)}',
+                );
                 return;
               }
               if (amount > balance) {
                 context.showErrorSnackBar('Insufficient rewards balance');
                 return;
               }
-              
-              final success = await ref.read(walletProvider.notifier).requestWithdrawal(amount);
+
+              final success = await ref
+                  .read(walletProvider.notifier)
+                  .requestWithdrawal(amount);
               if (context.mounted) {
                 Navigator.pop(context);
                 if (success) {
-                  context.showSuccessSnackBar('Withdrawal request submitted successfully!');
+                  context.showSuccessSnackBar(
+                    'Withdrawal request submitted successfully!',
+                  );
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.royalGold),
-            child: const Text('SUBMIT', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.royalGold,
+            ),
+            child: const Text(
+              'SUBMIT',
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -313,7 +397,11 @@ class _HowItWorksStep extends StatelessWidget {
   final String text;
   final bool isLast;
 
-  const _HowItWorksStep({required this.number, required this.text, this.isLast = false});
+  const _HowItWorksStep({
+    required this.number,
+    required this.text,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -331,7 +419,10 @@ class _HowItWorksStep extends StatelessWidget {
             child: Center(
               child: Text(
                 number,
-                style: AppTextStyles.labelMedium.copyWith(color: AppColors.deepBlack, fontWeight: FontWeight.w700),
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.deepBlack,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -342,6 +433,7 @@ class _HowItWorksStep extends StatelessWidget {
     );
   }
 }
+
 class _WithdrawalTile extends StatelessWidget {
   final dynamic req;
   const _WithdrawalTile({required this.req});
@@ -349,8 +441,10 @@ class _WithdrawalTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = req['status']?.toString().toUpperCase() ?? 'PENDING';
-    final color = status == 'COMPLETED' ? AppColors.success : (status == 'REJECTED' ? AppColors.error : AppColors.warning);
-    
+    final color = status == 'COMPLETED'
+        ? AppColors.success
+        : (status == 'REJECTED' ? AppColors.error : AppColors.warning);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -367,7 +461,11 @@ class _WithdrawalTile extends StatelessWidget {
               color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.account_balance_wallet_rounded, color: color, size: 20),
+            child: Icon(
+              Icons.account_balance_wallet_rounded,
+              color: color,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -377,7 +475,10 @@ class _WithdrawalTile extends StatelessWidget {
                 Text('Withdrawal Request', style: AppTextStyles.bodyMedium),
                 const SizedBox(height: 2),
                 Text(
-                  Formatters.relativeTime(req['createdAt']?.toString() ?? DateTime.now().toIso8601String()), 
+                  Formatters.relativeTime(
+                    req['createdAt']?.toString() ??
+                        DateTime.now().toIso8601String(),
+                  ),
                   style: AppTextStyles.caption.copyWith(color: AppColors.grey),
                 ),
               ],
@@ -387,8 +488,13 @@ class _WithdrawalTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                Formatters.currency(double.tryParse(req['amount']?.toString() ?? '0') ?? 0.0),
-                style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite, fontWeight: FontWeight.bold),
+                Formatters.currency(
+                  double.tryParse(req['amount']?.toString() ?? '0') ?? 0.0,
+                ),
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: AppColors.pureWhite,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 4),
               Container(
@@ -399,7 +505,11 @@ class _WithdrawalTile extends StatelessWidget {
                 ),
                 child: Text(
                   status,
-                  style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -432,7 +542,11 @@ class _RewardTile extends StatelessWidget {
               color: AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.add_rounded, color: AppColors.success, size: 20),
+            child: const Icon(
+              Icons.add_rounded,
+              color: AppColors.success,
+              size: 20,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -442,7 +556,7 @@ class _RewardTile extends StatelessWidget {
                 Text(txn.description, style: AppTextStyles.bodyMedium),
                 const SizedBox(height: 2),
                 Text(
-                  Formatters.relativeTime(txn.date.toIso8601String()), 
+                  Formatters.relativeTime(txn.date.toIso8601String()),
                   style: AppTextStyles.caption.copyWith(color: AppColors.grey),
                 ),
               ],
@@ -450,7 +564,10 @@ class _RewardTile extends StatelessWidget {
           ),
           Text(
             '+${Formatters.currency(txn.amount)}',
-            style: AppTextStyles.labelLarge.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
+            style: AppTextStyles.labelLarge.copyWith(
+              color: AppColors.success,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

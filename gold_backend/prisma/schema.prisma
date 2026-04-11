@@ -68,6 +68,7 @@ model Order {
   user                User        @relation(fields: [userId], references: [id], map: "Order_userId_fkey")
   payments            Payment[]
   statusHistory       OrderStatusHistory[]
+  buybackRequest      BuybackRequest?
 
   @@index([productId], map: "Order_productId_fkey")
   @@index([status], map: "Order_status_idx")
@@ -169,6 +170,7 @@ model User {
   other_user_user_staffIdTouser    User[]              @relation("user_staffIdTouser")
   wallet                           Wallet?
   withdrawalRequests               WithdrawalRequest[]
+  buybackRequests                  BuybackRequest[]
   notifications                    Notification[]
   fcmToken                         String?             @db.VarChar(255)
 
@@ -242,6 +244,23 @@ model WithdrawalRequest {
   @@map("withdrawal_request")
 }
 
+model BuybackRequest {
+  id          String   @id @default(uuid())
+  orderId     String   @unique
+  userId      String
+  amount      Decimal  @db.Decimal(15, 2)
+  buyPrice    Decimal  @db.Decimal(15, 2)
+  status      String   @default("PENDING") // PENDING, COMPLETED, REJECTED
+  adminNotes  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  order       Order    @relation(fields: [orderId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "BuybackRequest_userId_idx")
+  @@map("buyback_request")
+}
+
 enum UserRole {
   ADMIN
   CUSTOMER
@@ -288,7 +307,9 @@ enum OrderStatus {
   QUALITY_CHECKING
   READY_FOR_PICKUP
   PICKED_UP
+  BUYBACK_PENDING
   BUYBACK
+  SOLD_BACK
   CANCELLED
   REFUNDED
 

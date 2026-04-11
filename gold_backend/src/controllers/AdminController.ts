@@ -73,6 +73,11 @@ export class AdminController {
         where: { status: "READY_FOR_PICKUP" }
       });
 
+      // 4. Current Gold Price
+      const goldPrice = await prisma.goldPrice.findFirst({
+        orderBy: { timestamp: "desc" }
+      });
+      
       const stats = {
         totalUsers: userCount,
         totalPaidOrders: orderCount,
@@ -81,7 +86,11 @@ export class AdminController {
         grossAmount: Number(financialTotals._sum.amount || 0),
         totalGst: Number(financialTotals._sum.gst || 0),
         pendingPickups: pickupPending,
-        weeklyData: dailyRevenue // Corrected daily aggregate
+        weeklyData: dailyRevenue,
+        goldPrice: goldPrice ? {
+          buyPrice: Number(goldPrice.buyPrice),
+          sellPrice: Number(goldPrice.sellPrice)
+        } : null
       };
 
       return successResponse(res, stats, "Dashboard stats fetched successfully");

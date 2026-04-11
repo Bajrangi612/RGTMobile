@@ -25,6 +25,8 @@ import '../../notifications/presentation/providers/notification_provider.dart';
 import '../../order/screens/sell_back_screen.dart';
 import '../../wallet/screens/wallet_screen.dart';
 import '../../admin/screens/admin_gold_price_screen.dart';
+import '../../admin/screens/admin_withdrawal_manager_screen.dart';
+import '../../admin/screens/admin_buyback_manager_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -56,6 +58,109 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: _currentIndex == 0 ? AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu_rounded, color: AppColors.royalGold),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: CircleAvatar(
+              backgroundColor: AppColors.royalGold.withValues(alpha: 0.1),
+              child: Icon(Icons.person_outline_rounded, color: AppColors.royalGold),
+            ),
+          ),
+        ],
+      ) : null,
+      drawer: Drawer(
+        backgroundColor: AppColors.deepBlack,
+        child: Column(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: AppColors.darkGradient,
+                border: Border(bottom: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.1))),
+              ),
+              child: Center(
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 120,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.dashboard_rounded, color: AppColors.royalGold),
+              title: Text('Dashboard', style: AppTextStyles.bodyMedium),
+              onTap: () {
+                setState(() => _currentIndex = 0);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.shopping_bag_rounded, color: AppColors.royalGold),
+              title: Text('Catalog', style: AppTextStyles.bodyMedium),
+              onTap: () {
+                setState(() => _currentIndex = 4);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.history_rounded, color: AppColors.royalGold),
+              title: Text('Orders', style: AppTextStyles.bodyMedium),
+              onTap: () {
+                setState(() => _currentIndex = 1);
+                Navigator.pop(context);
+              },
+            ),
+            if (ref.watch(authProvider).user?.isAdmin ?? false) ...[
+              const Divider(color: Colors.white10),
+              Padding(
+                padding: const EdgeInsets.only(left: 16, top: 8, bottom: 4),
+                child: Text('ADMINISTRATIVE CONTROL', style: AppTextStyles.caption.copyWith(color: AppColors.royalGold, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
+              ),
+              ListTile(
+                leading: Icon(Icons.account_balance_wallet_rounded, color: AppColors.royalGold),
+                title: Text('Withdrawal Requests', style: AppTextStyles.bodyMedium),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminWithdrawalManagerScreen()));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.sell_rounded, color: AppColors.royalGold),
+                title: Text('Buyback Management', style: AppTextStyles.bodyMedium),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminBuybackManagerScreen()));
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.show_chart_rounded, color: AppColors.royalGold),
+                title: Text('Gold Price Control', style: AppTextStyles.bodyMedium),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminGoldPriceScreen()));
+                },
+              ),
+            ],
+            const Divider(color: Colors.white10),
+            ListTile(
+              leading: Icon(Icons.logout_rounded, color: Colors.redAccent),
+              title: Text('Logout', style: AppTextStyles.bodyMedium.copyWith(color: Colors.redAccent)),
+              onTap: () async {
+                await ref.read(authProvider.notifier).logout();
+                if (mounted) Navigator.pushReplacementNamed(context, '/login');
+              },
+            ),
+          ],
+        ),
+      ),
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
@@ -188,17 +293,7 @@ class _HomeDashboard extends ConsumerWidget {
   
               const SliverToBoxAdapter(child: SizedBox(height: 24)),
   
-              // Portfolio Balance Card (Big Dashboard Feature)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _PortfolioCard(
-                    holdings: (authState.user?.totalCollectionValue ?? 0.0) / (homeState.goldPrice > 0 ? homeState.goldPrice : 7000.0),
-                    value: authState.user?.totalCollectionValue ?? 0.0,
-                    isLoading: homeState.isLoading,
-                  ),
-                ),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
   
               const SliverToBoxAdapter(child: SizedBox(height: 28)),
   

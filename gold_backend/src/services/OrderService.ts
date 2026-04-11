@@ -398,35 +398,169 @@ class OrderService {
         throw new Error("Only gold ready for pickup can be sold back.");
       }
 
-      // 1. Update Order Status to BUYBACK
-      const updatedOrder = await tx.order.update({
+      // Check if a request already exists
+      const existingRequest = await tx.buybackRequest.findUnique({
+        where: { orderId }
+      });
+      if (existingRequest && existingRequest.status === "PENDING") {
+        throw new Error("A buyback request is already pending for this order.");
+      }
+
+      // Get latest Gold Buy Price
+      const latestPrice = await tx.goldPrice.findFirst({
+        orderBy: { timestamp: 'desc' }
+      });
+      if (!latestPrice) throw new Error("Gold price not available.");
+
+      const buybackAmount = Number(order.weight) * Number(latestPrice.buyPrice);
+
+      // 1. Update Order Status to BUYBACK_PENDING
+      await tx.order.update({
         where: { id: orderId },
         data: { 
-          status: "BUYBACK",
+          status: "BUYBACK_PENDING",
           statusHistory: {
-            create: { status: "BUYBACK", notes: "Gold sold back to store." }
+            create: { status: "BUYBACK_PENDING", notes: "Buyback request submitted for approval." }
           }
         }
       });
 
-      // 2. Create Transaction record for Payout
-      await tx.transaction.create({
+      // 2. Create BuybackRequest record
+      const request = await tx.buybackRequest.create({
         data: {
+          orderId,
           userId,
-          type: "SELL_BACK",
-          amount: order.total,
-          description: `Buyback Payout for ${order.product.name}. Transfer pending.`,
+          amount: new Prisma.Decimal(buybackAmount),
+          buyPrice: latestPrice.buyPrice,
           status: "PENDING"
         }
       });
 
-      // 4. Return to stock
+      // 3. Create Transaction record for Payout (Tracking)
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "SELL_BACK",
+          amount: new Prisma.Decimal(buybackAmount),
+          description: `Buyback Payout Request for ${order.product.name}. Approval pending.`,
+          status: "PENDING"
+        }
+      });
+
+      // 4. Temporarily return to stock (Blocked for other users)
       await tx.product.update({
         where: { id: order.productId },
         data: { stock: { increment: order.quantity } }
       });
 
-      return updatedOrder;
+      return request;
+    });
+  }
+
+  /**
+   * List all pending buyback requests (Admin)
+   */
+  async listBuybackRequests() {
+    return await prisma.buybackRequest.findMany({
+      where: { status: "PENDING" },
+      include: {
+        user: { select: { name: true, phone: true } },
+        order: { include: { product: true } }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+  }
+
+  /**
+   * Process Admin action on Buyback
+   */
+  async processBuybackAction(requestId: string, action: 'APPROVE' | 'REJECT', adminNotes?: string) {
+    return await prisma.$transaction(async (tx) => {
+      const request = await tx.buybackRequest.findUnique({
+        where: { id: requestId },
+        include: { order: true }
+      });
+
+      if (!request) throw new Error("Buyback request not found.");
+      if (request.status !== "PENDING") throw new Error("Request already processed.");
+
+      if (action === 'APPROVE') {
+        // 1. Mark Request as Completed
+        await tx.buybackRequest.update({
+          where: { id: requestId },
+          data: { status: "COMPLETED", adminNotes }
+        });
+
+        // 2. Update Order Status
+        await tx.order.update({
+          where: { id: request.orderId },
+          data: { 
+            status: "SOLD_BACK",
+            statusHistory: { create: { status: "SOLD_BACK", notes: adminNotes || "Buyback approved and processed." } }
+          }
+        });
+
+        // 3. Update Transaction status
+        // Find the pending transaction for this user/amount
+        const txn = await tx.transaction.findFirst({
+          where: { 
+            userId: request.userId, 
+            type: "SELL_BACK", 
+            status: "PENDING",
+            amount: request.amount
+          },
+          orderBy: { createdAt: "desc" }
+        });
+
+        if (txn) {
+          await tx.transaction.update({
+            where: { id: txn.id },
+            data: { status: "COMPLETED", description: `Buyback completed. ${adminNotes || ""}` }
+          });
+        }
+      } else {
+        // REJECT
+        // 1. Mark Request as Rejected
+        await tx.buybackRequest.update({
+          where: { id: requestId },
+          data: { status: "REJECTED", adminNotes }
+        });
+
+        // 2. Revert Order Status
+        await tx.order.update({
+          where: { id: request.orderId },
+          data: { 
+            status: "READY_FOR_PICKUP",
+            statusHistory: { create: { status: "READY_FOR_PICKUP", notes: `Buyback rejected: ${adminNotes}` } }
+          }
+        });
+
+        // 3. Update Transaction
+        const txn = await tx.transaction.findFirst({
+          where: { 
+            userId: request.userId, 
+            type: "SELL_BACK", 
+            status: "PENDING",
+            amount: request.amount
+          },
+          orderBy: { createdAt: "desc" }
+        });
+
+        if (txn) {
+          await tx.transaction.update({
+            where: { id: txn.id },
+            data: { status: "REJECTED", description: `Buyback rejected. ${adminNotes || ""}` }
+          });
+        }
+
+        // 4. Remove from stock (Restore inventory)
+        await tx.product.update({
+          where: { id: request.order.productId },
+          data: { stock: { decrement: request.order.quantity } }
+        });
+      }
+
+      return request;
     });
   }
 

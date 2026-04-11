@@ -24,6 +24,7 @@ class AdminState {
   final int lowStockThreshold;
   final List<dynamic> allTransactions;
   final List<dynamic> withdrawalRequests;
+  final List<dynamic> buybackRequests;
   final double referralReward;
   final double minWithdrawal;
   final List<dynamic> weeklyData;
@@ -49,6 +50,7 @@ class AdminState {
     this.weightFilter = 'all',
     this.lowStockThreshold = 10,
     this.withdrawalRequests = const [],
+    this.buybackRequests = const [],
     this.referralReward = 500.0,
     this.minWithdrawal = 1000.0,
     this.weeklyData = const [],
@@ -75,6 +77,7 @@ class AdminState {
     String? weightFilter,
     int? lowStockThreshold,
     List<dynamic>? withdrawalRequests,
+    List<dynamic>? buybackRequests,
     double? referralReward,
     double? minWithdrawal,
     List<dynamic>? weeklyData,
@@ -100,6 +103,7 @@ class AdminState {
       weightFilter: weightFilter ?? this.weightFilter,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       withdrawalRequests: withdrawalRequests ?? this.withdrawalRequests,
+      buybackRequests: buybackRequests ?? this.buybackRequests,
       referralReward: referralReward ?? this.referralReward,
       minWithdrawal: minWithdrawal ?? this.minWithdrawal,
       weeklyData: weeklyData ?? this.weeklyData,
@@ -478,6 +482,36 @@ class AdminNotifier extends StateNotifier<AdminState> {
         if (notes != null) 'adminNotes': notes,
       });
       await fetchWithdrawals(); // Refresh
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  // --- Buyback Management ---
+
+  Future<void> fetchBuybacks() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final response = await ApiService().get('/orders/buybacks');
+      state = state.copyWith(
+        buybackRequests: response.data['data']['requests'],
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<bool> updateBuybackStatus(String id, String action, {String? notes}) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await ApiService().patch('/orders/buybacks/$id', data: {
+        'action': action,
+        if (notes != null) 'adminNotes': notes,
+      });
+      await fetchBuybacks(); // Refresh
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

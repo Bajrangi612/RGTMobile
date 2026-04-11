@@ -139,9 +139,9 @@ class _SellBackScreenState extends ConsumerState<SellBackScreen> {
                       _SellBackRow('Product', widget.order.productName),
                       _SellBackRow('Weight', '${widget.order.weight}g'),
                       _SellBackRow('Original Price', Formatters.currency(widget.order.price)),
-                      _SellBackRow('Current Rate/g', Formatters.currencyPrecise(_currentPrice)),
+                      _SellBackRow('Current Buy Rate/g', Formatters.currencyPrecise(_currentPrice)),
                       Divider(height: 24, color: AppColors.pureWhite.withValues(alpha: 0.1)),
-                      _SellBackRow('Collection Value', Formatters.currency(_sellBackAmount)),
+                      _SellBackRow('Estimated Payout', Formatters.currency(_sellBackAmount)),
                       const SizedBox(height: 20),
                     ],
                   ),
@@ -151,11 +151,11 @@ class _SellBackScreenState extends ConsumerState<SellBackScreen> {
                   padding: const EdgeInsets.all(14),
                   child: Row(
                     children: [
-                      Icon(Icons.account_balance_rounded, color: AppColors.royalGold, size: 20),
+                      Icon(Icons.info_outline_rounded, color: AppColors.royalGold, size: 20),
                       SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Amount will be added to your wallet for instant collection at our physical store.',
+                          'Your request will be sent to the administrator for review. Once approved, the amount will be processed to your bank account.',
                           style: AppTextStyles.bodySmall,
                         ),
                       ),
@@ -174,10 +174,10 @@ class _SellBackScreenState extends ConsumerState<SellBackScreen> {
           ),
           child: SafeArea(
             child: GoldButton(
-              text: 'Confirm Sale',
+              text: 'Submit Buyback Request',
               isLoading: _isVerifying,
               onPressed: _isVerifying ? null : _confirmSellBack,
-              icon: Icons.check_circle_rounded,
+              icon: Icons.send_rounded,
             ),
           ),
         ),
@@ -201,13 +201,13 @@ class _SellBackScreenState extends ConsumerState<SellBackScreen> {
                   color: AppColors.success.withValues(alpha: 0.15),
                   border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                 ),
-                child: Icon(Icons.check_circle, color: AppColors.success, size: 56),
+                child: Icon(Icons.check_circle_outline_rounded, color: AppColors.success, size: 56),
               ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
               SizedBox(height: 32),
-              Text('Handover Initiated!', style: AppTextStyles.h2).animate(delay: 200.ms).fadeIn(),
+              Text('Request Submitted!', style: AppTextStyles.h2).animate(delay: 200.ms).fadeIn(),
               SizedBox(height: 8),
               Text(
-                '${Formatters.currency(_sellBackAmount)} has been added to your collection balance.',
+                'Your buyback request for ${Formatters.currency(_sellBackAmount)} has been sent for approval. You can track the status in your order history.',
                 style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey),
                 textAlign: TextAlign.center,
               ).animate(delay: 300.ms).fadeIn(),

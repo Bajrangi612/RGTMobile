@@ -115,8 +115,39 @@ export class OrderController {
     try {
       const orderId = req.params.id as string;
       const userId = req.user!.id as string;
-      const order = await OrderService.initiateBuyback(orderId, userId);
-      return successResponse(res, { order }, "Order sold back successfully");
+      const request = await OrderService.initiateBuyback(orderId, userId);
+      return successResponse(res, { request }, "Buyback request initiated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * List all buyback requests (Admin only)
+   */
+  static async listBuybackRequests(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const requests = await OrderService.listBuybackRequests();
+      return successResponse(res, { requests }, "Buyback requests fetched successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Update buyback status (Admin only)
+   */
+  static async updateBuybackStatus(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const id = req.params.id as string;
+      const { action, adminNotes } = req.body;
+      
+      if (!action || !['APPROVE', 'REJECT'].includes(action)) {
+        return errorResponse(res, "Valid action (APPROVE/REJECT) is required", 400);
+      }
+
+      const request = await OrderService.processBuybackAction(id, action, adminNotes);
+      return successResponse(res, { request }, `Buyback ${action.toLowerCase()}ed successfully`);
     } catch (error) {
       next(error);
     }

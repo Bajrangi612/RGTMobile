@@ -15,13 +15,19 @@ export class AuthController {
         where: { id: req.user.id },
         include: { 
           wallet: true,
+          orders: {
+            where: { status: { in: ["ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP"] } },
+            select: { total: true }
+          },
           _count: {
-            select: { orders: true }
+            select: { orders: { where: { status: { notIn: ["PAYMENT_PENDING", "CANCELLED"] } } } }
           }
         }
       }) as any;
       
       if (!userData) return errorResponse(res, 'User not found', 404);
+      
+      const totalCollectionValue = userData.orders.reduce((sum: number, order: any) => sum + Number(order.total), 0);
       
       return successResponse(
         res,
@@ -46,10 +52,8 @@ export class AuthController {
             bankName: userData.bankName,
             wallet: userData.wallet ? {
               balance: Number(userData.wallet.balance),
-              goldAdvance: Number(userData.wallet.goldAdvance),
-              referralRewards: Number(userData.wallet.referralRewards),
             } : null,
-            goldAdvanceAmount: userData.wallet ? Number(userData.wallet.goldAdvance) : 0,
+            totalCollectionValue: totalCollectionValue,
             orderCount: userData._count?.orders || 0,
             registerRequired: !userData.name || userData.name.startsWith('User '),
             isAdmin: userData.role === 'ADMIN',

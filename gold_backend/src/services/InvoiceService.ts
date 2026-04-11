@@ -62,12 +62,11 @@ class InvoiceService {
 
     if (!order) throw new Error('Order not found');
 
-    // 1. Generate QR Code pointing to the public URL
-    // We calculate the URL beforehand: public_url/invoices/orderId.pdf
-    const fileName = `invoices/${order.id}.pdf`;
-    const publicUrl = `${process.env.R2_PUBLIC_URL}/${fileName}`;
+    // 1. Generate QR Code pointing to the public download proxy
+    const baseUrl = process.env.APP_URL || 'http://localhost:4000';
+    const proxyUrl = `${baseUrl}/api/public/download-invoice/${order.id}`;
     
-    const qrCodeDataUrl = await QRCode.toDataURL(publicUrl, {
+    const qrCodeDataUrl = await QRCode.toDataURL(proxyUrl, {
       color: {
         dark: '#000000',
         light: '#FFFFFF',
@@ -77,7 +76,6 @@ class InvoiceService {
 
     // 2. Create PDF Document
     const doc = new PDFDocument({ margin: 50 });
-    this.registerFonts(doc);
     const chunks: Buffer[] = [];
 
     doc.on('data', (chunk) => chunks.push(chunk));
@@ -123,7 +121,7 @@ class InvoiceService {
         `${order.product?.name || 'Gold Coin'} (24 CT)`,
         order.quantity.toString(),
         `${order.weight}g`,
-        `${order.amount.toFixed(2)}`
+        `${Number(order.amount).toFixed(2)}`
       );
       this.generateHr(doc, itemPosition + 20);
 
@@ -139,22 +137,22 @@ class InvoiceService {
       const drawSummaryRow = (label: string, value: string, isTotal = false) => {
         if (isTotal) doc.font('Helvetica-Bold').fontSize(10);
         doc.text(label, 350, currentY);
-        doc.text(value, 450, currentY, { width: 90, align: 'right' });
+        doc.text(value, 460, currentY, { width: 90, align: 'right' });
         currentY += rowHeight;
         if (isTotal) doc.font('Helvetica').fontSize(9);
       };
 
-      drawSummaryRow('Taxable Value:', `₹${order.amount.toFixed(2)}`);
+      drawSummaryRow('Taxable Value:', `₹${Number(order.amount).toFixed(2)}`);
       drawSummaryRow('CGST (1.5%):', `₹${(Number(order.gst) / 2).toFixed(2)}`);
       drawSummaryRow('SGST (1.5%):', `₹${(Number(order.gst) / 2).toFixed(2)}`);
       this.generateHr(doc, currentY);
       currentY += 10;
-      drawSummaryRow('Total Amount:', `₹${order.total.toFixed(2)}`, true);
+      drawSummaryRow('Total Amount:', `₹${Number(order.total).toFixed(2)}`, true);
       
       currentY += 15;
-      doc.font('Helvetica-Bold').fontSize(9).text('Amount Chargeable (in words):', 350, currentY);
+      doc.font('Helvetica-Bold').fontSize(9).text('Amount Chargeable (in words):', 50, currentY);
       currentY += 12;
-      doc.font('Helvetica-Oblique').fontSize(8).text(this.numberToWords(Number(order.total)), 350, currentY, { width: 190, align: 'right' });
+      doc.font('Helvetica-Oblique').fontSize(9).text(this.numberToWords(Number(order.total)), 50, currentY, { width: 500, align: 'left' });
 
 
       // --- BANK DETAILS ---
@@ -192,16 +190,17 @@ class InvoiceService {
     });
 
     // 3. Upload to R2
+    const fileName = `invoices/${order.invoiceNo?.replace(/\//g, '-') || order.id}.pdf`;
     await r2Service.uploadFile(pdfBuffer, fileName, 'application/pdf');
 
-    // 4. Update DB
+    // 4. Update DB - Store the internal proxy URL to force direct download everywhere
     await prisma.order.update({
       where: { id: order.id },
-      data: { invoiceUrl: publicUrl },
+      data: { invoiceUrl: proxyUrl },
     });
 
-    console.log(`✅ Invoice generated and synced: ${publicUrl}`);
-    return publicUrl;
+    console.log(`✅ Invoice generated and synced via proxy: ${proxyUrl}`);
+    return proxyUrl;
   }
 
   private generateTableRow(doc: PDFKit.PDFDocument, y: number, item: string, qty: string, weight: string, total: string) {
