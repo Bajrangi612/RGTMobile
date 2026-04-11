@@ -239,6 +239,16 @@ class OrderService {
       console.error(`⚠️ Invoice generation failed for order ${orderId}:`, err);
     }
 
+    // 5. Auto-transition to PROCESSING after 2 seconds
+    setTimeout(async () => {
+      try {
+        await this.updateOrderStatus(orderId, "PROCESSING");
+        console.log(`⏱️ Auto-transitioned order ${orderId} to PROCESSING.`);
+      } catch (e) {
+        console.error(`Failed to auto-transition order ${orderId} to PROCESSING:`, e);
+      }
+    }, 2000);
+
     return result;
   }
 
@@ -248,7 +258,10 @@ class OrderService {
   async getUserOrders(userId: string) {
     return await prisma.order.findMany({
       where: { userId },
-      include: { product: true },
+      include: { 
+        product: true,
+        statusHistory: { orderBy: { createdAt: "asc" } }
+      },
       orderBy: { createdAt: "desc" },
     });
   }
@@ -260,11 +273,13 @@ class OrderService {
     return await prisma.order.findMany({
       include: {
         product: true,
+        statusHistory: { orderBy: { createdAt: "asc" } },
         user: {
           select: {
             id: true,
             name: true,
             phone: true,
+            address: true,
           }
         }
       },

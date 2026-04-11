@@ -138,30 +138,13 @@ export class AdminController {
       ]);
 
       // Normalize orders into transaction-like format
-      const orderTxns = orders.map(o => ({
-        id: o.id,
-        userId: o.userId,
-        type: "PURCHASE",
-        amount: Number(o.total),
-        description: `Order Purchase - ${o.product?.name || 'Gold Item'} (Qty: ${o.quantity})`,
-        status: o.status,
-        invoiceNo: o.invoiceNo,
-        createdAt: o.createdAt,
-        user: o.user
-      }));
-
       const tableTxns = transactions.map(t => ({
         ...t,
         amount: Number(t.amount),
         user: t.user
       }));
 
-      // Combine and Sort
-      const combined = [...tableTxns, ...orderTxns].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      return successResponse(res, { transactions: combined }, "All transactions fetched");
+      return successResponse(res, { transactions: tableTxns }, "All transactions fetched");
     } catch (error) {
       next(error);
     }

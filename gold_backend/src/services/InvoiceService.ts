@@ -10,8 +10,39 @@ const prisma = new PrismaClient();
 class InvoiceService {
   private fontPath = path.join(process.cwd(), 'assets', 'fonts', 'NotoSansDevanagari-Regular.ttf');
 
+  private numberToWords(num: number): string {
+    const single_digit = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const double_digit = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const below_hundred = ['Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    if (num === 0) return 'Zero';
+    
+    const translate = (n: number): string => {
+        let word = "";
+        if (n < 10) {
+            word = single_digit[n] + ' ';
+        } else if (n < 20) {
+            word = double_digit[n - 10] + ' ';
+        } else if (n < 100) {
+            let rem = translate(n % 10);
+            word = below_hundred[Math.floor(n / 10) - 2] + ' ' + rem;
+        } else if (n < 1000) {
+            word = single_digit[Math.floor(n / 100)] + ' Hundred ' + translate(n % 100);
+        } else if (n < 100000) {
+            word = translate(Math.floor(n / 1000)).trim() + ' Thousand ' + translate(n % 1000);
+        } else if (n < 10000000) {
+            word = translate(Math.floor(n / 100000)).trim() + ' Lakh ' + translate(n % 100000);
+        } else {
+            word = translate(Math.floor(n / 10000000)).trim() + ' Crore ' + translate(n % 10000000);
+        }
+        return word;
+    };
+    
+    return translate(Math.floor(num)).trim() + ' Rupees Only';
+  }
+
   private registerFonts(doc: PDFKit.PDFDocument) {
-    doc.registerFont('Devanagari', this.fontPath);
+    // We'll keep the font registration in case it's needed elsewhere, but use standard fonts for headers.
   }
 
   /**
@@ -56,14 +87,14 @@ class InvoiceService {
       doc.on('error', reject);
 
       // --- HEADER & LOGO ---
-      doc.fillColor('#D4AF37').font('Devanagari').fontSize(24).text('राजकीय गोल्ड ट्रेडर', { align: 'left' });
-      doc.font('Helvetica-Bold').fontSize(16).text('ROYAL GOLD TRADERS', { align: 'left' });
-      doc.fillColor('#444444').font('Helvetica').fontSize(8).text('2nd Floor, B-19, P.C. Colony, Kankarbagh, Patna, Bihar 800020', { align: 'left' });
+      doc.fillColor('#D4AF37').font('Helvetica-Bold').fontSize(24).text('ROYAL GOLD TRADERS', { align: 'left' });
+      doc.moveDown(0.2);
+      doc.fillColor('#444444').font('Helvetica').fontSize(9).text('2nd Floor, B-19, P.C. Colony, Kankarbagh, Patna, Bihar 800020', { align: 'left' });
       doc.text('GSTIN: 10ADJPI8137N1ZE | PAN: ADJPI8137N | Phone: 9065415619', { align: 'left' });
       doc.moveDown();
 
       // --- INVOICE META ---
-      doc.fillColor('#000000').font('Helvetica-Bold').fontSize(18).text('TAX INVOICE / कर चालान', 380, 50, { align: 'right' });
+      doc.fillColor('#000000').font('Helvetica-Bold').fontSize(18).text('TAX INVOICE', 380, 50, { align: 'right' });
       doc.font('Helvetica').fontSize(9).text(`Invoice No: ${order.invoiceNo || 'N/A'}`, { align: 'right' });
       doc.text(`Date: ${format(new Date(order.createdAt), 'dd/MM/yyyy h:mm a')}`, { align: 'right' });
       doc.text(`State: Bihar (10)`, { align: 'right' });
@@ -98,7 +129,7 @@ class InvoiceService {
 
       // --- SUMMARY ---
       const summaryTop = itemPosition + 40;
-      doc.font('Helvetica-Bold').text('Summary / सारांश', 350, summaryTop);
+      doc.font('Helvetica-Bold').text('Summary', 350, summaryTop);
       this.generateHr(doc, summaryTop + 15);
       
       doc.font('Helvetica').fontSize(9);
@@ -119,6 +150,12 @@ class InvoiceService {
       this.generateHr(doc, currentY);
       currentY += 10;
       drawSummaryRow('Total Amount:', `₹${order.total.toFixed(2)}`, true);
+      
+      currentY += 15;
+      doc.font('Helvetica-Bold').fontSize(9).text('Amount Chargeable (in words):', 350, currentY);
+      currentY += 12;
+      doc.font('Helvetica-Oblique').fontSize(8).text(this.numberToWords(Number(order.total)), 350, currentY, { width: 190, align: 'right' });
+
 
       // --- BANK DETAILS ---
       const bankTop = 450;

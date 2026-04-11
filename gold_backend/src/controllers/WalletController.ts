@@ -35,7 +35,10 @@ export class WalletController {
         description: t.description,
         status: t.status,
         invoiceNo: t.invoiceNo,
-        createdAt: t.createdAt.toISOString()
+        createdAt: t.createdAt.toISOString(),
+        metadata: {
+          paymentMode: 'Wallet/Admin',
+        }
       }));
 
       // Normalize Orders to Transactions
@@ -51,7 +54,14 @@ export class WalletController {
           description: `Gold Purchase - ${(order as any).product?.name || 'Gold'} (Qty: ${order.quantity})`,
           status: order.status === "PAYMENT_SUCCESSFUL" ? "COMPLETED" : order.status,
           invoiceNo: order.invoiceNo,
-          createdAt: order.createdAt.toISOString()
+          createdAt: order.createdAt.toISOString(),
+          metadata: {
+            quantity: order.quantity,
+            gst: Number(order.gst),
+            weight: Number(order.weight || 0),
+            paymentMode: order.paymentStatus || 'Payment Gateway',
+            invoiceUrl: order.invoiceUrl
+          }
         }));
 
       // Combine and sort
