@@ -3,13 +3,14 @@ import '../../data/models/product_model.dart';
 import '../../data/models/category_model.dart';
 import '../../../order/data/models/order_model.dart';
 import '../../data/repositories/product_repository.dart';
+import '../../../auth/providers/auth_provider.dart';
 
 final productRepositoryProvider = Provider((ref) => ProductRepository());
 
 final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
   final repository = ref.watch(productRepositoryProvider);
   final user = ref.watch(authProvider).user;
-  final isAdmin = user?.role == 'ADMIN';
+  final isAdmin = user?.isAdmin ?? false;
   return await repository.getCategories(includeInactive: isAdmin);
 });
 
@@ -19,7 +20,7 @@ final productsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final repository = ref.watch(productRepositoryProvider);
   final categoryId = ref.watch(selectedCategoryIdProvider);
   final user = ref.watch(authProvider).user;
-  final isAdmin = user?.role == 'ADMIN';
+  final isAdmin = user?.isAdmin ?? false;
   return await repository.getProducts(categoryId: categoryId, includeInactive: isAdmin);
 });
 

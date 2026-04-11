@@ -16,6 +16,7 @@ class ProductModel {
   final int pendingOrdersCount;
   final bool isPremium;
   final bool isPromoted;
+  final bool isActive;
 
   ProductModel({
     required this.id,
@@ -33,6 +34,7 @@ class ProductModel {
     this.pendingOrdersCount = 0,
     this.isPremium = false,
     this.isPromoted = false,
+    this.isActive = true,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class ProductModel {
       pendingOrdersCount: _toInt(json['_count']?['orders']),
       isPremium: json['isPremium'] ?? false,
       isPromoted: json['isPromoted'] ?? false,
+      isActive: json['isActive'] ?? true,
     );
   }
 
@@ -93,6 +96,7 @@ class ProductModel {
       'pendingOrdersCount': pendingOrdersCount,
       'isPremium': isPremium,
       'isPromoted': isPromoted,
+      'isActive': isActive,
     };
   }
 }

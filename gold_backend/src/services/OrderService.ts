@@ -331,110 +331,6 @@ class OrderService {
   }
 
   /**
-   * Cancel order - only if not yet READY
-   */
-  async cancelOrder(userId: string, orderId: string) {
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
-    if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status === "READY_FOR_PICKUP" || order.status === "PICKED_UP" || order.status === "BUYBACK") {
-      throw new Error("Order cannot be cancelled at this stage");
-    }
-
-    return await prisma.order.update({
-      where: { id: orderId },
-      data: { 
-        status: "CANCELLED",
-        statusHistory: {
-          create: {
-            status: "CANCELLED",
-            notes: "Order cancelled by user."
-          }
-        }
-      }
-    });
-  }
-
-  /**
-   * Buyback logic - Store buyback based on current purchase price
-   */
-  async sellBackOrder(userId: string, orderId: string) {
-    const order = await prisma.order.findUnique({ 
-      where: { id: orderId },
-      include: { product: true } 
-    });
-    if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status !== "READY_FOR_PICKUP") throw new Error("Only READY orders can be sold back");
-
-    const livePriceObj = await ProductService.getLatestGoldPrice();
-    const purchasePrice = Number(livePriceObj.buyPrice);
-    const weight = Number(order.weight);
-    const quantity = order.quantity;
-    const resellAmount = purchasePrice * weight * quantity;
-
-    return await prisma.$transaction(async (tx) => {
-      // 1. Mark order as BUYBACK
-      const updatedOrder = await tx.order.update({
-        where: { id: orderId },
-        data: { status: "BUYBACK" } // Logic key remains BUYBACK for DB compatibility, text is Buyback
-      });
-
-      // 2. Add amount to user wallet
-      await tx.wallet.update({
-        where: { userId },
-        data: { balance: { increment: resellAmount } }
-      });
-
-      // 3. Create Transaction record
-      await tx.transaction.create({
-        data: {
-          userId,
-          type: "SELL_BACK",
-          amount: new Prisma.Decimal(resellAmount),
-          description: `Order Buyback - #${orderId}`,
-          status: "COMPLETED"
-        }
-      });
-
-      return updatedOrder;
-    });
-  }
-
-  /**
-   * FIFO Auto-approval: Mark oldest pending orders as READY
-   */
-  async autoApproveOrders(productId: string, readyStockCount: number) {
-    if (readyStockCount <= 0) return;
-
-    // Get oldest PENDING orders for this product
-    const pendingOrders = await prisma.order.findMany({
-      where: { productId, status: "ORDER_CONFIRMED" },
-      orderBy: { createdAt: "asc" },
-      take: readyStockCount
-    });
-
-    return await prisma.$transaction(async (tx) => {
-      for (const order of pendingOrders) {
-        await tx.order.update({
-          where: { id: order.id },
-          data: { 
-            status: "READY_FOR_PICKUP",
-            statusHistory: {
-              create: {
-                status: "READY_FOR_PICKUP",
-                notes: "Inventory available. Ready for store collection."
-              }
-            }
-          }
-        });
-      }
-
-      // Decrement ready stock from the product
-      await tx.product.update({
-        where: { id: productId },
-        data: { readyStock: { decrement: pendingOrders.length } }
-      });
-    });
-  /**
    * Cancel an order (User initiated)
    * Only allowed before fulfillment processing reaches a certain stage
    */
@@ -543,6 +439,43 @@ class OrderService {
       });
 
       return updatedOrder;
+    });
+  }
+
+  /**
+   * FIFO Auto-approval: Mark oldest pending orders as READY
+   */
+  async autoApproveOrders(productId: string, readyStockCount: number) {
+    if (readyStockCount <= 0) return;
+
+    // Get oldest PENDING orders for this product
+    const pendingOrders = await prisma.order.findMany({
+      where: { productId, status: "ORDER_CONFIRMED" },
+      orderBy: { createdAt: "asc" },
+      take: readyStockCount
+    });
+
+    return await prisma.$transaction(async (tx) => {
+      for (const order of pendingOrders) {
+        await tx.order.update({
+          where: { id: order.id },
+          data: { 
+            status: "READY_FOR_PICKUP",
+            statusHistory: {
+              create: {
+                status: "READY_FOR_PICKUP",
+                notes: "Inventory available. Ready for store collection."
+              }
+            }
+          }
+        });
+      }
+
+      // Decrement ready stock from the product
+      await tx.product.update({
+        where: { id: productId },
+        data: { readyStock: { decrement: pendingOrders.length } }
+      });
     });
   }
 }

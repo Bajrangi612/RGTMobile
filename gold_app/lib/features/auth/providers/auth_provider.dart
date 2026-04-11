@@ -74,6 +74,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  // Refresh user profile data without full loading status
+  Future<void> getCurrentUser() async {
+    try {
+      final user = await _repository.getCurrentUser();
+      state = state.copyWith(user: user);
+    } catch (e) {
+      // Keep existing user if refresh fails or handle error
+      print('⚠️ Profile refresh failed: $e');
+    }
+  }
+
   // Send OTP
   Future<bool> sendOtp(String phone) async {
     state = state.copyWith(isLoading: true, error: null, testOtp: null);

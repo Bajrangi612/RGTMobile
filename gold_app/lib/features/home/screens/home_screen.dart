@@ -86,8 +86,6 @@ class _HomeDashboard extends ConsumerWidget {
         ),
       ),
       child: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
         child: RefreshIndicator(
           onRefresh: () async {
             await ref.read(homeProvider.notifier).loadDashboard();
@@ -408,14 +406,13 @@ class _HomeDashboard extends ConsumerWidget {
                       ),
               ),
   
-              const SliverToBoxAdapter(child: SizedBox(height: 40)),
-            ],
-          ),
-        ),
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // Portfolio/Balance Card Widget
