@@ -19,7 +19,7 @@ export class WalletController {
           take: 40 
         }),
         prisma.order.findMany({
-          where: { userId, status: { in: ["PAYMENT_PENDING", "PAYMENT_SUCCESSFUL", "ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP", "BUYBACK", "CANCELLED", "REFUNDED"] } },
+          where: { userId, status: { in: ["PAYMENT_PENDING", "PAYMENT_SUCCESSFUL", "ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP", "BUYBACK", "CANCELLED", "REFUNDED"] as any } },
           orderBy: { createdAt: "desc" },
           include: { product: true },
           take: 40

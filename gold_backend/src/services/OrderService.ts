@@ -23,7 +23,7 @@ class OrderService {
 
     // 2. Validate Referral Logic (Cannot use own code on 1st order)
     const paidOrderCount = await prisma.order.count({
-      where: { userId, status: "ORDER_CONFIRMED" }
+      where: { userId, status: "ORDER_CONFIRMED" as any }
     });
     
     if (referralCode) {
@@ -152,7 +152,7 @@ class OrderService {
           weight,
           paymentId: razorpayOrderId,
           paymentStatus: "SUCCESS",
-          status: "ORDER_CONFIRMED",
+          status: "ORDER_CONFIRMED" as any,
           invoiceNo: invoiceNo,
           deliveryDate: deliveryDate,
           goldPriceAtPurchase: livePrice,
@@ -161,8 +161,8 @@ class OrderService {
           statusHistory: {
             createMany: {
               data: [
-                { status: "PAYMENT_SUCCESSFUL", notes: "Verified Payment Successfully.", createdAt: nowIST },
-                { status: "ORDER_CONFIRMED", notes: "Order confirmed and fulfillment initiated.", createdAt: nowIST }
+                { status: "PAYMENT_SUCCESSFUL" as any, notes: "Verified Payment Successfully.", createdAt: nowIST },
+                { status: "ORDER_CONFIRMED" as any, notes: "Order confirmed and fulfillment initiated.", createdAt: nowIST }
               ]
             }
           }
@@ -380,9 +380,9 @@ class OrderService {
       const updatedOrder = await tx.order.update({
         where: { id: orderId },
         data: { 
-          status: "CANCELLED",
+          status: "CANCELLED" as any,
           statusHistory: {
-            create: { status: "CANCELLED", notes: "Order cancelled by customer." }
+            create: { status: "CANCELLED" as any, notes: "Order cancelled by customer." }
           }
         }
       });
@@ -489,7 +489,7 @@ class OrderService {
    */
   async listBuybackRequests() {
     return await prisma.buybackRequest.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING" as any },
       include: {
         user: { select: { name: true, phone: true } },
         order: { include: { product: true } }
@@ -525,8 +525,8 @@ class OrderService {
           await tx.order.update({
             where: { id: request.orderId },
             data: { 
-              status: "SOLD_BACK",
-              statusHistory: { create: { status: "SOLD_BACK", notes: adminNotes || "Buyback payment settled." } }
+              status: "SOLD_BACK" as any,
+              statusHistory: { create: { status: "SOLD_BACK" as any, notes: adminNotes || "Buyback payment settled." } }
             }
           });
         }
@@ -561,8 +561,8 @@ class OrderService {
         await tx.order.update({
           where: { id: request.orderId },
           data: { 
-            status: "READY_FOR_PICKUP",
-            statusHistory: { create: { status: "READY_FOR_PICKUP", notes: `Buyback rejected: ${adminNotes}` } }
+            status: "READY_FOR_PICKUP" as any,
+            statusHistory: { create: { status: "READY_FOR_PICKUP" as any, notes: `Buyback rejected: ${adminNotes}` } }
           }
         });
 
@@ -603,7 +603,7 @@ class OrderService {
 
     // Get oldest PENDING orders for this product
     const pendingOrders = await prisma.order.findMany({
-      where: { productId, status: "ORDER_CONFIRMED" },
+      where: { productId, status: "ORDER_CONFIRMED" as any },
       orderBy: { createdAt: "asc" },
       take: readyStockCount
     });
@@ -613,10 +613,10 @@ class OrderService {
         await tx.order.update({
           where: { id: order.id },
           data: { 
-            status: "READY_FOR_PICKUP",
+            status: "READY_FOR_PICKUP" as any,
             statusHistory: {
               create: {
-                status: "READY_FOR_PICKUP",
+                status: "READY_FOR_PICKUP" as any,
                 notes: "Inventory available. Ready for store collection."
               }
             }
@@ -652,8 +652,8 @@ class OrderService {
       await tx.order.update({
         where: { id: orderId },
         data: { 
-          status: "READY_FOR_PICKUP",
-          statusHistory: { create: { status: "READY_FOR_PICKUP", notes: "Buyback request cancelled by customer." } }
+          status: "READY_FOR_PICKUP" as any,
+          statusHistory: { create: { status: "READY_FOR_PICKUP" as any, notes: "Buyback request cancelled by customer." } }
         }
       });
 

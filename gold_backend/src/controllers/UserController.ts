@@ -48,12 +48,12 @@ export class UserController {
         prisma.order.count(),
         prisma.order.aggregate({
           _sum: { total: true },
-          where: { status: "PAYMENT_SUCCESSFUL" }
+          where: { status: "PAYMENT_SUCCESSFUL" as any }
         }),
-        prisma.order.count({ where: { status: "PAYMENT_PENDING" } }),
+        prisma.order.count({ where: { status: "PAYMENT_PENDING" as any } }),
         prisma.order.aggregate({
           _sum: { weight: true },
-          where: { status: "PAYMENT_SUCCESSFUL" }
+          where: { status: "PAYMENT_SUCCESSFUL" as any }
         })
       ]);
 

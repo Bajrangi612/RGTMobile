@@ -16,11 +16,11 @@ export class AuthController {
         include: { 
           wallet: true,
           orders: {
-            where: { status: { in: ["ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP"] } },
+            where: { status: { in: ["ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP"] as any } },
             select: { total: true }
           },
           _count: {
-            select: { orders: { where: { status: { notIn: ["PAYMENT_PENDING", "CANCELLED"] } } } }
+            select: { orders: { where: { status: { notIn: ["PAYMENT_PENDING", "CANCELLED"] as any } } } }
           }
         }
       }) as any;
