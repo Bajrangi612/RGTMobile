@@ -14,6 +14,7 @@ import '../providers/home_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../product/screens/product_detail_screen.dart';
 import '../../product/screens/catalog_screen.dart';
+import '../../product/presentation/providers/product_providers.dart';
 import '../../order/screens/orders_screen.dart';
 import '../../referral/screens/referral_screen.dart';
 import '../../profile/screens/profile_screen.dart';
@@ -137,7 +138,7 @@ class _HomeDashboard extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            child: const Icon(Icons.notifications_none_rounded,
+                            child: Icon(Icons.notifications_none_rounded,
                                 color: AppColors.royalGold, size: 24),
                           ),
                           Consumer(
@@ -452,7 +453,7 @@ class _PortfolioCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                     const Icon(Icons.shield_rounded, color: AppColors.royalGold, size: 12),
+                     Icon(Icons.shield_rounded, color: AppColors.royalGold, size: 12),
                      const SizedBox(width: 4),
                      Text(
                       'SECURE VAULT',
@@ -491,7 +492,7 @@ class _PortfolioCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.verified_rounded, color: AppColors.success, size: 14),
+                Icon(Icons.verified_rounded, color: AppColors.success, size: 14),
                 const SizedBox(width: 6),
                 Text(
                   '100% 24K Gold • Insured & Audited',

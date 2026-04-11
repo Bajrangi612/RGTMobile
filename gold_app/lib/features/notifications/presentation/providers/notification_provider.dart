@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
-import '../models/notification_model.dart';
-import '../../../../core/network/dio_client.dart';
-import '../../../../core/network/api_endpoints.dart';
+import '../../data/models/notification_model.dart';
+import '../../../../core/network/api_service.dart';
 
 // Repository
 class NotificationRepository {
-  final Dio _dio = DioClient.instance.dio;
+  final Dio _dio = ApiService().dio;
 
   Future<List<NotificationModel>> getNotifications() async {
     try {

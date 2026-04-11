@@ -30,7 +30,7 @@ export class NotificationController {
       const userId = req.user!.id;
 
       await prisma.notification.updateMany({
-        where: { id, userId },
+        where: { id: id as string, userId },
         data: { isRead: true }
       });
 

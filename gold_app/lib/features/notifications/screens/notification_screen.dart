@@ -7,8 +7,8 @@ import '../../../core/utils/formatters.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/shimmer_loader.dart';
-import '../providers/notification_provider.dart';
-import '../models/notification_model.dart';
+import '../presentation/providers/notification_provider.dart';
+import '../data/models/notification_model.dart';
 
 class NotificationScreen extends ConsumerWidget {
   const NotificationScreen({super.key});
@@ -23,7 +23,7 @@ class NotificationScreen extends ConsumerWidget {
         title: 'Notifications',
         actions: [
           IconButton(
-            icon: const Icon(Icons.done_all_rounded, color: AppColors.royalGold),
+            icon: Icon(Icons.done_all_rounded, color: AppColors.royalGold),
             onPressed: () async {
               await ref.read(notificationRepositoryProvider).markAllAsRead();
               ref.invalidate(notificationsProvider);
@@ -160,7 +160,7 @@ class _NotificationItem extends ConsumerWidget {
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.royalGold,
                           shape: BoxShape.circle,
                         ),

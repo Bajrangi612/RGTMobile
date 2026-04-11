@@ -43,7 +43,6 @@ class OrderModel {
     this.deliveryDate,
     this.goldPriceAtPurchase,
     this.invoiceUrl,
-    this.invoiceUrl,
     this.statusHistory = const [],
     this.customerName,
     this.customerPhone,

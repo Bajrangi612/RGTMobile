@@ -10,6 +10,7 @@ class ApiService {
   factory ApiService() => _instance;
 
   late final Dio _dio;
+  Dio get dio => _dio;
 
   ApiService._internal() {
     _dio = Dio(
