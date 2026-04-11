@@ -169,7 +169,7 @@ class InvoiceService {
 
       // Table Border
       doc.rect(30, tableTop, 535, 45).stroke('#EEEEEE');
-      doc.text('Total', 35, rowY + 15, { font: 'Noto' });
+      doc.font('Noto').text('Total', 35, rowY + 15);
       doc.text(Number(order.amount).toFixed(2), 520, rowY + 15, { width: 40, align: 'center' });
 
       // --- SUMMARY TABLES ---
