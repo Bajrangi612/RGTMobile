@@ -9,6 +9,7 @@ import '../../product/data/models/product_model.dart';
 import '../../product/presentation/widgets/checkout_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../admin/screens/admin_product_manager.dart';
+import '../screens/product_detail_screen.dart';
 
 class CatalogScreen extends ConsumerStatefulWidget {
   final String? initialCategoryId;
@@ -69,10 +70,15 @@ class _CatalogScreenState extends ConsumerState<CatalogScreen> {
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
-                return _CatalogProductCard(product: product)
-                    .animate()
-                    .fadeIn(delay: Duration(milliseconds: 100 * index))
-                    .scale(begin: const Offset(0.9, 0.9));
+                return GestureDetector(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+                  ),
+                  child: _CatalogProductCard(product: product)
+                      .animate()
+                      .fadeIn(delay: Duration(milliseconds: 100 * index))
+                      .scale(begin: const Offset(0.9, 0.9)),
+                );
               },
             ),
           ),

@@ -197,8 +197,6 @@ model Wallet {
   id              String   @id @default(uuid())
   userId          String   @unique(map: "Wallet_userId_key")
   balance         Decimal  @default(0.00) @db.Decimal(15, 2)
-  goldAdvance     Decimal  @default(0.00) @db.Decimal(15, 2)
-  referralRewards Decimal  @default(0.00) @db.Decimal(15, 2)
   updatedAt       DateTime @updatedAt
   user            User     @relation(fields: [userId], references: [id], map: "Wallet_userId_fkey")
 
@@ -277,6 +275,7 @@ enum TransactionType {
   REWARD
   REFERRAL_REWARD
   SELL_BACK
+  REFUND
 
   @@map("transaction_type")
 }

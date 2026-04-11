@@ -46,6 +46,28 @@ export class WithdrawalController {
   }
 
   /**
+   * List all withdrawals for current user
+   */
+  static async myWithdrawals(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user!.id as string;
+      const requestsData = await prisma.withdrawalRequest.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" }
+      });
+
+      const requests = requestsData.map(r => ({
+        ...r,
+        amount: Number(r.amount)
+      }));
+
+      return successResponse(res, { requests }, "My withdrawal requests fetched");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * List all withdrawals (Admin)
    */
   static async listWithdrawals(req: Request, res: Response, next: NextFunction) {

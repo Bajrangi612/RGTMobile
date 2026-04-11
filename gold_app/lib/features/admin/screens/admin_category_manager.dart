@@ -88,6 +88,7 @@ class AdminCategoryManager extends ConsumerWidget {
   void _showAddCategorySheet(BuildContext context, WidgetRef ref) {
     final nameController = TextEditingController();
     final slugController = TextEditingController();
+    final imageUrlController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -123,14 +124,27 @@ class AdminCategoryManager extends ConsumerWidget {
               style: AppTextStyles.bodyMedium,
               decoration: _inputDecoration('Slug (unique identifier)'),
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: imageUrlController,
+              style: AppTextStyles.bodyMedium,
+              decoration: _inputDecoration('Image URL (optional)'),
+            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
+                  final name = nameController.text.trim();
+                  final slug = slugController.text.trim();
+                  final imageUrl = imageUrlController.text.trim();
+                  
+                  if (name.isEmpty || slug.isEmpty) return;
+
                   final success = await ref.read(adminProvider.notifier).createCategory({
-                    'name': nameController.text.trim(),
-                    'slug': slugController.text.trim(),
+                    'name': name,
+                    'slug': slug,
+                    if (imageUrl.isNotEmpty) 'imageUrl': imageUrl,
                   });
                   if (success && context.mounted) Navigator.pop(context);
                 },

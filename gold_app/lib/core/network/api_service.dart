@@ -244,4 +244,8 @@ class ApiService {
       data: {'amount': amount, 'type': type},
     );
   }
+
+  Future<Response> getMyWithdrawals() async {
+    return await _dio.get('/wallet/my-withdrawals');
+  }
 }

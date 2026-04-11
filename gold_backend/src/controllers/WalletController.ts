@@ -101,16 +101,9 @@ export class WalletController {
       if (!wallet) return errorResponse(res, "Wallet not found", 404);
 
       // 2. Strict Balance Verification
-      if (type === 'REFERRAL') {
-        const referralRewards = Number(wallet.referralRewards);
-        if (requestedAmount > referralRewards) {
-          return errorResponse(res, `Insufficient referral rewards balance (Available: ₹${referralRewards})`, 400);
-        }
-      } else {
-        const mainBalance = Number(wallet.balance);
-        if (requestedAmount > mainBalance) {
-          return errorResponse(res, `Insufficient wallet balance (Available: ₹${mainBalance})`, 400);
-        }
+      const mainBalance = Number(wallet.balance);
+      if (requestedAmount > mainBalance) {
+        return errorResponse(res, `Insufficient wallet balance (Available: ₹${mainBalance})`, 400);
       }
 
       const year = new Date().getFullYear();

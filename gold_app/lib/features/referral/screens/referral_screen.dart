@@ -197,6 +197,19 @@ class ReferralScreen extends ConsumerWidget {
                 ...referralTransactions.map((txn) => _RewardTile(txn: txn)),
               ],
 
+              if (walletState.withdrawalRequests.isNotEmpty) ...[
+                const SizedBox(height: 32),
+                Row(
+                  children: [
+                    Icon(Icons.account_balance_rounded, color: AppColors.royalGold, size: 18),
+                    const SizedBox(width: 8),
+                    Text('Withdrawal History', style: AppTextStyles.labelLarge),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ...walletState.withdrawalRequests.map((req) => _WithdrawalTile(req: req)),
+              ],
+
               SizedBox(height: 24),
 
               // How it works
@@ -329,6 +342,74 @@ class _HowItWorksStep extends StatelessWidget {
     );
   }
 }
+class _WithdrawalTile extends StatelessWidget {
+  final dynamic req;
+  const _WithdrawalTile({required this.req});
+
+  @override
+  Widget build(BuildContext context) {
+    final status = req['status']?.toString().toUpperCase() ?? 'PENDING';
+    final color = status == 'COMPLETED' ? AppColors.success : (status == 'REJECTED' ? AppColors.error : AppColors.warning);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cardDark.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.account_balance_wallet_rounded, color: color, size: 20),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Withdrawal Request', style: AppTextStyles.bodyMedium),
+                const SizedBox(height: 2),
+                Text(
+                  Formatters.relativeTime(req['createdAt']?.toString() ?? DateTime.now().toIso8601String()), 
+                  style: AppTextStyles.caption.copyWith(color: AppColors.grey),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                Formatters.currency(double.tryParse(req['amount']?.toString() ?? '0') ?? 0.0),
+                style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RewardTile extends StatelessWidget {
   final dynamic txn;
   const _RewardTile({required this.txn});

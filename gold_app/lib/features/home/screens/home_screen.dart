@@ -294,23 +294,16 @@ class _HomeDashboard extends ConsumerWidget {
                         onTap: () => onTabChange(4),
                       ),
                       _SmallQuickAction(
-                        icon: Icons.verified_user_rounded,
-                        label: 'KYC',
+                        icon: Icons.people_rounded,
+                        label: 'Refer & Earn',
                         color: AppColors.warning,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => AadhaarKycScreen()),
-                        ),
+                        onTap: () => onTabChange(2),
                       ),
                       _SmallQuickAction(
-                        icon: Icons.account_balance_wallet_rounded,
-                        label: 'Asset Portfolio',
+                        icon: Icons.person_rounded,
+                        label: 'Profile',
                         color: AppColors.amber,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => WalletScreen()),
-                          );
-                        },
+                        onTap: () => onTabChange(3),
                       ),
                     ],
                   ).animate(delay: 400.ms).fadeIn(duration: 400.ms),
@@ -449,7 +442,7 @@ class _PortfolioCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'ASSET PORTFOLIO',
+                'ACCOUNT BALANCE',
                 style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold, letterSpacing: 2, fontWeight: FontWeight.bold),
               ),
               Container(

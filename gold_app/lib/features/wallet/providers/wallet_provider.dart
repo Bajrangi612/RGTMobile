@@ -5,12 +5,14 @@ import '../../../core/network/api_service.dart';
 class WalletState {
   final double balance;
   final List<TransactionModel> transactions;
+  final List<dynamic> withdrawalRequests;
   final bool isLoading;
   final String? error;
 
   WalletState({
     this.balance = 0.0,
     this.transactions = const [],
+    this.withdrawalRequests = const [],
     this.isLoading = false,
     this.error,
   });
@@ -18,12 +20,14 @@ class WalletState {
   WalletState copyWith({
     double? balance,
     List<TransactionModel>? transactions,
+    List<dynamic>? withdrawalRequests,
     bool? isLoading,
     String? error,
   }) {
     return WalletState(
       balance: balance ?? this.balance,
       transactions: transactions ?? this.transactions,
+      withdrawalRequests: withdrawalRequests ?? this.withdrawalRequests,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -33,7 +37,10 @@ class WalletState {
 class WalletNotifier extends StateNotifier<WalletState> {
   final ApiService _apiService;
 
-  WalletNotifier(this._apiService) : super(WalletState());
+  WalletNotifier(this._apiService) : super(WalletState()) {
+    loadWalletDetails();
+    loadWithdrawalHistory();
+  }
 
   Future<void> loadWalletDetails() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -41,8 +48,6 @@ class WalletNotifier extends StateNotifier<WalletState> {
       final response = await _apiService.getWalletDetails();
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        print('💰 [WalletNotifier] Data received: $data');
-        
         final wallet = data['wallet'];
         final transactionsJson = data['transactions'] as List;
         
@@ -59,19 +64,21 @@ class WalletNotifier extends StateNotifier<WalletState> {
           transactions: transactions,
           isLoading: false,
         );
-      } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Failed to load wallet data',
-        );
       }
-    } catch (e, stack) {
-      print('❌ [WalletNotifier] Error: $e');
-      print('🥞 Stacktrace: $stack');
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> loadWithdrawalHistory() async {
+    try {
+      final response = await _apiService.getMyWithdrawals();
+      if (response.statusCode == 200) {
+        final requests = response.data['data']['requests'] as List? ?? [];
+        state = state.copyWith(withdrawalRequests: requests);
+      }
+    } catch (e) {
+      print('⚠️ Withdrawal history failed: $e');
     }
   }
 
@@ -81,6 +88,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
       final response = await _apiService.requestWithdrawal(amount, 'BANK');
       if (response.statusCode == 200 || response.statusCode == 201) {
         await loadWalletDetails();
+        await loadWithdrawalHistory();
         return true;
       }
       state = state.copyWith(isLoading: false, error: 'Withdrawal request failed');

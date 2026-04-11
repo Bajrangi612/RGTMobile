@@ -161,27 +161,19 @@ class UserModel {
 
 class WalletModel {
   final double balance;
-  final double goldAdvance;
-  final double referralRewards;
 
   WalletModel({
     required this.balance,
-    required this.goldAdvance,
-    required this.referralRewards,
   });
 
   factory WalletModel.fromJson(Map<String, dynamic> json) {
     return WalletModel(
       balance: _toDouble(json['balance']),
-      goldAdvance: _toDouble(json['goldAdvance']),
-      referralRewards: _toDouble(json['referralRewards']),
     );
   }
 
   Map<String, dynamic> toJson() => {
         'balance': balance,
-        'goldAdvance': goldAdvance,
-        'referralRewards': referralRewards,
       };
 
   static double _toDouble(dynamic value) {

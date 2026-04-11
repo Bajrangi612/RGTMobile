@@ -155,15 +155,21 @@ export class AdminController {
    */
   static async updateSettings(req: Request, res: Response, next: NextFunction) {
     try {
-      const { delivery_days } = req.body;
+      const updates = req.body;
       
-      if (delivery_days !== undefined) {
-        await prisma.setting.upsert({
-          where: { key: "delivery_days" },
-          update: { value: delivery_days.toString() },
-          create: { key: "delivery_days", value: delivery_days.toString() }
+      const updatePromises = Object.entries(updates).map(([key, value]) => {
+        if (value === undefined) return null;
+        return prisma.setting.upsert({
+          where: { key: key },
+          update: { value: String(value) },
+          create: {
+            key: key,
+            value: String(value),
+          },
         });
-      }
+      }).filter(p => p !== null);
+
+      await Promise.all(updatePromises);
 
       return successResponse(res, null, "Settings updated successfully");
     } catch (error) {

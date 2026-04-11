@@ -204,8 +204,7 @@ class OrderService {
           await tx.wallet.update({
             where: { userId: referrer.id },
             data: { 
-              balance: { increment: rewardAmount },
-              referralRewards: { increment: rewardAmount }
+              balance: { increment: rewardAmount }
             }
           });
 
@@ -359,20 +358,15 @@ class OrderService {
         }
       });
 
-      // Refund to Wallet if paid
+      // Log direct refund transaction for admin tracking (Direct Bank Transfer)
       if (order.status !== "PAYMENT_PENDING") {
-        await tx.wallet.update({
-          where: { userId },
-          data: { balance: { increment: order.total } }
-        });
-
         await tx.transaction.create({
           data: {
             userId,
-            type: "CREDIT",
+            type: "REFUND",
             amount: order.total,
-            description: `Refund for Cancelled Order #${orderId}`,
-            status: "COMPLETED"
+            description: `Refund for Cancelled Order #${orderId.substring(0,8)}. Payout to Bank Account.`,
+            status: "PENDING"
           }
         });
       }
@@ -415,20 +409,14 @@ class OrderService {
         }
       });
 
-      // 2. Credit Wallet with Purchase Amount
-      await tx.wallet.update({
-        where: { userId },
-        data: { balance: { increment: order.total } }
-      });
-
-      // 3. Create Transaction record
+      // 2. Create Transaction record for Payout
       await tx.transaction.create({
         data: {
           userId,
           type: "SELL_BACK",
           amount: order.total,
-          description: `Buyback Credit for ${order.product.name}`,
-          status: "COMPLETED"
+          description: `Buyback Payout for ${order.product.name}. Transfer pending.`,
+          status: "PENDING"
         }
       });
 
