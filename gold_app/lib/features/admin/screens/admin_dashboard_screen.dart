@@ -376,46 +376,75 @@ class _MarketTicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUp = change >= 0;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1)),
+        color: AppColors.cardDark.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.15), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.royalGold.withValues(alpha: 0.05),
+            blurRadius: 20,
+            spreadRadius: -5,
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(6),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: AppColors.royalGold.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.public, color: AppColors.royalGold, size: 14),
+            child: Icon(Icons.public, color: AppColors.royalGold, size: 20),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('LIVE GOLD RATE (24K)', style: AppTextStyles.caption.copyWith(letterSpacing: 1.5, color: AppColors.grey)),
+              const SizedBox(height: 2),
+              Text(
+                '₹${price.toStringAsFixed(2)} /g',
+                style: AppTextStyles.h4.copyWith(color: AppColors.pureWhite, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isUp ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                  color: isUp ? AppColors.success : AppColors.error,
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${isUp ? '+' : ''}${change.toStringAsFixed(2)}%',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: isUp ? AppColors.success : AppColors.error,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 12),
-          Text('LIVE GOLD', style: AppTextStyles.labelSmall.copyWith(letterSpacing: 1)),
-          const Spacer(),
-          Text(
-            '₹${price.toStringAsFixed(2)}',
-            style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 8),
-          Icon(
-            isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-            color: isUp ? AppColors.success : AppColors.error,
-          ),
-          Text(
-            '${isUp ? '+' : ''}${change.toStringAsFixed(2)}%',
-            style: AppTextStyles.caption.copyWith(
-              color: isUp ? AppColors.success : AppColors.error,
-              fontWeight: FontWeight.bold,
-            ),
+          Container(
+            height: 32,
+            width: 1,
+            color: AppColors.grey.withValues(alpha: 0.2),
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.edit_note, color: AppColors.royalGold, size: 20),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+            icon: Icon(Icons.settings_suggest_outlined, color: AppColors.royalGold, size: 24),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AdminGoldPriceScreen()),
             ),
@@ -434,58 +463,109 @@ class _RevenueAnalysisChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GoldCard(
-      padding: const EdgeInsets.all(20),
+      isVibrant: false,
+      blurSigma: 60,
+      padding: const EdgeInsets.all(24),
+      hasGlow: true,
+      gradient: LinearGradient(
+        colors: [
+          AppColors.surface.withValues(alpha: 0.8),
+          AppColors.royalGold.withValues(alpha: 0.05),
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('WEEKLY REVENUE', style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold)),
-                  const SizedBox(height: 4),
-                  Text('₹${totalRevenue.toStringAsFixed(0)}', style: AppTextStyles.h4),
+                  Row(
+                    children: [
+                      Icon(Icons.analytics_outlined, color: AppColors.royalGold, size: 18),
+                      const SizedBox(width: 8),
+                      Text('WEEKLY REVENUE', style: AppTextStyles.caption.copyWith(color: AppColors.royalGold, letterSpacing: 2, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('₹${totalRevenue.toStringAsFixed(0)}', style: AppTextStyles.h1.copyWith(fontSize: 32, fontWeight: FontWeight.w900)),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.success.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
                 ),
-                child: Text('+12.5%', style: AppTextStyles.caption.copyWith(color: AppColors.success)),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up, color: AppColors.success, size: 14),
+                    const SizedBox(width: 4),
+                    Text('+12.5%', style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 48),
           SizedBox(
-            height: 140,
+            height: 180,
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: false),
-                titlesData: FlTitlesData(show: false),
+                gridData: FlGridData(
+                  show: true, 
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (_) => FlLine(color: AppColors.pureWhite.withValues(alpha: 0.05), strokeWidth: 1, dashArray: [5, 5]),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 1,
+                      getTitlesWidget: (val, _) => Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(['M', 'T', 'W', 'T', 'F', 'S', 'S'][val.toInt().clamp(0, 6)], style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
+                      ),
+                    ),
+                  ),
+                ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
                     spots: [
-                      FlSpot(0, totalRevenue * 0.2),
-                      FlSpot(1, totalRevenue * 0.1),
-                      FlSpot(2, totalRevenue * 0.3),
-                      FlSpot(3, totalRevenue * 0.15),
-                      FlSpot(4, totalRevenue * 0.25),
-                      FlSpot(5, totalRevenue * 0.2),
-                      FlSpot(6, totalRevenue * 0.4),
+                      FlSpot(0, totalRevenue * 0.12),
+                      FlSpot(1, totalRevenue * 0.15),
+                      FlSpot(2, totalRevenue * 0.1),
+                      FlSpot(3, totalRevenue * 0.2),
+                      FlSpot(4, totalRevenue * 0.18),
+                      FlSpot(5, totalRevenue * 0.3),
+                      FlSpot(6, totalRevenue * 0.35),
                     ],
                     isCurved: true,
                     color: AppColors.royalGold,
-                    barWidth: 3,
+                    barWidth: 4,
                     isStrokeCapRound: true,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(
                       show: true,
-                      color: AppColors.royalGold.withValues(alpha: 0.1),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.royalGold.withValues(alpha: 0.4),
+                          Colors.transparent,
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                     ),
                   ),
                 ],
@@ -516,39 +596,83 @@ class _EliteStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GoldCard(
-      padding: const EdgeInsets.all(12),
+      isVibrant: true,
+      hasGlow: true,
+      blurSigma: 80,
+      gradient: LinearGradient(
+        colors: [
+          color.withValues(alpha: 0.25),
+          color.withValues(alpha: 0.05),
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: color, size: 18),
-              SizedBox(
-                width: 40,
-                height: 15,
-                child: LineChart(
-                  LineChartData(
-                    gridData: FlGridData(show: false),
-                    titlesData: FlTitlesData(show: false),
-                    borderData: FlBorderData(show: false),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: List.generate(sparkData.length, (i) => FlSpot(i.toDouble(), sparkData[i])),
-                        isCurved: true,
-                        color: color,
-                        barWidth: 1.5,
-                        dotData: FlDotData(show: false),
-                      ),
-                    ],
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: color, size: 22),
+              ),
+              Expanded(
+                child: Container(
+                  height: 24,
+                  padding: const EdgeInsets.only(left: 12),
+                  child: LineChart(
+                    LineChartData(
+                      gridData: FlGridData(show: false),
+                      titlesData: FlTitlesData(show: false),
+                      borderData: FlBorderData(show: false),
+                      lineBarsData: [
+                        LineChartBarData(
+                          spots: List.generate(sparkData.length, (i) => FlSpot(i.toDouble(), sparkData[i])),
+                          isCurved: true,
+                          color: color.withValues(alpha: 0.8),
+                          barWidth: 2,
+                          dotData: FlDotData(show: false),
+                          belowBarData: BarAreaData(
+                            show: true,
+                            gradient: LinearGradient(
+                              colors: [color.withValues(alpha: 0.3), Colors.transparent],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ],
           ),
           const Spacer(),
-          Text(value, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 16)),
-          Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.4), fontSize: 8, letterSpacing: 1)),
+          Text(
+            value,
+            style: AppTextStyles.h3.copyWith(
+              color: AppColors.pureWhite,
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.pureWhite.withValues(alpha: 0.6),
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -620,18 +744,50 @@ class _CompactTool extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
       child: GoldCard(
+        isVibrant: false,
+        blurSigma: 40,
+        hasGoldBorder: true,
         padding: EdgeInsets.zero,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.royalGold, size: 24),
-            const SizedBox(height: 8),
-            Text(label, style: AppTextStyles.caption.copyWith(fontSize: 10, fontWeight: FontWeight.bold)),
-          ],
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              colors: [
+                AppColors.royalGold.withValues(alpha: 0.1),
+                Colors.transparent,
+              ],
+              center: Alignment.center,
+              radius: 0.8,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.royalGold.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: AppColors.royalGold.withValues(alpha: 0.2), blurRadius: 15, spreadRadius: -5)
+                  ],
+                ),
+                child: Icon(icon, color: AppColors.royalGold, size: 28),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label.toUpperCase(),
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 10,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.pureWhite.withValues(alpha: 0.8),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

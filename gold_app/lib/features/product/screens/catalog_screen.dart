@@ -10,11 +10,27 @@ import '../../product/presentation/widgets/checkout_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../admin/screens/admin_product_manager.dart';
 
-class CatalogScreen extends ConsumerWidget {
-  const CatalogScreen({super.key});
+class CatalogScreen extends ConsumerStatefulWidget {
+  final String? initialCategoryId;
+  const CatalogScreen({super.key, this.initialCategoryId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CatalogScreen> createState() => _CatalogScreenState();
+}
+
+class _CatalogScreenState extends ConsumerState<CatalogScreen> {
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialCategoryId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(selectedCategoryIdProvider.notifier).state = widget.initialCategoryId;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
 
     return Scaffold(

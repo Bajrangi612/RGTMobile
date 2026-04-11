@@ -7,6 +7,8 @@ import '../../../core/utils/extensions.dart';
 import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PasskeySetupScreen extends ConsumerStatefulWidget {
   const PasskeySetupScreen({super.key});
@@ -17,17 +19,41 @@ class PasskeySetupScreen extends ConsumerStatefulWidget {
 
 class _PasskeySetupScreenState extends ConsumerState<PasskeySetupScreen> {
   bool _isEnabling = false;
+  final LocalAuthentication _auth = LocalAuthentication();
 
   Future<void> _enablePasskey() async {
-    setState(() => _isEnabling = true);
-    
-    // Mock biometric/security prompt delay
-    await Future.delayed(Duration(seconds: 2));
+    try {
+      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
+      final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
 
-    if (mounted) {
-      setState(() => _isEnabling = false);
-      context.showSuccessSnackBar('Passkey enabled successfully!');
-      Navigator.of(context).pop();
+      if (!canAuthenticate) {
+        if (mounted) context.showErrorSnackBar('Your device does not support biometric/security features.');
+        return;
+      }
+
+      setState(() => _isEnabling = true);
+      
+      final bool didAuthenticate = await _auth.authenticate(
+        localizedReason: 'Secure your Royal Gold account with biometrics',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: false,
+        ),
+      );
+
+      if (didAuthenticate) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('biometric_enabled', true);
+        
+        if (mounted) {
+          context.showSuccessSnackBar('Passkey enabled successfully!');
+          Navigator.of(context).pop();
+        }
+      }
+    } catch (e) {
+      if (mounted) context.showErrorSnackBar('Security setup failed: ${e.toString()}');
+    } finally {
+      if (mounted) setState(() => _isEnabling = false);
     }
   }
 

@@ -329,6 +329,9 @@ class _TransactionList extends StatelessWidget {
             isCredit: isCredit,
             txnId: txn['id'],
             mode: txn['type'] ?? 'ONLINE',
+            metadata: txn['metadata'] as Map<String, dynamic>?,
+            status: txn['status'] ?? 'COMPLETED',
+            invoiceNo: txn['invoiceNo'],
           ),
         );
       }).toList(),
@@ -367,6 +370,9 @@ class _TransactionTile extends StatelessWidget {
   final bool isCredit;
   final String? txnId;
   final String? mode;
+  final String status;
+  final String? invoiceNo;
+  final Map<String, dynamic>? metadata;
 
   const _TransactionTile({
     required this.title,
@@ -375,11 +381,16 @@ class _TransactionTile extends StatelessWidget {
     required this.isCredit,
     this.txnId,
     this.mode,
+    this.status = 'COMPLETED',
+    this.invoiceNo,
+    this.metadata,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => _showTxnDetails(context),
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.cardDark.withValues(alpha: 0.3),
@@ -428,6 +439,97 @@ class _TransactionTile extends StatelessWidget {
                 Text(mode!.toUpperCase(), style: AppTextStyles.caption.copyWith(fontSize: 9, letterSpacing: 1)),
             ],
           ),
+        ],
+      ),
+    ),
+    );
+  }
+
+  void _showTxnDetails(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cardDark,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: AppColors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Transaction Details', style: AppTextStyles.h4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: (status == 'COMPLETED' ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(status.toUpperCase(), style: AppTextStyles.caption.copyWith(color: status == 'COMPLETED' ? AppColors.success : AppColors.warning, fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              _DetailRow(label: 'Date & Time', value: date),
+              if (txnId != null) _DetailRow(label: 'Transaction ID', value: txnId!),
+              if (invoiceNo != null) _DetailRow(label: 'Invoice No', value: invoiceNo!),
+              if (metadata?['paymentMode'] != null) _DetailRow(label: 'Payment Mode', value: metadata!['paymentMode']),
+              
+              if (metadata?['quantity'] != null) const SizedBox(height: 12),
+              if (metadata?['quantity'] != null) _DetailRow(label: 'Quantity', value: metadata!['quantity'].toString()),
+              if (metadata?['weight'] != null) _DetailRow(label: 'Weight (g)', value: '${metadata!['weight']}'),
+              if (metadata?['gst'] != null) _DetailRow(label: 'GST Applied', value: Formatters.currency(_toDouble(metadata!['gst']))),
+              
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                   Text('Total Amount', style: AppTextStyles.labelLarge.copyWith(color: AppColors.grey)),
+                   Text(Formatters.currency(amount), style: AppTextStyles.h3.copyWith(color: AppColors.royalGold)),
+                ],
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  double _toDouble(dynamic val) {
+    if (val is num) return val.toDouble();
+    if (val is String) return double.tryParse(val) ?? 0.0;
+    return 0.0;
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(flex: 2, child: Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.grey))),
+          Expanded(flex: 3, child: Text(value, style: AppTextStyles.labelLarge, textAlign: TextAlign.right)),
         ],
       ),
     );

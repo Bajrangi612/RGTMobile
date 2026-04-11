@@ -21,6 +21,9 @@ class OrderModel {
   final double? goldPriceAtPurchase;
   final String? invoiceUrl;
   final List<OrderStatusHistoryModel> statusHistory;
+  final String? customerName;
+  final String? customerPhone;
+  final String? customerAddress;
   final DateTime createdAt;
 
   OrderModel({
@@ -40,7 +43,11 @@ class OrderModel {
     this.deliveryDate,
     this.goldPriceAtPurchase,
     this.invoiceUrl,
+    this.invoiceUrl,
     this.statusHistory = const [],
+    this.customerName,
+    this.customerPhone,
+    this.customerAddress,
     required this.createdAt,
   });
 
@@ -69,6 +76,9 @@ class OrderModel {
       deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
       goldPriceAtPurchase: json['goldPriceAtPurchase'] != null ? parseDouble(json['goldPriceAtPurchase']) : null,
       invoiceUrl: json['invoiceUrl'],
+      customerName: json['user']?['name'],
+      customerPhone: json['user']?['phone'],
+      customerAddress: json['user']?['address'],
       statusHistory: json['statusHistory'] != null 
         ? (json['statusHistory'] as List).map((h) => OrderStatusHistoryModel.fromJson(h)).toList()
         : [],

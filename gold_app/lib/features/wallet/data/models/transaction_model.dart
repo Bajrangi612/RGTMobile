@@ -7,6 +7,7 @@ class TransactionModel {
   final String description;
   final String? invoiceNo;
   final DateTime date;
+  final Map<String, dynamic>? metadata;
 
   TransactionModel({
     required this.id,
@@ -17,6 +18,7 @@ class TransactionModel {
     required this.description,
     this.invoiceNo,
     required this.date,
+    this.metadata,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class TransactionModel {
       description: json['description'] ?? '',
       invoiceNo: json['invoiceNo'],
       date: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      metadata: json['metadata'],
     );
   }
 
@@ -42,6 +45,7 @@ class TransactionModel {
       'description': description,
       'invoiceNo': invoiceNo,
       'createdAt': date.toIso8601String(),
+      'metadata': metadata,
     };
   }
 }

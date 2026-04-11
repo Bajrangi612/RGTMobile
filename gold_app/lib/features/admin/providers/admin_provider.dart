@@ -26,6 +26,7 @@ class AdminState {
   final List<dynamic> withdrawalRequests;
   final double referralReward;
   final double minWithdrawal;
+  final List<dynamic> weeklyData;
   final String? error;
 
   AdminState({
@@ -50,6 +51,7 @@ class AdminState {
     this.withdrawalRequests = const [],
     this.referralReward = 500.0,
     this.minWithdrawal = 1000.0,
+    this.weeklyData = const [],
     this.error,
   });
 
@@ -75,6 +77,7 @@ class AdminState {
     List<dynamic>? withdrawalRequests,
     double? referralReward,
     double? minWithdrawal,
+    List<dynamic>? weeklyData,
     String? error,
   }) {
     return AdminState(
@@ -99,6 +102,7 @@ class AdminState {
       withdrawalRequests: withdrawalRequests ?? this.withdrawalRequests,
       referralReward: referralReward ?? this.referralReward,
       minWithdrawal: minWithdrawal ?? this.minWithdrawal,
+      weeklyData: weeklyData ?? this.weeklyData,
       error: error,
     );
   }
@@ -161,9 +165,10 @@ class AdminNotifier extends StateNotifier<AdminState> {
       /// ✅ STATS
       /// =======================
       final stats = statsResponse.data['data'];
-      final totalRevenue = _toDouble(stats['totalSales']);
-      final totalWeight = _toDouble(stats['totalWeight']);
-      final pendingOrdersCount = int.tryParse(stats['pendingOrders']?.toString() ?? '0') ?? 0;
+      final totalRevenue = _toDouble(stats['totalRevenue']);
+      final totalWeight = _toDouble(stats['totalGoldWeight']);
+      final pendingOrdersCount = int.tryParse(stats['pendingPickups']?.toString() ?? '0') ?? 0;
+      final weeklyData = stats['weeklyData'] as List<dynamic>? ?? [];
 
       /// =======================
       /// ✅ PRODUCTS
@@ -237,6 +242,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
         totalRevenue: totalRevenue,
         totalWeight: totalWeight,
         pendingOrdersCount: pendingOrdersCount,
+        weeklyData: weeklyData,
         isLoading: false,
       );
 

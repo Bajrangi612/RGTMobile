@@ -15,6 +15,7 @@ import categoryRoutes from './routes/CategoryRoutes';
 import bankRoutes from './routes/BankRoutes';
 import walletRoutes from './routes/WalletRoutes';
 import adminRoutes from './routes/AdminRoutes';
+import notificationRoutes from './routes/NotificationRoutes';
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/bank', bankRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Routes Placeholder
 // Routes Placeholder

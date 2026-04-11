@@ -50,10 +50,15 @@ export class WithdrawalController {
    */
   static async listWithdrawals(req: Request, res: Response, next: NextFunction) {
     try {
-      const requests = await prisma.withdrawalRequest.findMany({
+      const requestsData = await prisma.withdrawalRequest.findMany({
         include: { user: { select: { name: true, phone: true } } },
         orderBy: { createdAt: "desc" }
       });
+
+      const requests = requestsData.map(r => ({
+        ...r,
+        amount: Number(r.amount)
+      }));
 
       return successResponse(res, { requests }, "Withdrawal requests fetched successfully");
     } catch (error) {

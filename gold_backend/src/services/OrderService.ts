@@ -3,6 +3,7 @@ import ProductService from "./ProductService";
 import PaymentService from "./PaymentService";
 import { Prisma } from "@prisma/client";
 import invoiceService from "./InvoiceService";
+import NotificationService from "./NotificationService";
 
 class OrderService {
   /**
@@ -310,7 +311,12 @@ class OrderService {
     });
 
     // Notify User
-    console.log(`🔔 [Notification] To User ${order.user.phone}: Your order #${orderId.substring(0,8)} is now ${status}!`);
+    await NotificationService.sendPushNotification(
+      order.userId,
+      'Order Status Update',
+      `Your order #${orderId.substring(0, 8)} is now ${status.replace(/_/g, ' ')}.`,
+      'ORDER_STATUS'
+    );
 
     // If status is ORDER_CONFIRMED, generate/sync invoice
     if (status.toUpperCase() === 'ORDER_CONFIRMED' || status.toUpperCase() === 'PROCESSING') {

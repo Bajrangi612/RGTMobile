@@ -69,17 +69,20 @@ class AdminOrderManager extends ConsumerWidget {
               labelColor: AppColors.royalGold,
               unselectedLabelColor: AppColors.grey,
               tabs: const [
+                Tab(text: 'ALL'),
                 Tab(text: 'ACTIVE'),
                 Tab(text: 'HANDLING'),
                 Tab(text: 'READY'),
                 Tab(text: 'REFUNDS'),
-                Tab(text: 'ALL'),
               ],
             ),
 
             Expanded(
               child: TabBarView(
                 children: [
+                  // ALL
+                  _OrderList(orders: filterOrders(adminState.allOrders)),
+
                   // ACTIVE: Just Confirmed/Paid
                   _OrderList(orders: filterOrders(adminState.allOrders.where((o) => 
                      ['PAYMENT_SUCCESSFUL', 'ORDER_CONFIRMED'].contains(o['status'].toString().toUpperCase())).toList())),
@@ -95,9 +98,6 @@ class AdminOrderManager extends ConsumerWidget {
                   // REFUNDS
                   _OrderList(orders: filterOrders(adminState.allOrders.where((o) => 
                      ['REFUND_REQUESTED', 'REFUNDED'].contains(o['status'].toString().toUpperCase())).toList())),
-                  
-                  // ALL
-                  _OrderList(orders: filterOrders(adminState.allOrders)),
                 ],
               ),
             ),

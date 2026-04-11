@@ -16,6 +16,10 @@ import '../../auth/providers/auth_provider.dart';
 import 'sell_back_screen.dart';
 import '../../../core/services/invoice_service.dart';
 import '../../../widgets/live_countdown.dart';
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
@@ -109,21 +113,15 @@ class OrderDetailScreen extends ConsumerWidget {
                               children: [
                                 _CountdownBox(
                                   label: 'Remaining',
+                                  dateString: order.deliveryDate != null 
+                                      ? DateFormat('EEEE, MMM dd').format(order.deliveryDate!)
+                                      : null,
                                   child: order.deliveryDate != null 
                                     ? LiveCountdown(targetDate: order.deliveryDate!)
                                     : Text('Ready for Pickup', style: AppTextStyles.h4.copyWith(color: AppColors.deepBlack)),
                                 ),
                               ],
                             ),
-                            if (order.deliveryDate != null) ...[
-                              SizedBox(height: 12),
-                              Center(
-                                child: Text(
-                                  'Handover expected on ${DateFormat('EEEE, MMM dd').format(order.deliveryDate!)}',
-                                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.royalGold),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ).animate(delay: 200.ms).fadeIn(duration: 400.ms),
@@ -143,12 +141,12 @@ class OrderDetailScreen extends ConsumerWidget {
                             ),
                             SizedBox(height: 16),
                             Text(
-                              ref.read(authProvider).user?.name ?? 'Customer Name',
+                              order.customerName ?? ref.read(authProvider).user?.name ?? 'Customer Name',
                               style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
                             ),
                             SizedBox(height: 4),
                             Text(
-                              ref.read(authProvider).user?.address ?? 'No address provided',
+                              order.customerAddress ?? ref.read(authProvider).user?.address ?? 'No address provided',
                               style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey),
                             ),
                           ],
@@ -282,9 +280,19 @@ class OrderDetailScreen extends ConsumerWidget {
                     GoldButton(
                       text: order.invoiceUrl != null ? 'Download Tax Invoice' : 'View Tax Invoice',
                       isOutlined: true,
-                      onPressed: () {
+                      onPressed: () async {
                         if (order.invoiceUrl != null) {
-                          launchUrl(Uri.parse(order.invoiceUrl!), mode: LaunchMode.externalApplication);
+                          try {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Invoice...'), duration: Duration(seconds: 1)));
+                            final dir = await getApplicationDocumentsDirectory();
+                            final filePath = '${dir.path}/invoice_${order.id}.pdf';
+                            await Dio().download(order.invoiceUrl!, filePath);
+                            await OpenFilex.open(filePath);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Download Failed.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+                            );
+                          }
                         } else {
                           InvoiceService.generateAndPreviewInvoice(
                             order,
@@ -479,8 +487,9 @@ class _TimelineStep extends StatelessWidget {
 class _CountdownBox extends StatelessWidget {
   final String label;
   final Widget child;
+  final String? dateString;
 
-  const _CountdownBox({required this.label, required this.child});
+  const _CountdownBox({required this.label, required this.child, this.dateString});
 
   @override
   Widget build(BuildContext context) {
@@ -509,6 +518,23 @@ class _CountdownBox extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           child,
+          if (dateString != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.deepBlack.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                dateString!,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.deepBlack,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

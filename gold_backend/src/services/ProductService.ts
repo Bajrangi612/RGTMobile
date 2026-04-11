@@ -165,13 +165,34 @@ class ProductService {
    * Update the live gold price
    */
   async updateGoldPrice(buyPrice: number, sellPrice: number) {
-    return await prisma.goldPrice.create({
+    const newPrice = await prisma.goldPrice.create({
       data: {
         buyPrice: new Prisma.Decimal(buyPrice),
         sellPrice: new Prisma.Decimal(sellPrice),
         timestamp: new Date(),
       },
     });
+
+    // Auto-sync fixedPrice products linearly based on the new market rate (per gram)
+    // formula: fixedPrice = (weight * sellPrice) + makingCharges
+    const productsToUpdate = await prisma.product.findMany({
+      where: { fixedPrice: { gt: 0 } },
+    });
+
+    for (const product of productsToUpdate) {
+      const weight = Number(product.weight);
+      const makingCharges = Number(product.makingCharges || 0);
+      const updatedFixedPrice = (weight * sellPrice) + makingCharges;
+
+      await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          fixedPrice: new Prisma.Decimal(updatedFixedPrice),
+        },
+      });
+    }
+
+    return newPrice;
   }
 }
 

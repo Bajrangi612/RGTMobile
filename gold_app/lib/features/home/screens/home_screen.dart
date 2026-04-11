@@ -19,6 +19,8 @@ import '../../referral/screens/referral_screen.dart';
 import '../../profile/screens/profile_screen.dart';
 import '../../kyc/screens/aadhaar_kyc_screen.dart';
 import '../../notifications/screens/transactions_screen.dart';
+import '../../notifications/screens/notification_screen.dart';
+import '../../notifications/presentation/providers/notification_provider.dart';
 import '../../order/screens/sell_back_screen.dart';
 import '../../wallet/screens/wallet_screen.dart';
 import '../../admin/screens/admin_gold_price_screen.dart';
@@ -114,26 +116,61 @@ class _HomeDashboard extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    // Notification Icon (Minimal)
+                    // Notification Icon (Minimal with Badge)
                     GestureDetector(
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => TransactionsScreen()),
+                        MaterialPageRoute(builder: (_) => const NotificationScreen()),
                       ),
-                      child: Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 10,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: Icon(Icons.notifications_none_rounded,
-                            color: AppColors.royalGold, size: 24),
+                            child: const Icon(Icons.notifications_none_rounded,
+                                color: AppColors.royalGold, size: 24),
+                          ),
+                          Consumer(
+                            builder: (context, ref, child) {
+                              final count = ref.watch(unreadNotificationsCountProvider);
+                              if (count == 0) return const SizedBox.shrink();
+                              return Positioned(
+                                top: -2,
+                                right: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
+                                  child: Text(
+                                    count > 9 ? '9+' : count.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -384,13 +421,17 @@ class _PortfolioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GoldCard(
-      isVibrant: true,
-      gradient: const LinearGradient(
-        colors: [Color(0xFF1A1F3D), Color(0xFF2E376E), Color(0xFF151B40)],
+      isVibrant: false,
+      blurSigma: 60,
+      gradient: LinearGradient(
+        colors: [
+          AppColors.royalGold.withValues(alpha: 0.15),
+          AppColors.surface.withValues(alpha: 0.8),
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      hasGoldBorder: false,
+      hasGoldBorder: true,
       hasGlow: true,
       padding: const EdgeInsets.all(28),
       child: Column(
@@ -399,22 +440,30 @@ class _PortfolioCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Collection Value',
-                style: AppTextStyles.labelMedium.copyWith(color: Colors.white70),
+                'COLLECTION VALUE',
+                style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold, letterSpacing: 2, fontWeight: FontWeight.bold),
               ),
-              Row(
-                children: [
-                   const Icon(Icons.shield_rounded, color: Color(0xFFFFD700), size: 14),
-                   const SizedBox(width: 4),
-                   Text(
-                    'ROYAL STORE',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: const Color(0xFFFFD700),
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.royalGold.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                     const Icon(Icons.shield_rounded, color: AppColors.royalGold, size: 12),
+                     const SizedBox(width: 4),
+                     Text(
+                      'SECURE VAULT',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.royalGold,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -422,34 +471,40 @@ class _PortfolioCard extends StatelessWidget {
           Text(
             isLoading ? '₹ --,---' : Formatters.currency(value),
             style: AppTextStyles.goldPrice.copyWith(
-              fontSize: 34,
+              fontSize: 42,
               color: AppColors.pureWhite,
               fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+              shadows: [
+                Shadow(color: AppColors.royalGold.withValues(alpha: 0.2), blurRadius: 20, offset: const Offset(0, 5))
+              ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF00E5FF).withValues(alpha: 0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF00E5FF).withValues(alpha: 0.2)),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.verified_rounded, color: Color(0xFF00E5FF), size: 12),
-                const SizedBox(width: 4),
+                const Icon(Icons.verified_rounded, color: AppColors.success, size: 14),
+                const SizedBox(width: 6),
                 Text(
-                  'Physically Secured & Insured',
+                  '100% 24K Gold • Insured & Audited',
                   style: AppTextStyles.caption.copyWith(
-                    color: const Color(0xFF00E5FF),
+                    color: AppColors.success,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 12),
           const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -477,45 +532,54 @@ class _AssetAllocationCard extends ConsumerWidget {
     final total = user?.totalCollectionValue ?? 0.0;
     
     return GoldCard(
-      padding: const EdgeInsets.all(16),
+      blurSigma: 20,
+      padding: const EdgeInsets.all(20),
+      hasGoldBorder: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Asset Allocation', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
-          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(Icons.pie_chart_outline_rounded, color: AppColors.royalGold, size: 16),
+              const SizedBox(width: 8),
+              Text('Asset Allocation', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 20),
           Center(
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1), width: 12),
-              ),
-              child: Container(
-                 margin: const EdgeInsets.all(4),
-                 decoration: BoxDecoration(
-                   shape: BoxShape.circle,
-                   gradient: SweepGradient(
-                     colors: [
-                       AppColors.royalGold,
-                       AppColors.royalGold.withValues(alpha: 0.3),
-                       AppColors.royalGold,
-                     ],
-                     stops: const [0.0, 0.7, 1.0],
-                   ),
-                 ),
-              ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: CircularProgressIndicator(
+                    value: total > 0 ? 0.7 : 0.0,
+                    strokeWidth: 10,
+                    color: AppColors.royalGold,
+                    backgroundColor: AppColors.royalGold.withValues(alpha: 0.1),
+                    strokeCap: StrokeCap.round,
+                  ),
+                ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('70%', style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, color: AppColors.royalGold)),
+                    Text('Gold', style: AppTextStyles.caption.copyWith(fontSize: 8, color: AppColors.grey)),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           _AllocationLabel(
-            label: 'Physical Gold', 
+            label: 'Physical Holdings', 
             value: total > 0 ? '70%' : '0%', 
             color: AppColors.royalGold
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           _AllocationLabel(
-            label: 'Digital Gold', 
+            label: 'Vault Reserves', 
             value: total > 0 ? '30%' : '0%', 
             color: AppColors.royalGold.withValues(alpha: 0.3)
           ),
@@ -564,64 +628,69 @@ class _GoldPriceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isUp = change >= 0;
     return GoldCard(
-      isVibrant: true,
-      gradient: const LinearGradient(
-        colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+      isVibrant: false,
+      blurSigma: 30,
+      gradient: LinearGradient(
+        colors: [
+          AppColors.surface,
+          (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.05),
+        ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
+      hasGoldBorder: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Live Gold Rate', style: AppTextStyles.labelMedium.copyWith(color: AppColors.deepBlack.withValues(alpha: 0.6), fontWeight: FontWeight.bold)),
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: Icon(Icons.trending_up_rounded, color: AppColors.deepBlack, size: 14),
+              Row(
+                children: [
+                  Icon(Icons.query_stats_rounded, color: AppColors.royalGold, size: 16),
+                  const SizedBox(width: 8),
+                  Text('Market Statistics', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey, fontWeight: FontWeight.bold)),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                Formatters.currency(price),
-                style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.w900, color: AppColors.deepBlack),
-              ),
-              const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
-                child: Text(
-                  '${change >= 0 ? '+' : ''}${change.toStringAsFixed(1)}%',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.deepBlack, 
-                    fontSize: 10, 
-                    fontWeight: FontWeight.bold,
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    Icon(isUp ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, color: isUp ? AppColors.success : AppColors.error, size: 12),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${isUp ? '+' : ''}${change.toStringAsFixed(1)}%',
+                      style: AppTextStyles.caption.copyWith(color: isUp ? AppColors.success : AppColors.error, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
+          Text(
+            Formatters.currency(price),
+            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w900, color: AppColors.pureWhite, fontSize: 32),
+          ),
+          Text(
+            'Live Per Gram Rate (24K)',
+            style: AppTextStyles.caption.copyWith(color: AppColors.grey, letterSpacing: 1),
+          ),
+          const SizedBox(height: 28),
           // Sparkline Placeholder
           SizedBox(
-            height: 40,
+            height: 50,
             width: double.infinity,
             child: CustomPaint(
-              painter: _SparklinePainter(color: AppColors.deepBlack.withValues(alpha: 0.3)),
+              painter: _SparklinePainter(color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.3)),
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: ['1D', '1W', '1M'].map((t) => Text(t, style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.deepBlack.withValues(alpha: 0.5), fontWeight: FontWeight.bold))).toList(),
           ),
         ],
       ),
@@ -1022,56 +1091,60 @@ class _BannerCarouselState extends State<_BannerCarousel> {
   }
 }
 
-class _CategoryList extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final categories = [
-      {'label': 'Gold Bullion', 'image': 'assets/images/gold_coin_100g.png', 'desc': 'Pure 24K Investment Bars'},
-      {'label': 'Round Coins', 'image': 'assets/images/gold_coin_1g.png', 'desc': 'Classic Standard Minted Coins'},
-      {'label': 'Divine Prints', 'image': 'assets/images/gold_coin_lakshmi_ganesh.png', 'desc': 'Lakshmi, Ganesha & more'},
-      {'label': 'Historical Coins', 'image': 'assets/images/gold_coin_sovereign.png', 'desc': 'Regal Antique Style Coins'},
-      {'label': 'Gift Collections', 'image': 'assets/images/gold_coin_wedding.png', 'desc': 'Exclusive Wedding & Festive Sets'},
-    ];
+class _CategoryList extends ConsumerWidget {
+  const _CategoryList();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+
+    return categoriesAsync.when(
+      data: (categories) {
+        if (categories.isEmpty) return const SizedBox.shrink();
+        
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 4,
-                height: 18,
-                decoration: BoxDecoration(
-                  gradient: AppColors.goldGradient,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.goldGradient,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Exclusive Categories',
+                    style: AppTextStyles.h3.copyWith(
+                      fontSize: 18,
+                      color: AppColors.pureWhite,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                'Premium Collections',
-                style: AppTextStyles.h3.copyWith(
-                  fontSize: 18,
-                  color: AppColors.pureWhite,
+              const SizedBox(height: 20),
+              ...categories.map((cat) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _CategoryItem(
+                  label: cat.name,
+                  imagePath: cat.imageUrl ?? 'assets/images/gold_coin.png',
+                  description: 'Certified 24K ${cat.name}',
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => CatalogScreen(initialCategoryId: cat.id)),
+                  ),
                 ),
-              ),
+              )).toList(),
             ],
           ),
-          const SizedBox(height: 20),
-          ...categories.map((cat) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: _CategoryItem(
-              label: cat['label']!,
-              imagePath: cat['image']!,
-              description: cat['desc']!,
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => CatalogScreen()),
-              ),
-            ),
-          )).toList(),
-        ],
-      ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

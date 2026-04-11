@@ -169,12 +169,28 @@ model User {
   other_user_user_staffIdTouser    User[]              @relation("user_staffIdTouser")
   wallet                           Wallet?
   withdrawalRequests               WithdrawalRequest[]
+  notifications                    Notification[]
+  fcmToken                         String?             @db.VarChar(255)
 
   @@index([phone], map: "User_phone_idx")
   @@index([referrerId], map: "User_referrerId_fkey")
   @@index([role], map: "User_role_idx")
   @@index([staffId], map: "User_staffId_fkey")
   @@map("user")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  type      String   @default("GENERAL")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notification")
 }
 
 model Wallet {
