@@ -187,12 +187,9 @@ class InvoiceService {
       );
 
       doc.end();
-
-      doc.end();
     });
 
     // 3. Upload to R2
-    const fileName = `invoices/${order.invoiceNo?.replace(/\//g, '-') || order.id}.pdf`;
     await r2Service.uploadFile(pdfBuffer, fileName, 'application/pdf');
 
     // 4. Update DB - Store the direct Cloudflare R2 URL
