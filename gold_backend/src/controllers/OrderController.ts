@@ -146,6 +146,20 @@ export class OrderController {
 
 
   /**
+   * Cancel a buyback request
+   */
+  static async cancelBuyback(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const orderId = req.params.id as string;
+      const userId = req.user!.id as string;
+      const result = await OrderService.cancelBuyback(orderId, userId);
+      return successResponse(res, result, "Buyback request cancelled successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * List all buyback requests (Admin only)
    */
   static async listBuybackRequests(req: AuthRequest, res: Response, next: NextFunction) {

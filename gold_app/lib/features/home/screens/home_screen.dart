@@ -46,7 +46,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _screens = [
-      _HomeDashboard(onTabChange: (index) => setState(() => _currentIndex = index)),
+      _HomeDashboard(onTabChange: (index) {
+        setState(() => _currentIndex = index);
+        _handleRefresh(index);
+      }),
       const OrdersScreen(),
       const ReferralScreen(),
       const ProfileScreen(),
@@ -55,6 +58,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeProvider.notifier).loadDashboard();
     });
+  }
+
+  void _handleRefresh(int index) {
+    switch (index) {
+      case 0:
+        ref.read(homeProvider.notifier).loadDashboard();
+        break;
+      case 1:
+        ref.read(orderProvider.notifier).loadOrders();
+        break;
+      case 2:
+        ref.read(walletProvider.notifier).loadWalletDetails();
+        ref.read(walletProvider.notifier).loadWithdrawalHistory();
+        ref.read(authProvider.notifier).getCurrentUser();
+        break;
+      case 3:
+        ref.read(authProvider.notifier).getCurrentUser();
+        break;
+      case 4:
+        ref.invalidate(categoriesProvider);
+        ref.invalidate(productsProvider);
+        break;
+    }
   }
 
   @override
@@ -102,6 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: Text('Dashboard', style: AppTextStyles.bodyMedium),
               onTap: () {
                 setState(() => _currentIndex = 0);
+                _handleRefresh(0);
                 Navigator.pop(context);
               },
             ),
@@ -110,6 +137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: Text('Catalog', style: AppTextStyles.bodyMedium),
               onTap: () {
                 setState(() => _currentIndex = 4);
+                _handleRefresh(4);
                 Navigator.pop(context);
               },
             ),
@@ -118,6 +146,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: Text('Orders', style: AppTextStyles.bodyMedium),
               onTap: () {
                 setState(() => _currentIndex = 1);
+                _handleRefresh(1);
                 Navigator.pop(context);
               },
             ),
@@ -171,32 +200,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          if (_currentIndex == index) {
-            // Optional: Scroll to top if already on this tab
-          }
+          if (_currentIndex == index) return;
           
           setState(() => _currentIndex = index);
-          
-          // Optimization: Trigger latest data sync for the selected tab
-          switch (index) {
-            case 0: // Home
-              ref.read(homeProvider.notifier).refreshPrice();
-              ref.read(homeProvider.notifier).refreshProducts();
-              break;
-            case 1: // Orders
-              ref.read(orderProvider.notifier).loadOrders();
-              break;
-            case 2: // Referral
-              ref.read(walletProvider.notifier).loadWalletDetails();
-              ref.read(walletProvider.notifier).loadWithdrawalHistory();
-              ref.read(authProvider.notifier).getCurrentUser();
-              break;
-            case 3: // Profile
-              ref.read(authProvider.notifier).getCurrentUser();
-              break;
-            case 4: // Catalog
-              ref.invalidate(categoriesProvider);
-              ref.invalidate(productsProvider);
               break;
           }
         },

@@ -32,8 +32,8 @@ class OrderService {
         const normalizedCode = referralCode.trim().toUpperCase();
         const isSelf = dbUser.referralCode === normalizedCode;
         
-        if (isSelf) {
-          throw new Error("You cannot use your own referral code for your own order.");
+        if (isSelf && paidOrderCount === 0) {
+          throw new Error("You cannot use your own referral code for your first order.");
         }
 
         // Verify the referral code actually exists in the system
@@ -627,6 +627,59 @@ class OrderService {
         where: { id: productId },
         data: { readyStock: { decrement: pendingOrders.length } }
       });
+    });
+  }
+
+  /**
+   * Cancel a pending buyback request
+   */
+  async cancelBuyback(orderId: string, userId: string) {
+    return await prisma.$transaction(async (tx) => {
+      const request = await tx.buybackRequest.findUnique({
+        where: { orderId },
+        include: { order: true }
+      });
+
+      if (!request || request.userId !== userId) throw new Error("Buyback request not found.");
+      if (request.status !== "PENDING") throw new Error("Request already processed.");
+
+      // 1. Delete the request
+      await tx.buybackRequest.delete({ where: { id: request.id } });
+
+      // 2. Revert Order Status
+      await tx.order.update({
+        where: { id: orderId },
+        data: { 
+          status: "READY_FOR_PICKUP",
+          statusHistory: { create: { status: "READY_FOR_PICKUP", notes: "Buyback request cancelled by customer." } }
+        }
+      });
+
+      // 3. Mark the transaction as cancelled
+      const txn = await tx.transaction.findFirst({
+        where: { 
+          userId, 
+          type: "SELL_BACK", 
+          status: "PENDING",
+          amount: request.amount
+        },
+        orderBy: { createdAt: "desc" }
+      });
+
+      if (txn) {
+        await tx.transaction.update({
+          where: { id: txn.id },
+          data: { status: "CANCELLED", description: "Buyback request cancelled by customer." }
+        });
+      }
+
+      // 4. Restore original stock (Remove the increment we did during initiation)
+      await tx.product.update({
+        where: { id: request.order.productId },
+        data: { stock: { decrement: request.order.quantity } }
+      });
+
+      return { message: "Buyback request cancelled successfully" };
     });
   }
 }

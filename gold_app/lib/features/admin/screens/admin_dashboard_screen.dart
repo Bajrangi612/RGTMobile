@@ -729,6 +729,11 @@ class _ManagementGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminWithdrawalManagerScreen())),
         ),
         _CompactTool(
+          icon: Icons.assignment_return_outlined,
+          label: 'Buybacks',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminBuybackManagerScreen())),
+        ),
+        _CompactTool(
           icon: Icons.analytics_outlined,
           label: 'Reports',
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminReportsScreen())),

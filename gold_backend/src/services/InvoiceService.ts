@@ -62,16 +62,18 @@ class InvoiceService {
 
     if (!order) throw new Error('Order not found');
 
-    // 1. Generate QR Code pointing to the public download proxy
-    const baseUrl = process.env.APP_URL || 'http://localhost:4000';
-    const proxyUrl = `${baseUrl}/api/public/download-invoice/${order.id}`;
+    // 1. Generate QR Code pointing directly to Cloudflare R2
+    const fileName = `invoices/${order.invoiceNo?.replace(/\//g, '-') || order.id}.pdf`;
+    const r2BaseUrl = process.env.R2_PUBLIC_URL?.endsWith('/') ? process.env.R2_PUBLIC_URL : `${process.env.R2_PUBLIC_URL}/`;
+    const r2Url = `${r2BaseUrl}${fileName}`;
     
-    const qrCodeDataUrl = await QRCode.toDataURL(proxyUrl, {
+    const qrCodeDataUrl = await QRCode.toDataURL(r2Url, {
+      margin: 1,
+      width: 150,
       color: {
         dark: '#000000',
         light: '#FFFFFF',
       },
-      width: 150,
     });
 
     // 2. Create PDF Document
@@ -193,14 +195,14 @@ class InvoiceService {
     const fileName = `invoices/${order.invoiceNo?.replace(/\//g, '-') || order.id}.pdf`;
     await r2Service.uploadFile(pdfBuffer, fileName, 'application/pdf');
 
-    // 4. Update DB - Store the internal proxy URL to force direct download everywhere
+    // 4. Update DB - Store the direct Cloudflare R2 URL
     await prisma.order.update({
       where: { id: order.id },
-      data: { invoiceUrl: proxyUrl },
+      data: { invoiceUrl: r2Url },
     });
 
-    console.log(`✅ Invoice generated and synced via proxy: ${proxyUrl}`);
-    return proxyUrl;
+    console.log(`✅ Invoice generated and uploaded to R2: ${r2Url}`);
+    return r2Url;
   }
 
   private generateTableRow(doc: PDFKit.PDFDocument, y: number, item: string, qty: string, weight: string, total: string) {

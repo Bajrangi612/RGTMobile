@@ -350,7 +350,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
                    const SizedBox(height: 12),
                    Text(
                      message.replaceAll('Exception:', '').trim(),
-                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey),
+                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite),
                      textAlign: TextAlign.center,
                    ),
                    const SizedBox(height: 32),

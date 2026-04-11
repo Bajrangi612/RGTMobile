@@ -263,5 +263,11 @@ class ApiService {
 
   Future<Response> getMyWithdrawals({int page = 1, int limit = 50}) async {
     return await _dio.get('/wallet/my-withdrawals', queryParameters: {'page': page, 'limit': limit});
+  }  /**
+   * Cancel buyback request
+   */
+  Future<Response> cancelBuyback(String orderId) async {
+    return await delete('/orders/$orderId/sell-back');
   }
+
 }

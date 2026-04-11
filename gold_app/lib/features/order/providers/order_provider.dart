@@ -79,6 +79,17 @@ class OrderNotifier extends StateNotifier<OrderState> {
       return false;
     }
   }
+  Future<bool> cancelBuyback(String orderId) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _repository.cancelBuyback(orderId);
+      await loadOrders();
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
 }
 
 final orderProvider = StateNotifierProvider<OrderNotifier, OrderState>((ref) {

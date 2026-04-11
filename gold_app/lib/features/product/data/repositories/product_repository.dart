@@ -9,9 +9,9 @@ class ProductRepository {
   /**
    * Fetch gold coin products from the backend, optionally filtered by category
    */
-  Future<List<ProductModel>> getProducts({String? categoryId, bool includeInactive = false}) async {
+  Future<List<ProductModel>> getProducts({String? categoryId, bool includeInactive = false, int page = 1, int limit = 50}) async {
     try {
-      final response = await _apiService.getProducts(categoryId: categoryId, includeInactive: includeInactive);
+      final response = await _apiService.getProducts(categoryId: categoryId, includeInactive: includeInactive, page: page, limit: limit);
       final List<dynamic> data = response.data['data']['products'];
       return data.map((json) => ProductModel.fromJson(json)).toList();
     } catch (e) {
@@ -81,6 +81,17 @@ class ProductRepository {
   Future<void> sellBackOrder(String orderId) async {
     try {
       await _apiService.sellBackOrder(orderId);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /**
+   * Cancel buyback request
+   */
+  Future<void> cancelBuyback(String orderId) async {
+    try {
+      await _apiService.cancelBuyback(orderId);
     } catch (e) {
       rethrow;
     }

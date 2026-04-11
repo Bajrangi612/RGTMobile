@@ -170,7 +170,7 @@ class OrderDetailScreen extends ConsumerWidget {
                               Icon(Icons.history_rounded, color: AppColors.royalGold, size: 20),
                             ],
                           ),
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
                           if (order.statusHistory.isEmpty)
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -187,18 +187,19 @@ class OrderDetailScreen extends ConsumerWidget {
 
                               final index = entry.key;
                               final history = entry.value;
-                              final isLast = index == (order.statusHistory.length - (order.statusHistory.any((h) => h.status == 'PAYMENT_PENDING') ? 2 : 1));
+                              final isLast = index == (order.statusHistory.where((h) => h.status.toUpperCase() != 'PAYMENT_PENDING').length - 1);
                               final statusType = statusFromString(history.status);
                               
                               String title = statusType.name.toUpperCase().replaceAll('_', ' ');
                               if (history.status.toUpperCase() == 'PAYMENT_SUCCESSFUL') {
-                                title = 'VERIFIED PAYMENT SUCCESSFULLY';
+                                title = 'VERIFIED PAYMENT';
                               }
 
                               return _TimelineStep(
                                 title: title,
-                                subtitle: history.notes ?? 'Standard fulfillment step.',
-                                date: DateFormat('MMM dd, hh:mm a').format(history.createdAt.add(const Duration(hours: 0))), // Backend already sends in IST
+                                subtitle: history.notes ?? 'Status updated successfully.',
+                                date: DateFormat('MMM dd').format(history.createdAt),
+                                time: DateFormat('hh:mm a').format(history.createdAt),
                                 isCompleted: true,
                                 isLast: isLast,
                                 status: statusType,
@@ -218,63 +219,37 @@ class OrderDetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: Column(
                 children: [
-                  if (order.canCancel)
+                  if (order.status.toUpperCase() == 'BUYBACK_PENDING')
                     Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Opacity(
-                        opacity: 0.5,
-                        child: TextButton(
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                backgroundColor: AppColors.cardDark,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
-                                ),
-                                title: Text('Cancel Order?', style: AppTextStyles.h4),
-                                content: Text(
-                                  'This action cannot be undone. You will receive a full refund in your wallet.',
-                                  style: AppTextStyles.bodyMedium,
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text('NO', style: TextStyle(color: AppColors.grey)),
-                                  ),
-                                  GoldButton(
-                                    text: 'YES, CANCEL',
-                                    height: 36,
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                  ),
-                                ],
-                              ),
-                            ) ;
-                            if (confirm == true) {
-                              await ref.read(orderProvider.notifier).cancelOrder(order.id);
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Order cancelled successfully.'),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                                Navigator.of(context).pop();
-                              }
-                            }
-                          },
-                          child: Text(
-                            'Cancel Order',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: Colors.redAccent,
-                              decoration: TextDecoration.underline,
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: GoldButton(
+                        text: 'Cancel Buyback Request',
+                        color: Colors.orange,
+                        isOutlined: true,
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              backgroundColor: AppColors.cardDark,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              title: Text('Cancel Buyback?', style: AppTextStyles.h4),
+                              content: const Text('Do you want to cancel your sell-back request and keep your gold?'),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('NO')),
+                                GoldButton(text: 'YES, CANCEL', height: 36, onPressed: () => Navigator.pop(ctx, true)),
+                              ],
                             ),
-                          ),
-                        ),
+                          );
+                          if (confirm == true) {
+                            await ref.read(orderProvider.notifier).cancelBuyback(order.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Buyback request cancelled.')));
+                            }
+                          }
+                        },
                       ),
                     ),
-                  
+
                   if (order.canResell)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -289,32 +264,87 @@ class OrderDetailScreen extends ConsumerWidget {
                       ),
                     ),
 
-                  if (order.invoiceUrl != null || (!order.isCancelled && order.status != 'PAYMENT_PENDING'))
-                    GoldButton(
-                      text: order.invoiceUrl != null ? 'Download Tax Invoice' : 'View Tax Invoice',
-                      isOutlined: true,
-                      onPressed: () async {
-                        if (order.invoiceUrl != null) {
-                          try {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Invoice...'), duration: Duration(seconds: 1)));
-                            final dir = await getApplicationDocumentsDirectory();
-                            final filePath = '${dir.path}/invoice_${order.id}.pdf';
-                            await Dio().download(order.invoiceUrl!, filePath);
-                            await OpenFilex.open(filePath);
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Download Failed.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
-                            );
-                          }
-                        } else {
-                          InvoiceService.generateAndPreviewInvoice(
-                            order,
-                            user: ref.read(authProvider).user,
-                          );
-                        }
-                      },
-                      icon: order.invoiceUrl != null ? Icons.download_rounded : Icons.receipt_long_rounded,
-                    ),
+                  Row(
+                    children: [
+                      if (order.canCancel) 
+                        Expanded(
+                          child: GoldButton(
+                            text: 'Cancel',
+                            isOutlined: true,
+                            color: Colors.redAccent,
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: AppColors.cardDark,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                    side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
+                                  ),
+                                  title: Text('Cancel Order?', style: AppTextStyles.h4),
+                                  content: Text(
+                                    'This action cannot be undone. You will receive a full refund in your wallet.',
+                                    style: AppTextStyles.bodyMedium,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: Text('NO', style: TextStyle(color: AppColors.grey)),
+                                    ),
+                                    GoldButton(
+                                      text: 'YES, CANCEL',
+                                      height: 36,
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                    ),
+                                  ],
+                                ),
+                              ) ;
+                              if (confirm == true) {
+                                await ref.read(orderProvider.notifier).cancelOrder(order.id);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Order cancelled successfully.'),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                  Navigator.of(context).pop();
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                      
+                      if (order.canCancel) const SizedBox(width: 12),
+
+                      Expanded(
+                        child: GoldButton(
+                          text: order.invoiceUrl != null ? 'Download Invoice' : 'View Invoice',
+                          onPressed: () async {
+                            if (order.invoiceUrl != null) {
+                              try {
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Downloading Invoice...'), duration: Duration(seconds: 1)));
+                                final dir = await getApplicationDocumentsDirectory();
+                                final filePath = '${dir.path}/invoice_${order.id}.pdf';
+                                await Dio().download(order.invoiceUrl!, filePath);
+                                await OpenFilex.open(filePath);
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Download Failed.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+                                );
+                              }
+                            } else {
+                              InvoiceService.generateAndPreviewInvoice(
+                                order,
+                                user: ref.read(authProvider).user,
+                              );
+                            }
+                          },
+                          icon: order.invoiceUrl != null ? Icons.download_rounded : Icons.receipt_long_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -429,6 +459,7 @@ class _TimelineStep extends StatelessWidget {
   final String title;
   final String subtitle;
   final String date;
+  final String time;
   final bool isCompleted;
   final bool isLast;
   final StatusType status;
@@ -437,6 +468,7 @@ class _TimelineStep extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.date,
+    required this.time,
     this.isCompleted = false,
     this.isLast = false,
     required this.status,
@@ -450,44 +482,76 @@ class _TimelineStep extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Left Column: Date & Time
+        SizedBox(
+          width: 70,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(date, style: AppTextStyles.labelLarge.copyWith(fontSize: 11, color: AppColors.pureWhite)),
+              Text(time, style: AppTextStyles.caption.copyWith(fontSize: 9)),
+            ],
+          ),
+        ),
+        
+        const SizedBox(width: 16),
+
+        // Middle Column: Line and Circle
         Column(
           children: [
             Container(
-              width: 12,
-              height: 12,
-              margin: const EdgeInsets.only(top: 4, left: 6, right: 6),
+              width: 14,
+              height: 14,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: color,
                 boxShadow: [
-                  BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8),
+                  BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10),
                 ],
               ),
+              child: const Icon(Icons.check, size: 8, color: Colors.white),
             ),
             if (!isLast)
               Container(
-                width: 1,
-                height: 60,
-                color: AppColors.glassBorder,
+                width: 2,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color, color.withValues(alpha: 0.1)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
               ),
           ],
         ),
-        SizedBox(width: 12),
+        
+        const SizedBox(width: 16),
+
+        // Right Column: Status info
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 24),
+            padding: const EdgeInsets.only(bottom: 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(title, style: AppTextStyles.labelLarge.copyWith(color: AppColors.pureWhite, fontSize: 13)),
-                    Text(date, style: AppTextStyles.caption.copyWith(fontSize: 10)),
-                  ],
+                Text(
+                  title, 
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: AppColors.royalGold, 
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  )
                 ),
-                SizedBox(height: 4),
-                Text(subtitle, style: AppTextStyles.bodySmall.copyWith(fontSize: 11, color: AppColors.grey)),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle, 
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 11, 
+                    color: AppColors.grey,
+                    height: 1.4,
+                  )
+                ),
               ],
             ),
           ),
