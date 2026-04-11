@@ -174,6 +174,16 @@ class ReferralScreen extends ConsumerWidget {
                 ],
               ).animate(delay: 400.ms).fadeIn(duration: 400.ms),
 
+              const SizedBox(height: 24),
+              
+              // Withdrawal Action
+              GoldButton(
+                text: 'Withdraw Rewards',
+                isOutlined: true,
+                icon: Icons.payments_rounded,
+                onPressed: () => _showWithdrawDialog(context, ref, user?.wallet?.referralRewards ?? 0.0, settings.minWithdrawal),
+              ).animate(delay: 450.ms).fadeIn(),
+
               if (referralTransactions.isNotEmpty) ...[
                 const SizedBox(height: 32),
                 Row(
@@ -207,6 +217,79 @@ class ReferralScreen extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showWithdrawDialog(BuildContext context, WidgetRef ref, double balance, double minAmount) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.cardDark,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
+        ),
+        title: Text('Withdraw Rewards', style: AppTextStyles.h4),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Available Reward: ${Formatters.currency(balance)}',
+              style: AppTextStyles.caption.copyWith(color: AppColors.royalGold),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: 'Enter amount',
+                prefixText: '₹ ',
+                prefixStyle: TextStyle(color: AppColors.royalGold),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Minimum withdrawal: ${Formatters.currency(minAmount)}',
+              style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontSize: 10),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('CANCEL', style: TextStyle(color: AppColors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final amountStr = controller.text.trim();
+              if (amountStr.isEmpty) return;
+              
+              final amount = double.tryParse(amountStr) ?? 0.0;
+              if (amount < minAmount) {
+                context.showErrorSnackBar('Minimum withdrawal is ${Formatters.currency(minAmount)}');
+                return;
+              }
+              if (amount > balance) {
+                context.showErrorSnackBar('Insufficient rewards balance');
+                return;
+              }
+              
+              final success = await ref.read(walletProvider.notifier).requestWithdrawal(amount);
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (success) {
+                  context.showSuccessSnackBar('Withdrawal request submitted successfully!');
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.royalGold),
+            child: const Text('SUBMIT', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

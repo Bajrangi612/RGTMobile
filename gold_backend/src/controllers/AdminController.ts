@@ -33,17 +33,46 @@ export class AdminController {
    */
   static async getDashboardStats(req: Request, res: Response, next: NextFunction) {
     try {
-      const userCount = await prisma.user.count();
-      const orderCount = await prisma.order.count({ where: { status: "PAYMENT_SUCCESSFUL" } });
-      const totalVolume = await prisma.order.aggregate({
-        where: { status: "PAYMENT_SUCCESSFUL" },
-        _sum: { total: true }
+      // 2. Weekly Revenue Breakdown (Daily Groups)
+      const now = new Date();
+      const dailyRevenue = [];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+
+        const daySum = await prisma.order.aggregate({
+          where: {
+            createdAt: { gte: date, lt: nextDate },
+            status: { in: ["ORDER_CONFIRMED", "PROCESSING", "QUALITY_CHECKING", "READY_FOR_PICKUP", "PICKED_UP"] }
+          },
+          _sum: { total: true }
+        });
+
+        dailyRevenue.push({
+          date: date,
+          amount: Number(daySum._sum.total || 0)
+        });
+      }
+
+      // 3. Pickup Pending specifically
+      const pickupPending = await prisma.order.count({
+        where: { status: "READY_FOR_PICKUP" }
       });
 
       const stats = {
         totalUsers: userCount,
         totalPaidOrders: orderCount,
-        totalRevenue: Number(totalVolume._sum.total || 0),
+        totalRevenue: Number(financialTotals._sum.total || 0),
+        totalGoldWeight: Number(financialTotals._sum.weight || 0),
+        grossAmount: Number(financialTotals._sum.amount || 0),
+        totalGst: Number(financialTotals._sum.gst || 0),
+        pendingPickups: pickupPending,
+        weeklyData: dailyRevenue // Corrected daily aggregate
       };
 
       return successResponse(res, stats, "Dashboard stats fetched successfully");

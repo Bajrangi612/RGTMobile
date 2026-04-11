@@ -19,6 +19,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   final _gstController = TextEditingController();
   final _minWithdrawalController = TextEditingController();
   final _deliveryDaysController = TextEditingController();
+  final _commissionController = TextEditingController();
+  final _intervalController = TextEditingController();
+  final _lowStockController = TextEditingController();
 
   @override
   void initState() {
@@ -28,6 +31,9 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     _gstController.text = state.gstRate.toStringAsFixed(1);
     _minWithdrawalController.text = state.minWithdrawal.toStringAsFixed(0);
     _deliveryDaysController.text = state.deliveryTimeDays.toString();
+    _commissionController.text = state.commissionRate.toStringAsFixed(1);
+    _intervalController.text = state.orderIntervalMinutes.toString();
+    _lowStockController.text = state.lowStockThreshold.toString();
   }
 
   @override
@@ -36,25 +42,26 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     _gstController.dispose();
     _minWithdrawalController.dispose();
     _deliveryDaysController.dispose();
+    _commissionController.dispose();
+    _intervalController.dispose();
+    _lowStockController.dispose();
     super.dispose();
   }
 
   Future<void> _saveSettings() async {
-    final referral = double.tryParse(_referralController.text);
-    final gst = double.tryParse(_gstController.text);
-    final minWith = double.tryParse(_minWithdrawalController.text);
-    final delivery = int.tryParse(_deliveryDaysController.text);
-
     await ref.read(adminProvider.notifier).updateConfigs(
-      referralReward: referral,
-      gstRate: gst,
-      minWithdrawal: minWith,
-      deliveryTimeDays: delivery,
+      referralReward: double.tryParse(_referralController.text),
+      gstRate: double.tryParse(_gstController.text),
+      minWithdrawal: double.tryParse(_minWithdrawalController.text),
+      deliveryTimeDays: int.tryParse(_deliveryDaysController.text),
+      commissionRate: double.tryParse(_commissionController.text),
+      orderIntervalMinutes: int.tryParse(_intervalController.text),
+      lowStockThreshold: int.tryParse(_lowStockController.text),
     );
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Settings updated successfully')),
+        const SnackBar(content: Text('Settings updated successfully'), behavior: SnackBarBehavior.floating),
       );
     }
   }
@@ -64,36 +71,44 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     final adminState = ref.watch(adminProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.deepBlack,
+      backgroundColor: AppColors.background,
       appBar: GoldAppBar(title: 'Global Settings'),
       body: Container(
-        decoration: BoxDecoration(gradient: AppColors.darkGradient),
+        decoration: BoxDecoration(color: AppColors.background),
         child: adminState.isLoading 
-          ? const Center(child: CircularProgressIndicator(color: AppColors.royalGold))
+          ? Center(child: CircularProgressIndicator(color: AppColors.royalGold))
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Platform Economics', style: AppTextStyles.h4),
+                   _buildSectionTitle('Platform Economics'),
                   const SizedBox(height: 16),
                   GoldCard(
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
                         _ConfigField(
                           label: 'Referral Reward (₹)',
                           controller: _referralController,
-                          icon: Icons.card_giftcard_rounded,
+                          icon: Icons.stars_rounded,
                           helperText: 'Fixed amount earnable per successful referral',
                         ),
-                        const Divider(color: AppColors.glassBorder, height: 32),
+                        _Divider(),
                         _ConfigField(
                           label: 'GST Rate (%)',
                           controller: _gstController,
                           icon: Icons.percent_rounded,
                           helperText: 'Default tax applied to all gold purchases',
                         ),
-                        const Divider(color: AppColors.glassBorder, height: 32),
+                        _Divider(),
+                        _ConfigField(
+                          label: 'Admin Commission (%)',
+                          controller: _commissionController,
+                          icon: Icons.account_balance_rounded,
+                          helperText: 'Platform service fee on transactions',
+                        ),
+                        _Divider(),
                         _ConfigField(
                           label: 'Min Withdrawal (₹)',
                           controller: _minWithdrawalController,
@@ -104,31 +119,67 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
-                  Text('Logistics & Delivery', style: AppTextStyles.h4),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('Logistics & Inventory'),
                   const SizedBox(height: 16),
                   GoldCard(
-                    child: _ConfigField(
-                      label: 'Delivery Duration (Days)',
-                      controller: _deliveryDaysController,
-                      icon: Icons.local_shipping_rounded,
-                      helperText: 'Estimated timeline for vaulted gold collection',
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        _ConfigField(
+                          label: 'Delivery Duration (Days)',
+                          controller: _deliveryDaysController,
+                          icon: Icons.local_shipping_rounded,
+                          helperText: 'Timeline for vaulted gold collection',
+                        ),
+                        _Divider(),
+                        _ConfigField(
+                          label: 'Order Interval (Minutes)',
+                          controller: _intervalController,
+                          icon: Icons.timer_rounded,
+                          helperText: 'Cool-down period between user orders',
+                        ),
+                        _Divider(),
+                        _ConfigField(
+                          label: 'Low Stock Threshold',
+                          controller: _lowStockController,
+                          icon: Icons.inventory_2_rounded,
+                          helperText: 'Units remaining before low stock alert',
+                        ),
+                      ],
                     ),
                   ),
 
                   const SizedBox(height: 48),
                   GoldButton(
-                    text: 'Save Changes',
+                    text: 'SAVE GLOBAL CONFIGURATION',
                     onPressed: _saveSettings,
                     isLoading: adminState.isLoading,
                     icon: Icons.save_rounded,
                   ),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
       ),
     );
   }
+
+  Widget _buildSectionTitle(String title) {
+    return Text(
+      title.toUpperCase(),
+      style: AppTextStyles.labelLarge.copyWith(
+        color: AppColors.royalGold,
+        letterSpacing: 2,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) => Divider(color: AppColors.pureWhite.withValues(alpha: 0.05), height: 32);
 }
 
 class _ConfigField extends StatelessWidget {
@@ -150,33 +201,32 @@ class _ConfigField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: AppColors.royalGold, size: 20),
-            const SizedBox(width: 8),
-            Text(label, style: AppTextStyles.labelLarge),
+            Row(
+              children: [
+                Icon(icon, color: AppColors.royalGold.withValues(alpha: 0.7), size: 18),
+                const SizedBox(width: 8),
+                Text(label, style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
+              ],
+            ),
+            SizedBox(
+              width: 100,
+              child: TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.right,
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite, fontWeight: FontWeight.bold),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  hintText: '0.00',
+                  hintStyle: TextStyle(color: Colors.white24),
+                ),
+              ),
+            ),
           ],
         ),
-        const SizedBox(height: 12),
-        TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.glassBorder),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.glassBorder),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(helperText, style: AppTextStyles.caption.copyWith(fontSize: 10)),
+        Text(helperText, style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.pureWhite.withValues(alpha: 0.3))),
       ],
     );
   }

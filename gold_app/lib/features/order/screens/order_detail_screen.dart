@@ -16,6 +16,7 @@ import '../../auth/providers/auth_provider.dart';
 import 'sell_back_screen.dart';
 import '../../../core/services/invoice_service.dart';
 import '../../../widgets/live_countdown.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
   final OrderModel order;
@@ -88,8 +89,8 @@ class OrderDetailScreen extends ConsumerWidget {
 
                     SizedBox(height: 16),
 
-                    // Delivery Countdown
-                    if (order.isActive)
+                    // Delivery View
+                    if (order.isActive) ...[
                       GoldCard(
                         hasGlow: true,
                         child: Column(
@@ -97,7 +98,7 @@ class OrderDetailScreen extends ConsumerWidget {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.store_rounded, color: AppColors.royalGold, size: 22),
+                                Icon(Icons.timer_rounded, color: AppColors.royalGold, size: 22),
                                 SizedBox(width: 10),
                                 Text('Collection Estimate', style: AppTextStyles.labelLarge),
                               ],
@@ -114,18 +115,46 @@ class OrderDetailScreen extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            SizedBox(height: 12),
-                            Center(
-                              child: Text(
-                                order.deliveryDate != null 
-                                  ? 'Expected by ${DateFormat('dd/MM/yyyy').format(order.deliveryDate!)}'
-                                  : 'Arranging handover...',
-                                style: AppTextStyles.bodySmall,
+                            if (order.deliveryDate != null) ...[
+                              SizedBox(height: 12),
+                              Center(
+                                child: Text(
+                                  'Handover expected on ${DateFormat('EEEE, MMM dd').format(order.deliveryDate!)}',
+                                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.royalGold),
+                                ),
                               ),
-                            ),
+                            ],
                           ],
                         ),
                       ).animate(delay: 200.ms).fadeIn(duration: 400.ms),
+                      SizedBox(height: 16),
+
+                      // Customer Address Information
+                      GoldCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.location_on_rounded, color: AppColors.royalGold, size: 22),
+                                SizedBox(width: 10),
+                                Text('Delivery Information', style: AppTextStyles.labelLarge),
+                              ],
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              ref.read(authProvider).user?.name ?? 'Customer Name',
+                              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              ref.read(authProvider).user?.address ?? 'No address provided',
+                              style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey),
+                            ),
+                          ],
+                        ),
+                      ).animate(delay: 250.ms).fadeIn(duration: 400.ms),
+                    ],
 
                     SizedBox(height: 16),
 
@@ -180,37 +209,58 @@ class OrderDetailScreen extends ConsumerWidget {
                 children: [
                   if (order.canCancel)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TextButton.icon(
-                        onPressed: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text('Cancel Order?'),
-                              content: Text('This action cannot be undone. You will receive a full refund.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: Text('No'),
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Opacity(
+                        opacity: 0.5,
+                        child: TextButton(
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                backgroundColor: AppColors.cardDark,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
                                 ),
-                                ElevatedButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                  child: Text('Yes, Cancel'),
+                                title: Text('Cancel Order?', style: AppTextStyles.h4),
+                                content: Text(
+                                  'This action cannot be undone. You will receive a full refund in your wallet.',
+                                  style: AppTextStyles.bodyMedium,
                                 ),
-                              ],
-                            ),
-                          ) ;
-                          if (confirm == true) {
-                            await ref.read(orderProvider.notifier).cancelOrder(order.id);
-                            if (context.mounted) {
-                              context.showSuccessSnackBar('Order cancelled. Refund initiated.');
-                              Navigator.of(context).pop();
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: Text('NO', style: TextStyle(color: AppColors.grey)),
+                                  ),
+                                  GoldButton(
+                                    text: 'YES, CANCEL',
+                                    height: 36,
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                  ),
+                                ],
+                              ),
+                            ) ;
+                            if (confirm == true) {
+                              await ref.read(orderProvider.notifier).cancelOrder(order.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Order cancelled successfully.'),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                Navigator.of(context).pop();
+                              }
                             }
-                          }
-                        },
-                        icon: Icon(Icons.cancel_outlined, color: Colors.redAccent.withValues(alpha: 0.7), size: 18),
-                        label: Text('Cancel Order', style: AppTextStyles.bodySmall.copyWith(color: Colors.redAccent.withValues(alpha: 0.7))),
+                          },
+                          child: Text(
+                            'Cancel Order',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: Colors.redAccent,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   
@@ -228,13 +278,13 @@ class OrderDetailScreen extends ConsumerWidget {
                       ),
                     ),
 
-                  if (order.invoiceUrl != null || !order.isCancelled)
+                  if (order.invoiceUrl != null || (!order.isCancelled && order.status != 'PAYMENT_PENDING'))
                     GoldButton(
-                      text: 'View Tax Invoice',
+                      text: order.invoiceUrl != null ? 'Download Tax Invoice' : 'View Tax Invoice',
                       isOutlined: true,
                       onPressed: () {
                         if (order.invoiceUrl != null) {
-                           // Open cloud invoice
+                          launchUrl(Uri.parse(order.invoiceUrl!), mode: LaunchMode.externalApplication);
                         } else {
                           InvoiceService.generateAndPreviewInvoice(
                             order,
@@ -242,7 +292,7 @@ class OrderDetailScreen extends ConsumerWidget {
                           );
                         }
                       },
-                      icon: Icons.receipt_long_rounded,
+                      icon: order.invoiceUrl != null ? Icons.download_rounded : Icons.receipt_long_rounded,
                     ),
                 ],
               ),

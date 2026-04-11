@@ -31,7 +31,7 @@ class AdminOrderManager extends ConsumerWidget {
     }
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -70,8 +70,9 @@ class AdminOrderManager extends ConsumerWidget {
               unselectedLabelColor: AppColors.grey,
               tabs: const [
                 Tab(text: 'ACTIVE'),
+                Tab(text: 'HANDLING'),
+                Tab(text: 'READY'),
                 Tab(text: 'REFUNDS'),
-                Tab(text: 'CANCELLED'),
                 Tab(text: 'ALL'),
               ],
             ),
@@ -79,12 +80,23 @@ class AdminOrderManager extends ConsumerWidget {
             Expanded(
               child: TabBarView(
                 children: [
+                  // ACTIVE: Just Confirmed/Paid
                   _OrderList(orders: filterOrders(adminState.allOrders.where((o) => 
-                     !['CANCELLED', 'REFUNDED'].contains(o['status'].toString().toUpperCase())).toList())),
+                     ['PAYMENT_SUCCESSFUL', 'ORDER_CONFIRMED'].contains(o['status'].toString().toUpperCase())).toList())),
+                  
+                  // HANDLING: Processing & Quality Check
+                  _OrderList(orders: filterOrders(adminState.allOrders.where((o) => 
+                     ['PROCESSING', 'QUALITY_CHECKING'].contains(o['status'].toString().toUpperCase())).toList())),
+                  
+                  // READY: Ready for Pickup & Picked Up
+                  _OrderList(orders: filterOrders(adminState.allOrders.where((o) => 
+                     ['READY_FOR_PICKUP', 'PICKED_UP'].contains(o['status'].toString().toUpperCase())).toList())),
+
+                  // REFUNDS
                   _OrderList(orders: filterOrders(adminState.allOrders.where((o) => 
                      ['REFUND_REQUESTED', 'REFUNDED'].contains(o['status'].toString().toUpperCase())).toList())),
-                  _OrderList(orders: filterOrders(adminState.allOrders.where((o) => 
-                     o['status'].toString().toUpperCase() == 'CANCELLED').toList())),
+                  
+                  // ALL
                   _OrderList(orders: filterOrders(adminState.allOrders)),
                 ],
               ),

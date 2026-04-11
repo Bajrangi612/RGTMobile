@@ -38,6 +38,10 @@ class OrderService {
     // 3. Calculate Pricing (Weight * Price * 1.03)
     const pricing = ProductService.calculateEffectivePrice(product, livePrice);
 
+    // Get IST time
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const nowIST = new Date(Date.now() + istOffset);
+
     // 3. Create Database Order (Pending)
     const order = await prisma.order.create({
       data: {
@@ -51,10 +55,12 @@ class OrderService {
         status: "PAYMENT_PENDING",
         goldPriceAtPurchase: new Prisma.Decimal(livePrice),
         referralCode: referralCode,
+        createdAt: nowIST,
         statusHistory: {
           create: {
             status: "PAYMENT_PENDING",
-            notes: "Order initiated and awaiting payment."
+            notes: "Order initiated and awaiting payment.",
+            createdAt: nowIST,
           }
         }
       },
@@ -269,20 +275,27 @@ class OrderService {
   /**
    * Update order status (Admin only)
    */
-  async updateOrderStatus(orderId: string, status: string) {
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const nowIST = new Date(Date.now() + istOffset);
+
     const order = await prisma.order.update({
       where: { id: orderId },
+      include: { user: true, product: true },
       data: { 
         status: status.toUpperCase() as any,
         statusHistory: {
           create: {
             status: status.toUpperCase() as any,
-            notes: `Status updated by administrator.`
+            notes: `Status updated by administrator.`,
+            createdAt: nowIST,
           }
         }
       },
-      include: { statusHistory: true }
     });
+
+    // Notify User
+    console.log(`🔔 [Notification] To User ${order.user.phone}: Your order #${orderId.substring(0,8)} is now ${status}!`);
+
     // If status is ORDER_CONFIRMED, generate/sync invoice
     if (status.toUpperCase() === 'ORDER_CONFIRMED' || status.toUpperCase() === 'PROCESSING') {
       try {

@@ -9,7 +9,7 @@ class Formatters {
     final formatter = NumberFormat.currency(
       locale: 'en_IN',
       symbol: '₹',
-      decimalDigits: 0,
+      decimalDigits: 2,
     );
     return formatter.format(value);
   }
@@ -65,9 +65,24 @@ class Formatters {
   }
 
   // Relative time (2 days ago, just now)
-  static String relativeTime(String isoDate) {
-    final dt = DateTime.parse(isoDate);
-    final diff = DateTime.now().difference(dt);
+  static String relativeTime(dynamic dateValue) {
+    if (dateValue == null) return 'N/A';
+    
+    DateTime dt;
+    try {
+      if (dateValue is DateTime) {
+        dt = dateValue;
+      } else if (dateValue is String) {
+        dt = DateTime.parse(dateValue);
+      } else {
+        return 'N/A';
+      }
+    } catch (e) {
+      return 'N/A';
+    }
+
+    final now = DateTime.now();
+    final diff = now.difference(dt);
 
     if (diff.inSeconds < 60) return 'Just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';

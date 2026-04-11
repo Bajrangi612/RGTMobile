@@ -173,26 +173,17 @@ class _MainBalanceCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 28),
-          Row(
-            children: [
-              Expanded(
-                child: GoldButton(
-                  text: 'Add Funds',
-                  icon: Icons.add_circle_rounded,
-                  onPressed: () {},
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: GoldButton(
-                  text: 'Request Payout',
-                  isOutlined: true,
-                  color: AppColors.deepBlack,
-                  icon: Icons.payments_rounded,
-                  onPressed: () => _showWithdrawDialog(context, ref, balance, ref.read(settingsProvider).minWithdrawal),
-                ),
-              ),
-            ],
+          GoldButton(
+            text: 'Request Payout',
+            icon: Icons.account_balance_rounded,
+            onPressed: () => _showWithdrawDialog(context, ref, balance, ref.read(settingsProvider).minWithdrawal),
+          ),
+          const SizedBox(height: 12),
+          GoldButton(
+            text: 'Add Funds',
+            isOutlined: true,
+            icon: Icons.add_circle_outline_rounded,
+            onPressed: () {},
           ),
         ],
       ),
@@ -328,18 +319,26 @@ class _TransactionList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: transactions.map((txn) {
-        final isCredit = ['referral', 'refund', 'resell', 'deposit', 'profit'].contains(txn.type.toLowerCase());
+        final isCredit = ['referral', 'refund', 'resell', 'deposit', 'profit'].contains(txn['type']?.toString().toLowerCase());
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: _TransactionTile(
-            title: txn.description,
-            date: Formatters.relativeTime(txn.date.toIso8601String()),
-            amount: txn.amount,
+            title: txn['description'] ?? 'Transaction',
+            date: Formatters.relativeTime(txn['createdAt'] ?? txn['date']),
+            amount: _toDouble(txn['amount']),
             isCredit: isCredit,
+            txnId: txn['id'],
+            mode: txn['type'] ?? 'ONLINE',
           ),
         );
       }).toList(),
     );
+  }
+
+  double _toDouble(dynamic val) {
+    if (val is num) return val.toDouble();
+    if (val is String) return double.tryParse(val) ?? 0.0;
+    return 0.0;
   }
 }
 
@@ -366,12 +365,16 @@ class _TransactionTile extends StatelessWidget {
   final String date;
   final double amount;
   final bool isCredit;
+  final String? txnId;
+  final String? mode;
 
   const _TransactionTile({
     required this.title,
     required this.date,
     required this.amount,
     required this.isCredit,
+    this.txnId,
+    this.mode,
   });
 
   @override
@@ -402,18 +405,28 @@ class _TransactionTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(date, style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontWeight: FontWeight.w500)),
+                Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+                const SizedBox(height: 2),
+                if (txnId != null) 
+                   Text('ID: ${txnId!.substring(0, 8).toUpperCase()}', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.royalGold.withValues(alpha: 0.6))),
+                Text(date, style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontSize: 10)),
               ],
             ),
           ),
-          Text(
-            '${isCredit ? "+" : "-"} ₹${amount.toInt()}',
-            style: AppTextStyles.labelLarge.copyWith(
-              color: isCredit ? AppColors.success : AppColors.error,
-              fontWeight: FontWeight.w900,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${isCredit ? "+" : "-"} ${Formatters.currency(amount)}',
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: isCredit ? AppColors.success : AppColors.error,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                ),
+              ),
+              if (mode != null)
+                Text(mode!.toUpperCase(), style: AppTextStyles.caption.copyWith(fontSize: 9, letterSpacing: 1)),
+            ],
           ),
         ],
       ),

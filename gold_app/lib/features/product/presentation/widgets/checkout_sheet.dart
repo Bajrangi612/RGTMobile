@@ -12,6 +12,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../order/providers/order_provider.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class CheckoutSheet extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -311,33 +312,59 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
   }
 
   void _showErrorDialog(BuildContext context, String message) {
+    bool isReferralError = message.toLowerCase().contains('referral') || 
+                          message.toLowerCase().contains('own referral');
+                          
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.background,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.error_outline_rounded, color: AppColors.error),
-            SizedBox(width: 12),
-            Text('Action Required', style: AppTextStyles.h4),
-          ],
-        ),
-        content: Text(
-          message.replaceAll('Exception:', '').trim(),
-          style: AppTextStyles.bodyMedium,
-        ),
-        actions: [
-          GoldButton(
-            text: 'UNDERSTOOD',
-            onPressed: () => Navigator.pop(ctx),
-            height: 48,
+      builder: (ctx) => Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 32),
+          child: Material(
+            color: Colors.transparent,
+            child: GoldCard(
+              hasGlow: true,
+              hasGoldBorder: true,
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                   Container(
+                     padding: const EdgeInsets.all(16),
+                     decoration: BoxDecoration(
+                       color: (isReferralError ? AppColors.warning : AppColors.error).withValues(alpha: 0.1),
+                       shape: BoxShape.circle,
+                     ),
+                     child: Icon(
+                       isReferralError ? Icons.stars_rounded : Icons.error_outline_rounded,
+                       color: isReferralError ? AppColors.royalGold : AppColors.error,
+                       size: 40,
+                     ),
+                   ),
+                   const SizedBox(height: 24),
+                   Text(
+                     isReferralError ? 'Referral Policy' : 'Action Required',
+                     style: AppTextStyles.h3.copyWith(color: AppColors.pureWhite),
+                     textAlign: TextAlign.center,
+                   ),
+                   const SizedBox(height: 12),
+                   Text(
+                     message.replaceAll('Exception:', '').trim(),
+                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey),
+                     textAlign: TextAlign.center,
+                   ),
+                   const SizedBox(height: 32),
+                   GoldButton(
+                     text: 'UNDERSTOOD',
+                     onPressed: () => Navigator.pop(ctx),
+                     height: 52,
+                   ),
+                ],
+              ),
+            ),
           ),
-        ],
-      ),
+        ),
+      ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack).fadeIn(),
     );
   }
 }

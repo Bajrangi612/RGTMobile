@@ -84,12 +84,18 @@ class HomeNotifier extends StateNotifier<HomeState> {
 
   Future<void> refreshPrice() async {
     try {
-      final priceData = await _repository.getGoldPriceData();
-      final change = await _repository.getGoldPriceChange();
+      final results = await Future.wait([
+        _repository.getGoldPriceData(),
+        _repository.getGoldPriceChange(),
+        _repository.getProducts(),
+      ]);
+
+      final priceData = results[0] as Map<String, double>;
       state = state.copyWith(
         goldPrice: priceData['sellPrice'],
         buyPrice: priceData['buyPrice'],
-        priceChange: change,
+        priceChange: results[1] as double,
+        products: results[2] as List<ProductModel>,
       );
     } catch (_) {}
   }

@@ -193,7 +193,14 @@ class InvoiceService {
             width: 70,
             height: 70,
             decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.5)),
-            child: pw.Center(child: pw.Text('QR CODE', style: const pw.TextStyle(fontSize: 6))),
+            child: pw.Center(
+              child: pw.BarcodeWidget(
+                barcode: pw.Barcode.qrCode(),
+                data: 'https://royalgold.app/verify/${order.id}',
+                width: 60,
+                height: 60,
+              ),
+            ),
           ),
         ],
       ),

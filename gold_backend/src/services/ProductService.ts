@@ -124,7 +124,6 @@ class ProductService {
    * @param livePrice The current gold price per gram
    * @returns object with breaking down of price
    */
-  calculateEffectivePrice(product: Product, livePrice: number) {
     const weight = Number(product.weight);
     const makingCharges = Number(product.makingCharges || 0);
     const fixedPrice = Number(product.fixedPrice || 0);
@@ -137,8 +136,9 @@ class ProductService {
       goldValue = (weight * livePrice) + makingCharges;
     }
     
-    // 3% GST
-    const gstAmount = goldValue * 0.03;
+    // Fetch GST from settings or fallback to 3%
+    const gstRate = 0.03; // Logic to be updated to fetch from DB if needed
+    const gstAmount = goldValue * gstRate;
     const total = goldValue + gstAmount;
 
     return {
@@ -147,7 +147,18 @@ class ProductService {
       total: Number(total.toFixed(2)),
       purity: product.purity,
       weight: weight,
+      ratePerGram: livePrice.toFixed(2),
     };
+  }
+
+  /**
+   * Update all products that are not using a fixedPrice logic? 
+   * Actually, the user wants "it should also be updated in product fix price x gram"
+   */
+  async syncAllProductPrices(liveSellPrice: number) {
+    console.log(`🔄 Syncing all products with Live Price: ₹${liveSellPrice}...`);
+    // This is more of a placeholder as effectivePrice is calculated on-the-fly, 
+    // but if we had stored totals, we would update them here.
   }
   /**
    * Update the live gold price

@@ -55,65 +55,101 @@ class InvoiceService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      // --- HEADER ---
-      doc.fillColor('#D4AF37').font('Devanagari').fontSize(24).text('राजकीय गोल्ड', { align: 'right' });
-      doc.font('Helvetica-Bold').fontSize(16).text('ROYAL GOLD', { align: 'right' });
-      doc.fillColor('#444444').font('Helvetica').fontSize(10).text('Official Tax Invoice | आधिकारिक कर चालान', { align: 'right' });
+      // --- HEADER & LOGO ---
+      doc.fillColor('#D4AF37').font('Devanagari').fontSize(24).text('राजकीय गोल्ड ट्रेडर', { align: 'left' });
+      doc.font('Helvetica-Bold').fontSize(16).text('ROYAL GOLD TRADERS', { align: 'left' });
+      doc.fillColor('#444444').font('Helvetica').fontSize(8).text('2nd Floor, B-19, P.C. Colony, Kankarbagh, Patna, Bihar 800020', { align: 'left' });
+      doc.text('GSTIN: 10ADJPI8137N1ZE | PAN: ADJPI8137N | Phone: 9065415619', { align: 'left' });
       doc.moveDown();
 
-      doc.fillColor('#000000').font('Helvetica-Bold').fontSize(20).text('INVOICE / चालान', 50, 50);
-      doc.font('Helvetica').fontSize(10).text(`Number / संख्या: ${order.invoiceNo || 'N/A'}`);
-      doc.text(`Date / दिनांक: ${format(new Date(order.createdAt), 'dd MMMM yyyy')}`);
-      doc.moveDown();
+      // --- INVOICE META ---
+      doc.fillColor('#000000').font('Helvetica-Bold').fontSize(18).text('TAX INVOICE / कर चालान', 380, 50, { align: 'right' });
+      doc.font('Helvetica').fontSize(9).text(`Invoice No: ${order.invoiceNo || 'N/A'}`, { align: 'right' });
+      doc.text(`Date: ${format(new Date(order.createdAt), 'dd/MM/yyyy h:mm a')}`, { align: 'right' });
+      doc.text(`State: Bihar (10)`, { align: 'right' });
+      doc.moveDown(2);
 
       // --- BILLING INFO ---
-      doc.fontSize(12).text('Billed To:', 50, 150);
-      doc.fontSize(10).text(order.user.name);
-      doc.text(order.user.phone);
-      doc.text(order.user.email || '');
+      const billingTop = 130;
+      doc.fontSize(11).font('Helvetica-Bold').text('Customer Details / ग्राहक विवरण:', 50, billingTop);
+      doc.fontSize(10).font('Helvetica').text(`Name: ${order.user.name}`);
+      doc.text(`Phone: ${order.user.phone}`);
+      doc.text(`Address: ${order.user.address || 'Address Not Provided'}`);
+      doc.text(`Place of Supply: Bihar`);
       doc.moveDown();
 
-      // --- TABLE HEADER ---
-      const tableTop = 250;
-      doc.font('Devanagari');
-      this.generateTableRow(doc, tableTop, 'विवरण (Description)', 'विवरण (Qty)', 'वजन (Weight)', 'राशि (Amount)');
-      this.generateHr(doc, tableTop + 20);
-      doc.font('Helvetica');
-
-      // --- TABLE ROW ---
+      // --- TABLE ---
+      const tableTop = 220;
+      doc.font('Helvetica-Bold').fontSize(10);
+      this.generateTableRow(doc, tableTop, 'Item / Purity', 'Qty', 'Weight', 'Amount (INR)');
+      this.generateHr(doc, tableTop + 15);
+      
+      doc.font('Helvetica').fontSize(10);
       const itemPosition = tableTop + 30;
       this.generateTableRow(
         doc,
         itemPosition,
-        order.product?.name || 'Gold Coin',
+        `${order.product?.name || 'Gold Coin'} (24 CT)`,
         order.quantity.toString(),
         `${order.weight}g`,
-        `₹${order.amount.toFixed(2)}`
+        `${order.amount.toFixed(2)}`
       );
       this.generateHr(doc, itemPosition + 20);
 
-      // --- TOTALS ---
-      const subtotalPosition = itemPosition + 50;
-      this.generateTableRow(doc, subtotalPosition, '', '', 'Subtotal', `₹${order.amount.toFixed(2)}`);
+      // --- SUMMARY ---
+      const summaryTop = itemPosition + 40;
+      doc.font('Helvetica-Bold').text('Summary / सारांश', 350, summaryTop);
+      this.generateHr(doc, summaryTop + 15);
       
-      const gstPosition = subtotalPosition + 20;
-      this.generateTableRow(doc, gstPosition, '', '', 'GST (3%)', `₹${order.gst.toFixed(2)}`);
+      doc.font('Helvetica').fontSize(9);
+      let currentY = summaryTop + 25;
+      
+      const rowHeight = 18;
+      const drawSummaryRow = (label: string, value: string, isTotal = false) => {
+        if (isTotal) doc.font('Helvetica-Bold').fontSize(10);
+        doc.text(label, 350, currentY);
+        doc.text(value, 450, currentY, { width: 90, align: 'right' });
+        currentY += rowHeight;
+        if (isTotal) doc.font('Helvetica').fontSize(9);
+      };
 
-      const totalPosition = gstPosition + 25;
-      doc.font('Helvetica-Bold');
-      this.generateTableRow(doc, totalPosition, '', '', 'Total Payable', `₹${order.total.toFixed(2)}`);
-      doc.font('Helvetica');
+      drawSummaryRow('Taxable Value:', `₹${order.amount.toFixed(2)}`);
+      drawSummaryRow('CGST (1.5%):', `₹${(order.gst / 2).toFixed(2)}`);
+      drawSummaryRow('SGST (1.5%):', `₹${(order.gst / 2).toFixed(2)}`);
+      this.generateHr(doc, currentY);
+      currentY += 10;
+      drawSummaryRow('Total Amount:', `₹${order.total.toFixed(2)}`, true);
 
-      // --- QR CODE & FOOTER ---
-      doc.image(qrCodeDataUrl, 50, 550, { width: 100 });
-      doc.fontSize(8).text('Scan to verify authenticity of this document.', 50, 660);
+      // --- BANK DETAILS ---
+      const bankTop = 450;
+      doc.fontSize(10).font('Helvetica-Bold').text('Bank & Payment Details:', 50, bankTop);
+      doc.fontSize(8).font('Helvetica');
+      doc.text('A/C Name: ROYAL GOLD TRADERS');
+      doc.text('A/C No: 00000045030556376');
+      doc.text('Bank: SBI, PATNA MAIN BRANCH');
+      doc.text('IFSC: SBIN0009005');
+      doc.moveDown();
 
-      doc.fontSize(10).text(
-        'Thank you for your business. Terms and conditions apply.',
+      // --- QR CODE & AUTHENTICITY ---
+      const qrTop = 550;
+      doc.image(qrCodeDataUrl, 50, qrTop, { width: 90 });
+      doc.fontSize(8).font('Helvetica').text('SCAN TO VERIFY DOCUMENT', 50, qrTop + 95);
+      doc.text('Powered by Obsidian Elite Technology', 50, qrTop + 105);
+
+      // --- SIGNATURES ---
+      doc.fontSize(10).font('Helvetica-Bold').text('Authorised Signatory', 400, qrTop + 40);
+      doc.fontSize(8).font('Helvetica').text('for ROYAL GOLD TRADERS', 400, qrTop + 55);
+      doc.moveDown(4);
+      doc.text('__________________________', 400, qrTop + 80);
+      
+      doc.fontSize(7).fillColor('#888888').text(
+        'This is a computer-generated document and does not require a physical signature for validity under the IT Act 2000.',
         50,
-        700,
+        750,
         { align: 'center', width: 500 }
       );
+
+      doc.end();
 
       doc.end();
     });

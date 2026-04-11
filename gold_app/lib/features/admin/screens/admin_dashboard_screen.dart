@@ -12,7 +12,7 @@ import 'admin_product_manager.dart';
 import 'admin_category_manager.dart';
 import 'admin_user_manager.dart';
 import 'admin_order_manager.dart';
-import 'admin_config_screen.dart';
+import 'admin_settings_screen.dart';
 import 'admin_reports_screen.dart';
 import 'admin_gold_price_screen.dart';
 import 'admin_transactions_screen.dart';
@@ -20,6 +20,7 @@ import 'admin_withdrawal_manager_screen.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../home/screens/home_screen.dart';
+import '../../../core/utils/formatters.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -142,8 +143,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                             const SizedBox(height: 32),
 
                             /// 📈 Interactive Revenue Analysis
-                            _RevenueAnalysisChart(totalRevenue: adminState.totalRevenue)
-                                .animate()
+                            _RevenueAnalysisChart(
+                              totalRevenue: adminState.totalRevenue,
+                              weeklyData: adminState.allTransactions // Logic to filter correctly mapped in widget
+                            ).animate()
                                 .fadeIn(delay: 400.ms)
                                 .scale(begin: const Offset(0.98, 0.98)),
 
@@ -163,14 +166,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                   children: [
                                     _EliteStatCard(
                                       label: 'GROSS REVENUE',
-                                      value: '₹${adminState.totalRevenue.toStringAsFixed(0)}',
+                                      value: Formatters.currency(adminState.totalRevenue),
                                       icon: Icons.account_balance_wallet_outlined,
                                       color: AppColors.royalGold,
                                       sparkData: _generateRelativeSpark(adminState.totalRevenue),
                                     ),
                                     _EliteStatCard(
                                       label: 'GOLD COLLECTED',
-                                      value: '${adminState.totalWeight.toStringAsFixed(1)}g',
+                                      value: '${adminState.totalWeight.toStringAsFixed(2)}g',
                                       icon: Icons.check_circle_outline,
                                       color: AppColors.success,
                                       sparkData: _generateRelativeSpark(adminState.totalWeight),
@@ -183,7 +186,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                       sparkData: _generateRelativeSpark(adminState.users.length.toDouble()),
                                     ),
                                     _EliteStatCard(
-                                      label: 'PENDING PICKUPS',
+                                      label: 'PICKUP PENDING',
                                       value: '${adminState.pendingOrdersCount}',
                                       icon: Icons.pending_actions,
                                       color: AppColors.warning,
@@ -256,7 +259,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 _SidebarItem(icon: Icons.people_outline, label: 'Customers', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager()))),
                 _SidebarItem(icon: Icons.local_shipping_outlined, label: 'Orders', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager()))),
                 _SidebarItem(icon: Icons.account_balance_wallet_outlined, label: 'Transactions', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen()))),
-                _SidebarItem(icon: Icons.settings_outlined, label: 'Settings', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminConfigScreen()))),
+                _SidebarItem(icon: Icons.settings_outlined, label: 'Settings', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminSettingsScreen()))),
               ],
             ),
           ),
@@ -425,7 +428,8 @@ class _MarketTicker extends StatelessWidget {
 
 class _RevenueAnalysisChart extends StatelessWidget {
   final double totalRevenue;
-  const _RevenueAnalysisChart({required this.totalRevenue});
+  final List<dynamic> weeklyData;
+  const _RevenueAnalysisChart({required this.totalRevenue, required this.weeklyData});
 
   @override
   Widget build(BuildContext context) {
@@ -586,7 +590,7 @@ class _ManagementGrid extends StatelessWidget {
         _CompactTool(
           icon: Icons.settings_outlined,
           label: 'System',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminConfigScreen())),
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminSettingsScreen())),
         ),
         _CompactTool(
           icon: Icons.account_balance_wallet_outlined,
