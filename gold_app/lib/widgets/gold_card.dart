@@ -40,13 +40,13 @@ class GoldCard extends StatelessWidget {
             if (hasGlow || isVibrant)
               BoxShadow(
                 color: (gradient?.colors.first ?? AppColors.royalGold)
-                    .withValues(alpha: isVibrant ? 0.15 : 0.08),
+                    .withOpacity(isVibrant ? 0.15 : 0.08),
                 blurRadius: 40,
                 spreadRadius: isVibrant ? 2 : -10,
                 offset: const Offset(0, 15),
               ),
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 25,
               offset: const Offset(0, 10),
             ),
@@ -61,15 +61,15 @@ class GoldCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isVibrant 
                     ? Colors.transparent 
-                    : AppColors.surface.withValues(alpha: 0.65),
+                    : AppColors.surface.withOpacity(0.65),
                 gradient: gradient,
                 borderRadius: BorderRadius.circular(borderRadius),
                 border: Border.all(
                   color: isVibrant
-                      ? (gradient?.colors.last.withValues(alpha: 0.3) ?? AppColors.royalGold.withValues(alpha: 0.4))
+                      ? (gradient?.colors.last.withOpacity(0.3) ?? AppColors.royalGold.withOpacity(0.4))
                       : (hasGoldBorder
-                          ? AppColors.royalGold.withValues(alpha: 0.3)
-                          : AppColors.pureWhite.withValues(alpha: 0.08)),
+                          ? AppColors.royalGold.withOpacity(0.3)
+                          : AppColors.pureWhite.withOpacity(0.08)),
                   width: (hasGoldBorder || isVibrant) ? 1.5 : 0.8,
                 ),
               ),
@@ -78,9 +78,9 @@ class GoldCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(borderRadius - 2),
                   border: Border.all(
                     color: isVibrant
-                        ? Colors.white.withValues(alpha: 0.1)
+                        ? Colors.white.withOpacity(0.1)
                         : (hasGoldBorder 
-                            ? AppColors.royalGold.withValues(alpha: 0.05) 
+                            ? AppColors.royalGold.withOpacity(0.05) 
                             : Colors.transparent),
                     width: 1,
                   ),

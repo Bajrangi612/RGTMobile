@@ -9,9 +9,9 @@ class ProductRepository {
   /**
    * Fetch gold coin products from the backend, optionally filtered by category
    */
-  Future<List<ProductModel>> getProducts({String? categoryId}) async {
+  Future<List<ProductModel>> getProducts({String? categoryId, bool includeInactive = false}) async {
     try {
-      final response = await _apiService.getProducts(categoryId: categoryId);
+      final response = await _apiService.getProducts(categoryId: categoryId, includeInactive: includeInactive);
       final List<dynamic> data = response.data['data']['products'];
       return data.map((json) => ProductModel.fromJson(json)).toList();
     } catch (e) {
@@ -22,9 +22,9 @@ class ProductRepository {
   /**
    * Fetch all categories from the backend
    */
-  Future<List<CategoryModel>> getCategories() async {
+  Future<List<CategoryModel>> getCategories({bool includeInactive = false}) async {
     try {
-      final response = await _apiService.getCategories();
+      final response = await _apiService.getCategories(includeInactive: includeInactive);
       final List<dynamic> data = response.data['data']['categories'];
       return data.map((json) => CategoryModel.fromJson(json)).toList();
     } catch (e) {

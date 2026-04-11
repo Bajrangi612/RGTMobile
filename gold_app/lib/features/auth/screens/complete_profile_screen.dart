@@ -160,7 +160,7 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                         const SizedBox(height: 32),
                         
                         GoldButton(
-                          text: 'START INVESTING',
+                          text: 'START SAVING',
                           isLoading: _isLoading,
                           onPressed: _isLoading ? null : _submit,
                           icon: Icons.rocket_launch_rounded,

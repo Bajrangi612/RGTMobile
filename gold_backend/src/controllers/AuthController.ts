@@ -11,41 +11,48 @@ const RATE_LIMIT_WINDOW = 5 * 60 * 1000; // 5 minutes
 export class AuthController {
   static async me(req: any, res: Response, next: NextFunction) {
     try {
-      const user = await prisma.user.findUnique({
+        const userData = await prisma.user.findUnique({
         where: { id: req.user.id },
-        include: { wallet: true }
+        include: { 
+          wallet: true,
+          _count: {
+            select: { orders: true }
+          }
+        }
       }) as any;
-      if (!user) return errorResponse(res, 'User not found', 404);
+      
+      if (!userData) return errorResponse(res, 'User not found', 404);
       
       return successResponse(
         res,
         {
           user: {
-            id: user.id,
-            name: user.name,
-            phone: user.phone,
-            contactNo: user.phone,
-            email: user.email,
-            role: user.role,
-            kycStatus: user.kycStatus,
-            bankStatus: user.bankStatus,
-            referralCode: user.referralCode,
-            address: user.address,
-            dob: user.dob,
-            panNo: user.panNo,
-            aadharNo: user.aadharNo,
-            bankAccountNo: user.bankAccountNo,
-            bankIfsc: user.bankIfsc,
-            bankHolderName: user.bankHolderName,
-            bankName: user.bankName,
-            wallet: user.wallet ? {
-              balance: Number(user.wallet.balance),
-              goldAdvance: Number(user.wallet.goldAdvance),
-              referralRewards: Number(user.wallet.referralRewards),
+            id: userData.id,
+            name: userData.name,
+            phone: userData.phone,
+            contactNo: userData.phone,
+            email: userData.email,
+            role: userData.role,
+            kycStatus: userData.kycStatus,
+            bankStatus: userData.bankStatus,
+            referralCode: userData.referralCode,
+            address: userData.address,
+            dob: userData.dob,
+            panNo: userData.panNo,
+            aadharNo: userData.aadharNo,
+            bankAccountNo: userData.bankAccountNo,
+            bankIfsc: userData.bankIfsc,
+            bankHolderName: userData.bankHolderName,
+            bankName: userData.bankName,
+            wallet: userData.wallet ? {
+              balance: Number(userData.wallet.balance),
+              goldAdvance: Number(userData.wallet.goldAdvance),
+              referralRewards: Number(userData.wallet.referralRewards),
             } : null,
-            goldAdvanceAmount: user.wallet ? Number(user.wallet.goldAdvance) : 0,
-            registerRequired: !user.name || user.name.startsWith('User '),
-            isAdmin: user.role === 'ADMIN',
+            goldAdvanceAmount: userData.wallet ? Number(userData.wallet.goldAdvance) : 0,
+            orderCount: userData._count?.orders || 0,
+            registerRequired: !userData.name || userData.name.startsWith('User '),
+            isAdmin: userData.role === 'ADMIN',
           }
         },
         'User fetched successfully'

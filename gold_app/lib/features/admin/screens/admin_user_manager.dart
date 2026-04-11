@@ -43,7 +43,7 @@ class AdminUserManager extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _FilterChip(label: 'ALL INVESTORS', value: 'all'),
+                    _FilterChip(label: 'ALL CUSTOMERS', value: 'all'),
                     const SizedBox(width: 10),
                     _FilterChip(label: 'PENDING KYC', value: 'kyc'),
                     const SizedBox(width: 10),

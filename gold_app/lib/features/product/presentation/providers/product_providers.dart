@@ -8,7 +8,9 @@ final productRepositoryProvider = Provider((ref) => ProductRepository());
 
 final categoriesProvider = FutureProvider<List<CategoryModel>>((ref) async {
   final repository = ref.watch(productRepositoryProvider);
-  return await repository.getCategories();
+  final user = ref.watch(authProvider).user;
+  final isAdmin = user?.role == 'ADMIN';
+  return await repository.getCategories(includeInactive: isAdmin);
 });
 
 final selectedCategoryIdProvider = StateProvider<String?>((ref) => null);
@@ -16,7 +18,9 @@ final selectedCategoryIdProvider = StateProvider<String?>((ref) => null);
 final productsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final repository = ref.watch(productRepositoryProvider);
   final categoryId = ref.watch(selectedCategoryIdProvider);
-  return await repository.getProducts(categoryId: categoryId);
+  final user = ref.watch(authProvider).user;
+  final isAdmin = user?.role == 'ADMIN';
+  return await repository.getProducts(categoryId: categoryId, includeInactive: isAdmin);
 });
 
 class PurchaseState {

@@ -2,11 +2,12 @@ import { prisma } from "../lib/prisma";
 
 class CategoryService {
   /**
-   * Get all active categories
+   * Get categories with optional inactive inclusion
    */
-  async getAllCategories() {
+  async getAllCategories(includeInactive: boolean = false) {
+    const where = includeInactive ? {} : { isActive: true };
     return await prisma.category.findMany({
-      where: { isActive: true },
+      where,
       orderBy: { name: 'asc' },
     });
   }
@@ -30,7 +31,7 @@ class CategoryService {
   }
 
   /**
-   * Delete a category
+   * Soft delete a category
    */
   async deleteCategory(id: string) {
     return await prisma.category.update({

@@ -62,3 +62,17 @@ extension NumExtensions on num {
   SizedBox get verticalSpace => SizedBox(height: toDouble());
   SizedBox get horizontalSpace => SizedBox(width: toDouble());
 }
+extension ListDateExtensions<T> on List<T> {
+  List<T> sortedByDateDesc() {
+    final list = List<T>.from(this);
+    list.sort((a, b) {
+      final aDate = (a as dynamic).createdAt;
+      final bDate = (b as dynamic).createdAt;
+      if (aDate is DateTime && bDate is DateTime) {
+        return bDate.compareTo(aDate);
+      }
+      return 0;
+    });
+    return list;
+  }
+}

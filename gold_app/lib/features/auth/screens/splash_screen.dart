@@ -133,7 +133,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 const SizedBox(height: 24),
                 
                 Text(
-                  'INVEST IN ELEGANCE. OWN THE LEGACY.',
+                  'SAVE IN ELEGANCE. OWN THE LEGACY.',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.labelSmall.copyWith(
                     color: AppColors.royalGold.withValues(alpha: 0.7),

@@ -39,7 +39,15 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       body: Container(
         decoration: BoxDecoration(gradient: AppColors.darkGradient),
         child: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(walletProvider.notifier).loadWalletDetails();
+            await ref.read(authProvider.notifier).getCurrentUser();
+          },
+          color: AppColors.royalGold,
+          backgroundColor: AppColors.surface,
           child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
             slivers: [
               // Custom Gold Header
               SliverAppBar(
@@ -136,6 +144,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
             ],
           ),
         ),
+        ),
       ),
     );
   }
@@ -218,11 +227,14 @@ class _MainBalanceCard extends ConsumerWidget {
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
-              style: const TextStyle(color: Colors.white),
+              style: AppTextStyles.h4.copyWith(color: AppColors.pureWhite),
               decoration: InputDecoration(
                 hintText: 'Enter amount',
+                hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey.withOpacity(0.5)),
                 prefixText: '₹ ',
-                prefixStyle: TextStyle(color: AppColors.royalGold),
+                prefixStyle: AppTextStyles.h4.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold),
+                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.royalGold.withOpacity(0.1))),
+                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.royalGold)),
               ),
             ),
           ],

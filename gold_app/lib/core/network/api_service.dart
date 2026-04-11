@@ -82,19 +82,23 @@ class ApiService {
 
   // ─── Products & Orders ──────────────────────────────────────────────────
 
-  Future<Response> getProducts({String? categoryId}) async {
-    return await _dio.get(
-      '/products',
-      queryParameters: categoryId != null ? {'categoryId': categoryId} : null,
-    );
+  Future<Response> getProducts({String? categoryId, bool includeInactive = false}) async {
+    final Map<String, dynamic> params = {};
+    if (categoryId != null) params['categoryId'] = categoryId;
+    if (includeInactive) params['includeInactive'] = 'true';
+    
+    return await _dio.get('/products', queryParameters: params);
   }
 
   Future<Response> getGoldPrice() async {
     return await _dio.get('/products/price');
   }
 
-  Future<Response> getCategories() async {
-    return await _dio.get('/categories');
+  Future<Response> getCategories({bool includeInactive = false}) async {
+    return await _dio.get(
+      '/categories',
+      queryParameters: includeInactive ? {'includeInactive': 'true'} : null,
+    );
   }
 
   Future<Response> createProduct(Map<String, dynamic> data) async {

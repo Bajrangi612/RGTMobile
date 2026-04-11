@@ -4,11 +4,12 @@ import { successResponse, errorResponse } from "../utils/response";
 
 export class CategoryController {
   /**
-   * Get all active categories
+   * Get all active categories (with optional inactive for Admins)
    */
-  static async listCategories(req: Request, res: Response, next: NextFunction) {
+  static async listCategories(req: any, res: Response, next: NextFunction) {
     try {
-      const categories = await CategoryService.getAllCategories();
+      const includeInactive = req.query.includeInactive === 'true' || req.user?.role === 'ADMIN';
+      const categories = await CategoryService.getAllCategories(includeInactive);
       return successResponse(res, { categories }, "Categories fetched");
     } catch (error) {
       next(error);

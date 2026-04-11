@@ -88,319 +88,330 @@ class _HomeDashboard extends ConsumerWidget {
       child: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
-          slivers: [
-            // Header Content
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Welcome Text (Premium Clean)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Welcome,',
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: AppColors.grey,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        Text(
-                          authState.user?.name ?? 'Alexander',
-                          style: AppTextStyles.h2.copyWith(
-                            color: AppColors.pureWhite,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    // Notification Icon (Minimal with Badge)
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const NotificationScreen()),
-                      ),
-                      child: Stack(
-                        clipBehavior: Clip.none,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await ref.read(homeProvider.notifier).loadDashboard();
+            await ref.read(authProvider.notifier).getCurrentUser();
+          },
+          color: AppColors.royalGold,
+          backgroundColor: AppColors.surface,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+            slivers: [
+              // Header Content
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Welcome Text (Premium Clean)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 10,
-                                ),
-                              ],
+                          Text(
+                            'Welcome,',
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: AppColors.grey,
+                              fontWeight: FontWeight.w400,
                             ),
-                            child: Icon(Icons.notifications_none_rounded,
-                                color: AppColors.royalGold, size: 24),
                           ),
-                          Consumer(
-                            builder: (context, ref, child) {
-                              final count = ref.watch(unreadNotificationsCountProvider);
-                              if (count == 0) return const SizedBox.shrink();
-                              return Positioned(
-                                top: -2,
-                                right: -2,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 16,
-                                    minHeight: 16,
-                                  ),
-                                  child: Text(
-                                    count > 9 ? '9+' : count.toString(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              );
-                            },
+                          Text(
+                            authState.user?.name ?? 'Alexander',
+                            style: AppTextStyles.h2.copyWith(
+                              color: AppColors.pureWhite,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
-                ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            // Portfolio Balance Card (Big Dashboard Feature)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _PortfolioCard(
-                  holdings: (authState.user?.totalCollectionValue ?? 0.0) / (homeState.goldPrice > 0 ? homeState.goldPrice : 7000.0),
-                  value: authState.user?.totalCollectionValue ?? 0.0,
-                  isLoading: homeState.isLoading,
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 28)),
-
-            // Action Buttons (Modern Pills)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: GoldButton(
-                        text: 'Buy Gold',
-                        icon: Icons.add_rounded,
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => CatalogScreen()),
+                      // Notification Icon (Minimal with Badge)
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const NotificationScreen()),
+                        ),
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.royalGold.withOpacity(0.1)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 10,
+                                  ),
+                                ],
+                              ),
+                              child: Icon(Icons.notifications_none_rounded,
+                                  color: AppColors.royalGold, size: 24),
+                            ),
+                            Consumer(
+                              builder: (context, ref, child) {
+                                final count = ref.watch(unreadNotificationsCountProvider);
+                                if (count == 0) return const SizedBox.shrink();
+                                return Positioned(
+                                  top: -2,
+                                  right: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 16,
+                                      minHeight: 16,
+                                    ),
+                                    child: Text(
+                                      count > 9 ? '9+' : count.toString(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: GoldButton(
-                        text: 'Buyback Program',
-                        isOutlined: true,
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Select an item to sell back')),
-                          );
+                    ],
+                  ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.1),
+                ),
+              ),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+  
+              // Portfolio Balance Card (Big Dashboard Feature)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _PortfolioCard(
+                    holdings: (authState.user?.totalCollectionValue ?? 0.0) / (homeState.goldPrice > 0 ? homeState.goldPrice : 7000.0),
+                    value: authState.user?.totalCollectionValue ?? 0.0,
+                    isLoading: homeState.isLoading,
+                  ),
+                ),
+              ),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 28)),
+  
+              // Action Buttons (Modern Pills)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: GoldButton(
+                          text: 'Buy Gold',
+                          icon: Icons.add_rounded,
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => CatalogScreen()),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: GoldButton(
+                          text: 'Buyback Program',
+                          isOutlined: true,
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Select an item to sell back')),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+  
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _GoldPriceCard(
+                    price: homeState.goldPrice,
+                    change: homeState.priceChange,
+                    isLoading: homeState.isLoading,
+                    isAdmin: authState.user?.isAdmin ?? false,
+                    onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
+                  ),
+                ),
+              ),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+  
+              // 🏆 The Elite Collection (Premium Filtered Assets)
+              const SliverToBoxAdapter(child: _EliteCollection()),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+  
+              // Offers Carousel (Latest Banners)
+              SliverToBoxAdapter(
+                child: _BannerCarousel(),
+              ),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+  
+              // Categories Section (Premium Gold, Round, Hindu God)
+              SliverToBoxAdapter(
+                child: _CategoryList(),
+              ),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+  
+              // Utility Actions Grid
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _SmallQuickAction(
+                        icon: Icons.receipt_long_rounded,
+                        label: 'Orders',
+                        color: AppColors.info,
+                        onTap: () => onTabChange(1),
+                      ),
+                      _SmallQuickAction(
+                        icon: Icons.shopping_bag_rounded,
+                        label: 'Shop',
+                        color: AppColors.success,
+                        onTap: () => onTabChange(4),
+                      ),
+                      _SmallQuickAction(
+                        icon: Icons.verified_user_rounded,
+                        label: 'KYC',
+                        color: AppColors.warning,
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => AadhaarKycScreen()),
+                        ),
+                      ),
+                      _SmallQuickAction(
+                        icon: Icons.account_balance_wallet_rounded,
+                        label: 'Asset Portfolio',
+                        color: AppColors.amber,
+                        onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const OrdersScreen()),
+                            MaterialPageRoute(builder: (_) => WalletScreen()),
                           );
                         },
                       ),
-                    ),
-                  ],
+                    ],
+                  ).animate(delay: 400.ms).fadeIn(duration: 400.ms),
                 ),
               ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _GoldPriceCard(
-                  price: homeState.goldPrice,
-                  change: homeState.priceChange,
-                  isLoading: homeState.isLoading,
-                  isAdmin: authState.user?.isAdmin ?? false,
-                  onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+  
+              // Promotional Content
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: _PromoBanner(),
                 ),
               ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // 🏆 The Elite Collection (Premium Filtered Assets)
-            const SliverToBoxAdapter(child: _EliteCollection()),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Offers Carousel (Latest Banners)
-            SliverToBoxAdapter(
-              child: _BannerCarousel(),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Categories Section (Premium Gold, Round, Hindu God)
-            SliverToBoxAdapter(
-              child: _CategoryList(),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Utility Actions Grid
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _SmallQuickAction(
-                      icon: Icons.receipt_long_rounded,
-                      label: 'Orders',
-                      color: AppColors.info,
-                      onTap: () => onTabChange(1),
-                    ),
-                    _SmallQuickAction(
-                      icon: Icons.shopping_bag_rounded,
-                      label: 'Shop',
-                      color: AppColors.success,
-                      onTap: () => onTabChange(4),
-                    ),
-                    _SmallQuickAction(
-                      icon: Icons.verified_user_rounded,
-                      label: 'KYC',
-                      color: AppColors.warning,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => AadhaarKycScreen()),
-                      ),
-                    ),
-                    _SmallQuickAction(
-                      icon: Icons.account_balance_wallet_rounded,
-                      label: 'Wallet',
-                      color: AppColors.amber,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => WalletScreen()),
-                        );
-                      },
-                    ),
-                  ],
-                ).animate(delay: 400.ms).fadeIn(duration: 400.ms),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Promotional Content
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: _PromoBanner(),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            // Featured Coins section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.goldGradient,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text('Premium Gold Coins', style: AppTextStyles.h3.copyWith(color: AppColors.pureWhite)),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => CatalogScreen()),
-                      ),
-                      child: Text(
-                        'View All',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.royalGold,
-                          fontWeight: FontWeight.bold,
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+  
+              // Featured Coins section
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 4,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          gradient: AppColors.goldGradient,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                    ),
-                  ],
-                ).animate(delay: 500.ms).fadeIn(duration: 400.ms),
+                      const SizedBox(width: 8),
+                      Text('Premium Gold Coins', style: AppTextStyles.h3.copyWith(color: AppColors.pureWhite)),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => CatalogScreen()),
+                        ),
+                        child: Text(
+                          'View All',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.royalGold,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ).animate(delay: 500.ms).fadeIn(duration: 400.ms),
+                ),
               ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: homeState.isLoading
-                  ? SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.75 : 0.68,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (_, __) => ShimmerLoader.productCard(),
-                        childCount: 4,
-                      ),
-                    )
-                  : SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.75 : 0.68,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final products = homeState.products.where((p) => !p.isPremium).toList();
-                          final product = products[index];
-                          return _ProductCard(
-                            product: product,
-                            onTap: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ProductDetailScreen(product: product),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+  
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                sliver: homeState.isLoading
+                    ? SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.75 : 0.68,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (_, __) => ShimmerLoader.productCard(),
+                          childCount: 4,
+                        ),
+                      )
+                    : SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.75 : 0.68,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final products = homeState.products.where((p) => !p.isPremium).toList();
+                            final product = products[index];
+                            return _ProductCard(
+                              product: product,
+                              onTap: () => Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ProductDetailScreen(product: product),
+                                ),
                               ),
-                            ),
-                          ).animate(delay: (600 + index * 100).ms).fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
-                        },
-                        childCount: homeState.products.where((p) => !p.isPremium).length > 4 ? 4 : homeState.products.where((p) => !p.isPremium).length,
+                            ).animate(delay: (600 + index * 100).ms).fadeIn(duration: 400.ms).scale(begin: const Offset(0.95, 0.95));
+                          },
+                          childCount: homeState.products.where((p) => !p.isPremium).length > 4 ? 4 : homeState.products.where((p) => !p.isPremium).length,
+                        ),
                       ),
-                    ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
-          ],
+              ),
+  
+              const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            ],
+          ),
+        ),
         ),
       ),
     );
@@ -441,7 +452,7 @@ class _PortfolioCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'COLLECTION VALUE',
+                'ASSET PORTFOLIO',
                 style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold, letterSpacing: 2, fontWeight: FontWeight.bold),
               ),
               Container(
@@ -456,7 +467,7 @@ class _PortfolioCard extends StatelessWidget {
                      Icon(Icons.shield_rounded, color: AppColors.royalGold, size: 12),
                      const SizedBox(width: 4),
                      Text(
-                      'SECURE VAULT',
+                      'ACCOUNT BALANCE',
                       style: AppTextStyles.caption.copyWith(
                         color: AppColors.royalGold,
                         fontWeight: FontWeight.bold,

@@ -5,8 +5,8 @@ class ProductService {
   /**
    * Get all active products
    */
-  async getAllProducts(categoryId?: string) {
-    const where: any = { isActive: true };
+  async getAllProducts(categoryId?: string, includeInactive: boolean = false) {
+    const where: any = includeInactive ? {} : { isActive: true };
     if (categoryId) {
       where.categoryId = categoryId;
     }

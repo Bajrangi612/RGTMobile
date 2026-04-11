@@ -48,7 +48,22 @@ class AdminCategoryManager extends ConsumerWidget {
                             style: TextStyle(color: AppColors.royalGold, fontWeight: FontWeight.bold),
                           ),
                         ),
-                        title: Text(cat['name'] ?? 'Unnamed', style: AppTextStyles.labelLarge),
+                        title: Row(
+                          children: [
+                            Text(cat['name'] ?? 'Unnamed', style: AppTextStyles.labelLarge),
+                            if (cat['isActive'] == false)
+                              Container(
+                                margin: const EdgeInsets.only(left: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                                decoration: BoxDecoration(
+                                  color: AppColors.error.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                                ),
+                                child: Text('INACTIVE', style: AppTextStyles.caption.copyWith(color: AppColors.error, fontSize: 7, fontWeight: FontWeight.bold)),
+                              ),
+                          ],
+                        ),
                         subtitle: Text('/${cat['slug'] ?? ''}', style: AppTextStyles.caption),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),

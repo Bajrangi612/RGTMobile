@@ -532,25 +532,27 @@ class _RevenueAnalysisChart extends StatelessWidget {
                     sideTitles: SideTitles(
                       showTitles: true,
                       interval: 1,
-                      getTitlesWidget: (val, _) => Padding(
-                        padding: const EdgeInsets.only(top: 10),
-                        child: Text(['M', 'T', 'W', 'T', 'F', 'S', 'S'][val.toInt().clamp(0, 6)], style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
-                      ),
+                      getTitlesWidget: (val, _) {
+                        if (weeklyData.isEmpty) return const SizedBox.shrink();
+                        final index = val.toInt();
+                        if (index < 0 || index >= weeklyData.length) return const SizedBox.shrink();
+                        // Format the date using Formatters (e.g. "Apr 11")
+                        final date = DateTime.tryParse(weeklyData[index]['date'] ?? '') ?? DateTime.now();
+                        final labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Text(labels[date.weekday % 7], style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
+                        );
+                      },
                     ),
                   ),
                 ),
                 borderData: FlBorderData(show: false),
                 lineBarsData: [
                   LineChartBarData(
-                    spots: [
-                      FlSpot(0, totalRevenue * 0.12),
-                      FlSpot(1, totalRevenue * 0.15),
-                      FlSpot(2, totalRevenue * 0.1),
-                      FlSpot(3, totalRevenue * 0.2),
-                      FlSpot(4, totalRevenue * 0.18),
-                      FlSpot(5, totalRevenue * 0.3),
-                      FlSpot(6, totalRevenue * 0.35),
-                    ],
+                    spots: weeklyData.isEmpty 
+                      ? [const FlSpot(0, 0), const FlSpot(1, 0), const FlSpot(2, 0), const FlSpot(3, 0), const FlSpot(4, 0), const FlSpot(5, 0), const FlSpot(6, 0)]
+                      : List.generate(weeklyData.length, (i) => FlSpot(i.toDouble(), (weeklyData[i]['amount'] as num).toDouble())),
                     isCurved: true,
                     color: AppColors.royalGold,
                     barWidth: 4,

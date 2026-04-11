@@ -434,6 +434,116 @@ class OrderService {
         data: { readyStock: { decrement: pendingOrders.length } }
       });
     });
+  /**
+   * Cancel an order (User initiated)
+   * Only allowed before fulfillment processing reaches a certain stage
+   */
+  async cancelOrder(orderId: string, userId: string) {
+    return await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+        include: { user: true }
+      });
+
+      if (!order || order.userId !== userId) throw new Error("Order not found");
+      
+      const cancellableStatuses = ["PAYMENT_PENDING", "PAYMENT_SUCCESSFUL", "ORDER_CONFIRMED", "PROCESSING"];
+      if (!cancellableStatuses.includes(order.status)) {
+        throw new Error(`Order cannot be cancelled at stage: ${order.status}`);
+      }
+
+      // Update Order Status
+      const updatedOrder = await tx.order.update({
+        where: { id: orderId },
+        data: { 
+          status: "CANCELLED",
+          statusHistory: {
+            create: { status: "CANCELLED", notes: "Order cancelled by customer." }
+          }
+        }
+      });
+
+      // Refund to Wallet if paid
+      if (order.status !== "PAYMENT_PENDING") {
+        await tx.wallet.update({
+          where: { userId },
+          data: { balance: { increment: order.total } }
+        });
+
+        await tx.transaction.create({
+          data: {
+            userId,
+            type: "CREDIT",
+            amount: order.total,
+            description: `Refund for Cancelled Order #${orderId}`,
+            status: "COMPLETED"
+          }
+        });
+      }
+
+      // Restore Stock
+      await tx.product.update({
+        where: { id: order.productId },
+        data: { stock: { increment: order.quantity } }
+      });
+
+      return updatedOrder;
+    });
+  }
+
+  /**
+   * Buyback Program (Sell Back Gold)
+   * Only allowed if status is READY_FOR_PICKUP (User has the gold in vault)
+   */
+  async initiateBuyback(orderId: string, userId: string) {
+    return await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: orderId },
+        include: { product: true }
+      });
+
+      if (!order || order.userId !== userId) throw new Error("Order not found");
+      
+      if (order.status !== "READY_FOR_PICKUP") {
+        throw new Error("Only gold ready for pickup can be sold back.");
+      }
+
+      // 1. Update Order Status to BUYBACK
+      const updatedOrder = await tx.order.update({
+        where: { id: orderId },
+        data: { 
+          status: "BUYBACK",
+          statusHistory: {
+            create: { status: "BUYBACK", notes: "Gold sold back to store." }
+          }
+        }
+      });
+
+      // 2. Credit Wallet with Purchase Amount
+      await tx.wallet.update({
+        where: { userId },
+        data: { balance: { increment: order.total } }
+      });
+
+      // 3. Create Transaction record
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "SELL_BACK",
+          amount: order.total,
+          description: `Buyback Credit for ${order.product.name}`,
+          status: "COMPLETED"
+        }
+      });
+
+      // 4. Return to stock
+      await tx.product.update({
+        where: { id: order.productId },
+        data: { stock: { increment: order.quantity } }
+      });
+
+      return updatedOrder;
+    });
   }
 }
 

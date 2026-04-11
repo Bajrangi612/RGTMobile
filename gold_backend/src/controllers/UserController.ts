@@ -57,12 +57,31 @@ export class UserController {
         })
       ]);
 
+      // Calculate Weekly Revenue (Daily Aggregates for Chart)
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const dailyRevenue = await prisma.transaction.groupBy({
+        by: ['createdAt'],
+        _sum: { amount: true },
+        where: {
+          type: "CREDIT", // Usually for successful payments/top-ups
+          status: "COMPLETED",
+          createdAt: { gte: sevenDaysAgo }
+        },
+        orderBy: { createdAt: 'asc' }
+      });
+
       return successResponse(res, {
         userCount,
         orderCount,
         pendingOrders,
         totalSales: Number(totalSales?._sum?.total || 0),
         totalWeight: Number(totalWeight?._sum?.weight || 0),
+        dailyRevenue: dailyRevenue.map(d => ({
+          date: d.createdAt,
+          amount: Number(d._sum.amount || 0)
+        }))
       }, "Stats fetched successfully");
     } catch (error) {
       next(error);

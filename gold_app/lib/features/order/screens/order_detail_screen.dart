@@ -104,7 +104,7 @@ class OrderDetailScreen extends ConsumerWidget {
                               children: [
                                 Icon(Icons.timer_rounded, color: AppColors.royalGold, size: 22),
                                 SizedBox(width: 10),
-                                Text('Collection Estimate', style: AppTextStyles.labelLarge),
+                                Text('Delivery Estimate', style: AppTextStyles.labelLarge),
                               ],
                             ),
                             SizedBox(height: 16),
@@ -177,7 +177,7 @@ class OrderDetailScreen extends ConsumerWidget {
                               ),
                             )
                           else
-                            ...order.statusHistory.asMap().entries.map((entry) {
+                            ...order.statusHistory.sortedByDateDesc().asMap().entries.map((entry) {
                               final index = entry.key;
                               final history = entry.value;
                               final isLast = index == order.statusHistory.length - 1;

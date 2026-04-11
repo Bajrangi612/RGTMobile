@@ -6,10 +6,11 @@ export class ProductController {
   /**
    * Get all active gold coins
    */
-  static async listProducts(req: Request, res: Response, next: NextFunction) {
+  static async listProducts(req: any, res: Response, next: NextFunction) {
     try {
-      const { categoryId } = req.query;
-      const products = await ProductService.getAllProducts(categoryId as string);
+      const { categoryId, includeInactive } = req.query;
+      const isAdmin = req.user?.role === 'ADMIN' || includeInactive === 'true';
+      const products = await ProductService.getAllProducts(categoryId as string, isAdmin);
       const livePriceObj = await ProductService.getLatestGoldPrice();
       
       const livePrice = livePriceObj ? Number(livePriceObj.sellPrice) : 0;

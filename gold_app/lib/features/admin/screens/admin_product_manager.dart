@@ -168,6 +168,17 @@ class AdminProductManager extends ConsumerWidget {
                               title: Row(
                                 children: [
                                   Expanded(child: Text(product.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold))),
+                                  if (!product.isActive)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      margin: const EdgeInsets.only(right: 8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.error.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                        border: Border.all(color: AppColors.error.withOpacity(0.3)),
+                                      ),
+                                      child: Text('INACTIVE', style: AppTextStyles.caption.copyWith(color: AppColors.error, fontSize: 8, fontWeight: FontWeight.bold)),
+                                    ),
                                   if (isLowStock)
                                     _StockBadge(count: product.stock, isCritical: isCritical),
                                 ],
@@ -320,6 +331,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
   String _purity = '24K';
   String? _selectedCategoryId;
   bool _isPremium = false;
+  bool _isActive = true;
   bool _isSaving = false;
   
   XFile? _pickedImage;
@@ -338,6 +350,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
     _purity = widget.product?.purity ?? '24K';
     _selectedCategoryId = widget.product?.categoryId;
     _isPremium = widget.product?.isPremium ?? false;
+    _isActive = widget.product?.isActive ?? true;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final categories = ref.read(adminProvider).categories;
@@ -404,6 +417,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
         'imageUrl': imageUrl,
         'categoryId': _selectedCategoryId,
         'isPremium': _isPremium,
+        'isActive': _isActive,
       };
 
       bool success;
@@ -665,14 +679,27 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
                          const SizedBox(height: 8),
                          Container(
                            decoration: BoxDecoration(
-                             color: Colors.white.withValues(alpha: 0.05),
+                             color: Colors.white.withOpacity(0.05),
                              borderRadius: BorderRadius.circular(12),
                            ),
-                           child: SwitchListTile(
-                             title: Text('Premium', style: AppTextStyles.caption),
-                             value: _isPremium,
-                             activeColor: AppColors.royalGold,
-                             onChanged: (v) => setState(() => _isPremium = v),
+                           child: Column(
+                             children: [
+                               SwitchListTile(
+                                 title: Text('Premium', style: AppTextStyles.caption),
+                                 value: _isPremium,
+                                 activeColor: AppColors.royalGold,
+                                 onChanged: (v) => setState(() => _isPremium = v),
+                                 dense: true,
+                               ),
+                               Divider(height: 1, color: Colors.white10),
+                               SwitchListTile(
+                                 title: Text('Active', style: AppTextStyles.caption),
+                                 value: _isActive,
+                                 activeColor: AppColors.success,
+                                 onChanged: (v) => setState(() => _isActive = v),
+                                 dense: true,
+                               ),
+                             ],
                            ),
                          ),
                       ],

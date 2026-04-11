@@ -64,13 +64,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppColors.royalGold.withValues(alpha: 0.15),
+                              AppColors.royalGold.withOpacity(0.15),
                               AppColors.cardDark,
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.royalGold.withValues(alpha: 0.1),
+                              color: AppColors.royalGold.withOpacity(0.1),
                               blurRadius: 40,
                               spreadRadius: 5,
                             ),
@@ -86,13 +86,13 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 errorBuilder: (context, error, stackTrace) => Icon(
                                   Icons.monetization_on_rounded,
                                   size: 80,
-                                  color: AppColors.royalGold.withValues(alpha: 0.9),
+                                  color: AppColors.royalGold.withOpacity(0.9),
                                 ),
                               )
                             : Icon(
                                 Icons.monetization_on_rounded,
                                 size: 80,
-                                color: AppColors.royalGold.withValues(alpha: 0.9),
+                                color: AppColors.royalGold.withOpacity(0.9),
                               ),
                         ),
                       ),
@@ -162,9 +162,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.royalGold.withValues(alpha: 0.05),
+                              color: AppColors.royalGold.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
+                              border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
                             ),
                             child: Row(
                               children: [
@@ -228,7 +228,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppColors.success.withValues(alpha: 0.15),
+                                  color: AppColors.success.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
@@ -279,7 +279,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.05),
+                                  color: Colors.white.withOpacity(0.05),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(color: AppColors.glassBorder),
                                 ),
@@ -320,7 +320,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     // Description
                     Text('About this coin', style: AppTextStyles.labelLarge),
                     SizedBox(height: 8),
-                    Text(product.description ?? 'A premium gold coin for pure investment.', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey, height: 1.6)),
+                    Text(product.description ?? 'A premium gold coin for long-term savings.', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey, height: 1.6)),
 
                     SizedBox(height: 24),
                   ],
@@ -332,7 +332,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.charcoal.withValues(alpha: 0.95),
+                color: AppColors.charcoal.withOpacity(0.95),
                 border: Border(top: BorderSide(color: AppColors.glassBorder)),
               ),
               child: SafeArea(
@@ -409,9 +409,9 @@ class _SpecChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.royalGold.withValues(alpha: 0.1),
+        color: AppColors.royalGold.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
+        border: Border.all(color: AppColors.royalGold.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
