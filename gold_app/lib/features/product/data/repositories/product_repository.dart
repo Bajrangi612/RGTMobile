@@ -89,9 +89,9 @@ class ProductRepository {
   /**
    * Get purchase history
    */
-  Future<List<OrderModel>> getMyOrders() async {
+  Future<List<OrderModel>> getMyOrders({int page = 1, int limit = 50}) async {
     try {
-      final response = await _apiService.get('/orders/my');
+      final response = await _apiService.get('/orders/my', queryParameters: {'page': page, 'limit': limit});
       final List<dynamic> data = response.data['data']['orders'];
       return data.map((json) => OrderModel.fromJson(json)).toList();
     } catch (e) {

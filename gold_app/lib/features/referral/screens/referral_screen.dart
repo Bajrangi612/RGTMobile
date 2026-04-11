@@ -277,7 +277,7 @@ class ReferralScreen extends ConsumerWidget {
                     _HowItWorksStep(
                       number: '3',
                       text:
-                          'You get flat ${Formatters.currency(settings.referralReward)} for every gram purchased',
+                          'You get flat ${Formatters.currency(settings.referralReward)} for every successful purchase made with your code',
                     ),
                     _HowItWorksStep(
                       number: '4',

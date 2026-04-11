@@ -7,6 +7,7 @@ const router = Router();
 
 router.get("/", ProductController.listProducts);
 router.get("/price", ProductController.getGoldPrice);
+router.get("/price-history", ProductController.getPriceHistory);
 router.post(
   "/price",
   authenticate,

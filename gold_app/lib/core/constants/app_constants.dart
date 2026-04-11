@@ -10,5 +10,5 @@ class AppConstants {
   static const int passKeyLength = 4;
   
   // Payment Config
-  static const String razorpayKeyId = 'rzp_live_SafL7UaY86evlY'; // Live production key
+  static const String razorpayKeyId = 'rzp_live_SafL7UaY86evlY'; // Test key
 }

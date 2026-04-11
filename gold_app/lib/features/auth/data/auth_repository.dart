@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/constants/app_constants.dart';
@@ -7,9 +8,9 @@ class AuthRepository {
   // Send OTP
   Future<String?> sendOtp(String phone) async {
     try {
-      print('🚀 Sending OTP to: $phone');
+      debugPrint('🚀 Sending OTP to: $phone');
       final response = await ApiService().post('/auth/send-otp', data: {'mobile': phone});
-      print('✅ OTP Response: ${response.statusCode} - ${response.data}');
+      debugPrint('✅ OTP Response: ${response.statusCode} - ${response.data}');
       if (response.statusCode == 200) {
         final data = response.data['data'];
         // In production, mockCode will be null/absent. 
@@ -18,7 +19,7 @@ class AuthRepository {
       }
       return null;
     } catch (e) {
-      print('❌ OTP Error: $e');
+      debugPrint('❌ OTP Error: $e');
       return null;
     }
   }
@@ -50,7 +51,11 @@ class AuthRepository {
           'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',
           'registerRequired': userData['registerRequired'] ?? false,
+          'pin': userData['pin'],
+          'pinUpdatedAt': userData['pinUpdatedAt'],
+          'passKeySet': userData['passKeySet'] ?? (userData['pin'] != null),
         };
+
 
         return UserModel.fromJson(mappedUser);
       }
@@ -69,10 +74,14 @@ class AuthRepository {
   // Get current user
   Future<UserModel> getCurrentUser() async {
     try {
+      debugPrint('🚀 [AuthRepository] Fetching current user profile...');
       final response = await ApiService().getMe();
+
       if (response.statusCode == 200) {
         final userData = response.data['data']['user'];
+        debugPrint('👤 [AuthRepository] User Data from API: $userData');
         final Map<String, dynamic> mappedUser = {
+
           ...Map<String, dynamic>.from(userData),
           'phone': userData['contactNo'] ?? userData['phone'] ?? '',
           'totalCollectionValue': (userData['goldAdvanceAmount'] ?? 0.0).toDouble(),
@@ -81,7 +90,11 @@ class AuthRepository {
           'bankStatus': (userData['bankStatus'] ?? 'PENDING').toString().toLowerCase(),
           'isAdmin': userData['role'] == 'ADMIN',
           'registerRequired': userData['registerRequired'] ?? false,
+          'pin': userData['pin'],
+          'pinUpdatedAt': userData['pinUpdatedAt'],
+          'passKeySet': userData['passKeySet'] ?? (userData['pin'] != null),
         };
+
         return UserModel.fromJson(mappedUser);
       }
       throw Exception('Failed to fetch user');
@@ -144,4 +157,26 @@ class AuthRepository {
       return null;
     }
   }
+
+  // Set/Update PIN
+
+  Future<bool> setPin(String pin) async {
+    try {
+      final response = await ApiService().post('/users/pin', data: {'pin': pin});
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Verify PIN
+  Future<bool> verifyPin(String pin) async {
+    try {
+      final response = await ApiService().post('/users/pin/verify', data: {'pin': pin});
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }
+

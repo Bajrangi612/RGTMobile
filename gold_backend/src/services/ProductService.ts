@@ -5,14 +5,19 @@ class ProductService {
   /**
    * Get all active products
    */
-  async getAllProducts(categoryId?: string, includeInactive: boolean = false) {
+  async getAllProducts(categoryId?: string, includeInactive: boolean = false, page: number = 1, limit: number = 50) {
     const where: any = includeInactive ? {} : { isActive: true };
     if (categoryId) {
       where.categoryId = categoryId;
     }
 
-    return await prisma.product.findMany({
-      where,
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
       include: {
         category: true,
         _count: {
@@ -22,8 +27,19 @@ class ProductService {
             }
           }
         }
+      }),
+      prisma.product.count({ where })
+    ]);
+
+    return {
+      products,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
       }
-    });
+    };
   }
 
   /**
@@ -194,7 +210,22 @@ class ProductService {
 
     return newPrice;
   }
-}
 
+  /**
+   * Get historical gold price data
+   */
+  async getGoldPriceHistory(limit: number = 24): Promise<any[]> {
+    const prices = await prisma.goldPrice.findMany({
+      orderBy: { timestamp: "desc" },
+      take: limit,
+    });
+
+    // Return in chronological order (oldest first for charts)
+    return prices.reverse().map(p => ({
+      price: Number(p.sellPrice),
+      timestamp: p.timestamp,
+    }));
+  }
+}
 
 export default new ProductService();

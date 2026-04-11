@@ -112,34 +112,36 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       _buildTextField(_emailController, "example@mail.com", Icons.email_outlined, keyboardType: TextInputType.emailAddress),
                       const SizedBox(height: 20),
 
-                      _buildFieldTitle('Residential Address'),
-                      _buildTextField(_addressController, "House No, Street, City, State, PIN", Icons.home_outlined, maxLines: 3),
-                      const SizedBox(height: 20),
+                       _buildFieldTitle('Residential Address (Optional)'),
+                       _buildTextField(_addressController, "House No, Street, City, State, PIN", Icons.home_outlined, maxLines: 3, isRequired: false),
+                       const SizedBox(height: 20),
+ 
+                     ],
+                   ),
+                 ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
+                 
+                 const SizedBox(height: 16),
+                 
+                 Text('IDENTITY DETAILS', style: AppTextStyles.caption.copyWith(letterSpacing: 1.5, color: AppColors.royalGold)),
+                 const SizedBox(height: 12),
+                 
+                 GoldCard(
+                   child: Column(
+                     crossAxisAlignment: CrossAxisAlignment.start,
+                     children: [
+                       _buildFieldTitle('PAN Number (Optional)'),
+                       _buildTextField(
+                         _panController, 
+                         "ABCDE1234F", 
+                         Icons.credit_card, 
+                         textCapitalization: TextCapitalization.characters,
+                         isRequired: false,
+                       ),
+                       const SizedBox(height: 24),
+                     ],
+                   ),
+                 ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1),
 
-                    ],
-                  ),
-                ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1),
-                
-                const SizedBox(height: 16),
-                
-                Text('IDENTITY DETAILS', style: AppTextStyles.caption.copyWith(letterSpacing: 1.5, color: AppColors.royalGold)),
-                const SizedBox(height: 12),
-                
-                GoldCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildFieldTitle('PAN Number'),
-                      _buildTextField(
-                        _panController, 
-                        "ABCDE1234F", 
-                        Icons.credit_card, 
-                        textCapitalization: TextCapitalization.characters,
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ).animate(delay: 100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.1),
 
                 const SizedBox(height: 40),
                 
@@ -175,6 +177,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     TextInputType? keyboardType,
     int maxLines = 1,
     TextCapitalization textCapitalization = TextCapitalization.none,
+    bool isRequired = true,
   }) {
     return TextFormField(
       controller: controller,
@@ -203,11 +206,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) {
+        if (isRequired && (value == null || value.isEmpty)) {
           return 'This field is required';
         }
         return null;
       },
     );
   }
+
 }

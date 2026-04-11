@@ -8,15 +8,18 @@ export class ProductController {
    */
   static async listProducts(req: any, res: Response, next: NextFunction) {
     try {
-      const { categoryId, includeInactive } = req.query;
+      const { categoryId, includeInactive, page, limit } = req.query;
       const isAdmin = req.user?.role === 'ADMIN' || includeInactive === 'true';
-      const products = await ProductService.getAllProducts(categoryId as string, isAdmin);
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = parseInt(limit as string) || 50;
+
+      const result = await ProductService.getAllProducts(categoryId as string, isAdmin, pageNum, limitNum);
       const livePriceObj = await ProductService.getLatestGoldPrice();
       
       const livePrice = livePriceObj ? Number(livePriceObj.sellPrice) : 0;
 
       // Map products with current dynamic pricing
-      const productsWithPrice = products.map((p: any) => {
+      const productsWithPrice = result.products.map((p: any) => {
         const productPojo = JSON.parse(JSON.stringify(p));
         return {
           ...productPojo,
@@ -24,7 +27,11 @@ export class ProductController {
         };
       });
 
-      return successResponse(res, { products: productsWithPrice, livePrice }, "Products fetched");
+      return successResponse(res, { 
+        products: productsWithPrice, 
+        livePrice,
+        pagination: result.pagination
+      }, "Products fetched");
     } catch (error) {
       next(error);
     }
@@ -137,6 +144,19 @@ export class ProductController {
       await ProductService.updateGoldPrice(Number(buyPrice), Number(sellPrice));
 
       return successResponse(res, null, "Gold price updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Get historical gold price data
+   */
+  static async getPriceHistory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { limit } = req.query;
+      const history = await ProductService.getGoldPriceHistory(limit ? Number(limit) : 24);
+      return successResponse(res, { history }, "Gold price history fetched");
     } catch (error) {
       next(error);
     }

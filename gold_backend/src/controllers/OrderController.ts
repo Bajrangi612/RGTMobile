@@ -24,10 +24,14 @@ export class OrderController {
       );
       
       return successResponse(res, orderData, "Order initiated successfully", 201);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message.includes("referral code") || error.message.includes("stock") || error.message.includes("not found")) {
+        return errorResponse(res, error.message, 400);
+      }
       next(error);
     }
   }
+
 
   /**
    * Verify the payment from the mobile app via Cashfree
@@ -60,9 +64,16 @@ export class OrderController {
   static async myOrders(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const userId = req.user!.id;
-      const orders = await OrderService.getUserOrders(userId);
+      const { page, limit } = req.query;
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = parseInt(limit as string) || 50;
 
-      return successResponse(res, { orders }, "Orders fetched successfully");
+      const result = await OrderService.getUserOrders(userId, pageNum, limitNum);
+
+      return successResponse(res, { 
+        orders: result.orders,
+        pagination: result.pagination
+      }, "Orders fetched successfully");
     } catch (error) {
       next(error);
     }
@@ -73,8 +84,16 @@ export class OrderController {
    */
   static async listAllOrders(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const orders = await OrderService.getAllOrders();
-      return successResponse(res, { orders }, "All orders fetched successfully");
+      const { page, limit } = req.query;
+      const pageNum = parseInt(page as string) || 1;
+      const limitNum = parseInt(limit as string) || 50;
+
+      const result = await OrderService.getAllOrders(pageNum, limitNum);
+      
+      return successResponse(res, { 
+        orders: result.orders,
+        pagination: result.pagination
+      }, "All orders fetched successfully");
     } catch (error) {
       next(error);
     }
@@ -117,10 +136,14 @@ export class OrderController {
       const userId = req.user!.id as string;
       const request = await OrderService.initiateBuyback(orderId, userId);
       return successResponse(res, { request }, "Buyback request initiated successfully");
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message.includes("gold ready") || error.message.includes("already pending") || error.message.includes("price not available")) {
+        return errorResponse(res, error.message, 400);
+      }
       next(error);
     }
   }
+
 
   /**
    * List all buyback requests (Admin only)

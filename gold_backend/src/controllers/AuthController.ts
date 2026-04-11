@@ -57,8 +57,12 @@ export class AuthController {
             orderCount: userData._count?.orders || 0,
             registerRequired: !userData.name || userData.name.startsWith('User '),
             isAdmin: userData.role === 'ADMIN',
+            pin: userData.pin,
+            pinUpdatedAt: userData.pinUpdatedAt,
+            passKeySet: !!userData.pin,
           }
         },
+
         'User fetched successfully'
       );
     } catch (error) {
@@ -188,8 +192,12 @@ export class AuthController {
             referralCode: user.referralCode || "", 
             registerRequired: isNewUser,
             isAdmin: user.role === 'ADMIN',
+            pin: user.pin,
+            pinUpdatedAt: user.pinUpdatedAt,
+            passKeySet: !!user.pin,
           },
         },
+
         isNewUser ? 'Account created and logged in' : 'Login successful'
       );
     } catch (error) {

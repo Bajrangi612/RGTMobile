@@ -173,8 +173,11 @@ model User {
   buybackRequests                  BuybackRequest[]
   notifications                    Notification[]
   fcmToken                         String?             @db.VarChar(255)
+  pin                              String?
+  pinUpdatedAt                     DateTime?
 
   @@index([phone], map: "User_phone_idx")
+
   @@index([referrerId], map: "User_referrerId_fkey")
   @@index([role], map: "User_role_idx")
   @@index([staffId], map: "User_staffId_fkey")

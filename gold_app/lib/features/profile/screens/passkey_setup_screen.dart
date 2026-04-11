@@ -9,6 +9,10 @@ import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
+import '../../auth/providers/auth_provider.dart';
+
+
 
 class PasskeySetupScreen extends ConsumerStatefulWidget {
   const PasskeySetupScreen({super.key});
@@ -17,175 +21,276 @@ class PasskeySetupScreen extends ConsumerStatefulWidget {
   ConsumerState<PasskeySetupScreen> createState() => _PasskeySetupScreenState();
 }
 
+enum SetupStep { verifyOld, enterNew, confirmNew }
+
 class _PasskeySetupScreenState extends ConsumerState<PasskeySetupScreen> {
-  bool _isEnabling = false;
-  final LocalAuthentication _auth = LocalAuthentication();
+  List<String> _pin = [];
+  String _pendingNewPin = '';
+  bool _isLoading = false;
+  bool _isCheckingStatus = false;
+  SetupStep _currentStep = SetupStep.enterNew;
+  bool _isInitialized = false;
 
-  Future<void> _enablePasskey() async {
-    try {
-      final bool canAuthenticateWithBiometrics = await _auth.canCheckBiometrics;
-      final bool canAuthenticate = canAuthenticateWithBiometrics || await _auth.isDeviceSupported();
+  @override
+  void initState() {
+    super.initState();
+    _checkStatus();
+  }
 
-      if (!canAuthenticate) {
-        if (mounted) context.showErrorSnackBar('Your device does not support biometric/security features.');
-        return;
-      }
-
-      setState(() => _isEnabling = true);
-      
-      final bool didAuthenticate = await _auth.authenticate(
-        localizedReason: 'Secure your Royal Gold account with biometrics',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false,
-        ),
-      );
-
-      if (didAuthenticate) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('biometric_enabled', true);
-        
-        if (mounted) {
-          context.showSuccessSnackBar('Passkey enabled successfully!');
-          Navigator.of(context).pop();
+  Future<void> _checkStatus() async {
+    setState(() => _isCheckingStatus = true);
+    // Fetch latest user data to ensure PIN status and timestamp are fresh
+    await ref.read(authProvider.notifier).getCurrentUser();
+    if (mounted) {
+      final user = ref.read(authProvider).user;
+      setState(() {
+        _isCheckingStatus = false;
+        if (!_isInitialized) {
+          _currentStep = (user?.pin != null) ? SetupStep.verifyOld : SetupStep.enterNew;
+          _isInitialized = true;
         }
+      });
+    }
+  }
+
+
+
+  void _onNumberPressed(String number) {
+    if (_pin.length < 4) {
+      setState(() => _pin.add(number));
+    }
+  }
+
+  void _onBackspace() {
+    if (_pin.isNotEmpty) {
+      setState(() => _pin.removeLast());
+    }
+  }
+
+  Future<void> _submitPin() async {
+    if (_pin.length != 4) return;
+    
+    setState(() => _isLoading = true);
+    
+    if (_currentStep == SetupStep.verifyOld) {
+      final success = await ref.read(authProvider.notifier).verifyPin(_pin.join());
+      setState(() => _isLoading = false);
+      if (success) {
+        setState(() {
+          _pin.clear();
+          _currentStep = SetupStep.enterNew;
+        });
+      } else {
+        setState(() => _pin.clear());
+        if (mounted) context.showErrorSnackBar('Incorrect PIN. Please try again.');
       }
-    } catch (e) {
-      if (mounted) context.showErrorSnackBar('Security setup failed: ${e.toString()}');
-    } finally {
-      if (mounted) setState(() => _isEnabling = false);
+    } 
+    else if (_currentStep == SetupStep.enterNew) {
+      setState(() {
+        _pendingNewPin = _pin.join();
+        _pin.clear();
+        _currentStep = SetupStep.confirmNew;
+        _isLoading = false;
+      });
+    } 
+    else if (_currentStep == SetupStep.confirmNew) {
+      if (_pin.join() == _pendingNewPin) {
+        final success = await ref.read(authProvider.notifier).setPin(_pin.join());
+        setState(() => _isLoading = false);
+
+        if (success && mounted) {
+          final isSet = ref.read(authProvider).user?.pin != null;
+          context.showSuccessSnackBar(isSet ? 'Security PIN updated successfully!' : 'Security PIN set successfully!');
+          Navigator.of(context).pop();
+        } else if (mounted) {
+          context.showErrorSnackBar('Failed to update PIN. Please try again.');
+        }
+      } else {
+        setState(() {
+          _isLoading = false;
+          _pin.clear();
+          _pendingNewPin = '';
+          _currentStep = SetupStep.enterNew;
+        });
+        if (mounted) context.showErrorSnackBar('PINs do not match. Try again.');
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final isPinSet = user?.pin != null;
+    final lastChanged = user?.pinUpdatedAt;
+
+    // Debugging
+    debugPrint('🛡️ [PasskeySetupScreen] PIN Set: $isPinSet, PIN: ${user?.pin}, PassKeySet: ${user?.passKeySet}');
+
+
+    String title = '';
+    String subtitle = '';
+    String buttonText = '';
+
+    if (_currentStep == SetupStep.verifyOld) {
+      title = 'Enter Current PIN';
+      subtitle = 'Enter your current 4-digit PIN to verify your identity.';
+      buttonText = 'VERIFY PIN';
+    } else if (_currentStep == SetupStep.enterNew) {
+      title = isPinSet ? 'Set New PIN' : 'Security PIN';
+      subtitle = isPinSet 
+          ? 'Enter your new 4-digit PIN for sensitive transactions.'
+          : 'Set a 4-digit PIN to secure your\nSell Back and other sensitive actions.';
+      buttonText = 'NEXT';
+    } else {
+      title = 'Confirm New PIN';
+      subtitle = 'Re-enter your new 4-digit PIN to confirm.';
+      buttonText = 'CONFIRM PIN';
+    }
+
+    if (_isCheckingStatus) {
+      return Scaffold(
+        backgroundColor: AppColors.deepBlack,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: AppColors.royalGold),
+              const SizedBox(height: 16),
+              Text('Checking security status...', style: AppTextStyles.bodyMedium),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.deepBlack,
-      appBar: GoldAppBar(title: 'Security'),
+      appBar: GoldAppBar(title: isPinSet ? 'Change Security PIN' : 'Security Setup'),
       body: Container(
+        width: double.infinity,
         decoration: BoxDecoration(gradient: AppColors.darkGradient),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              SizedBox(height: 24),
-              
-              // Animated Illustration
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: AppColors.cardDarkAlt,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
+              const SizedBox(height: 24),
+              Icon(Icons.lock_person_rounded, size: 64, color: AppColors.royalGold)
+                  .animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+              const SizedBox(height: 24),
+              Text(title, style: AppTextStyles.h2),
+              if (isPinSet && lastChanged != null && _currentStep == SetupStep.verifyOld) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Last changed on ${DateFormat('dd MMM yyyy, hh:mm a').format(DateTime.parse(lastChanged))}',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.grey.withValues(alpha: 0.7)),
                 ),
-                child: Icon(
-                  Icons.fingerprint,
-                  size: 64,
-                  color: AppColors.royalGold,
-                ),
-              ).animate()
-               .scale(duration: 600.ms, curve: Curves.elasticOut)
-               .shimmer(delay: 1.seconds, duration: 2.seconds),
-
-              SizedBox(height: 32),
-
-              Text('Setup Passkey', style: AppTextStyles.h2),
-              SizedBox(height: 12),
+              ],
+              const SizedBox(height: 12),
               Text(
-                'Use biometrics or your screen lock pin to sign in faster and more securely.',
-                style: AppTextStyles.bodySmall,
+                subtitle,
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey),
                 textAlign: TextAlign.center,
               ),
 
-              SizedBox(height: 48),
+              const SizedBox(height: 48),
+              
+              // PIN Display
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(4, (index) {
+                  final hasValue = _pin.length > index;
+                  return Container(
+                    width: 20,
+                    height: 20,
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: hasValue ? AppColors.royalGold : Colors.transparent,
+                      border: Border.all(
+                        color: hasValue ? AppColors.royalGold : AppColors.grey.withValues(alpha: 0.5),
+                        width: 2,
+                      ),
+                    ),
+                  ).animate(target: hasValue ? 1 : 0).scale(begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2));
+                }),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Numeric Keypad
 
-              GoldCard(
-                hasGoldBorder: true,
-                padding: const EdgeInsets.all(20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.03),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                ),
                 child: Column(
                   children: [
-                    _FeatureRow(
-                      icon: Icons.flash_on_rounded,
-                      title: 'Faster Login',
-                      description: 'Sign in instantly without OTP',
+                    _buildKeypadRow(['1', '2', '3']),
+                    const SizedBox(height: 24),
+                    _buildKeypadRow(['4', '5', '6']),
+                    const SizedBox(height: 24),
+                    _buildKeypadRow(['7', '8', '9']),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        const SizedBox(width: 80),
+                        _buildKey('0'),
+                        _buildIconButton(Icons.backspace_outlined, _onBackspace),
+                      ],
                     ),
-                    Divider(height: 32, color: AppColors.darkGrey),
-                    _FeatureRow(
-                      icon: Icons.security_rounded,
-                      title: 'Extra Secure',
-                      description: 'Uses industry standard encryption',
+                    const SizedBox(height: 24),
+                    GoldButton(
+                      text: buttonText,
+                      isLoading: _isLoading,
+                      onPressed: _pin.length == 4 ? _submitPin : null,
                     ),
-                    Divider(height: 32, color: AppColors.darkGrey),
-                    _FeatureRow(
-                      icon: Icons.devices_rounded,
-                      title: 'Device Sync',
-                      description: 'Works across all your devices',
-                    ),
+                    const SizedBox(height: 16),
                   ],
-                ),
-              ).animate(delay: 200.ms).fadeIn(duration: 500.ms).slideY(begin: 0.1),
-
-              SizedBox(height: 48),
-
-              GoldButton(
-                text: 'Enable Passkey',
-                isLoading: _isEnabling,
-                onPressed: _isEnabling ? null : _enablePasskey,
-                icon: Icons.lock_open_rounded,
-              ),
-
-              SizedBox(height: 24),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Skip for now',
-                  style: AppTextStyles.labelLarge.copyWith(color: AppColors.grey),
                 ),
               ),
             ],
           ),
         ),
       ),
-    ) ;
+    );
   }
-}
 
-class _FeatureRow extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String description;
-
-  const _FeatureRow({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildKeypadRow(List<String> keys) {
     return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.royalGold.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: AppColors.royalGold, size: 20),
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: keys.map((key) => _buildKey(key)).toList(),
+    );
+  }
+
+  Widget _buildKey(String key) {
+    return InkWell(
+      onTap: () => _onNumberPressed(key),
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        width: 80,
+        height: 80,
+        alignment: Alignment.center,
+        child: Text(
+          key,
+          style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.normal),
         ),
-        SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTextStyles.labelLarge),
-              SizedBox(height: 2),
-              Text(description, style: AppTextStyles.caption),
-            ],
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, VoidCallback onPressed) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        width: 80,
+        height: 80,
+        alignment: Alignment.center,
+        child: Icon(icon, color: AppColors.pureWhite, size: 28),
+      ),
     );
   }
 }

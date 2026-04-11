@@ -9,7 +9,7 @@ export class WalletController {
   static async getWalletDetails(req: any, res: Response, next: NextFunction) {
     try {
       const userId = req.user.id;
-      console.log(`💰 [WalletController] Fetching wallet for user: ${userId}`);
+      // console.log(`💰 [WalletController] Fetching wallet for user: ${userId}`);
 
       const [wallet, transactions, orders] = await Promise.all([
         prisma.wallet.findUnique({ where: { userId } }),
@@ -115,19 +115,28 @@ export class WalletController {
       });
       const invoiceNo = `WDR/${year}/${(wdrCount + 1).toString().padStart(4, '0')}`;
 
-      // 3. Create a PENDING withdrawal transaction
-      const transaction = await prisma.transaction.create({
-        data: {
-          userId,
-          type: "WITHDRAWAL",
-          amount: requestedAmount,
-          status: "PENDING",
-          description: `Withdrawal request for ${type}`,
-          invoiceNo: invoiceNo,
-        } as any,
+      // 3. Create a PENDING withdrawal transaction AND deduct balance immediately
+      const result = await prisma.$transaction(async (tx) => {
+        const transaction = await tx.transaction.create({
+          data: {
+            userId,
+            type: "WITHDRAWAL",
+            amount: requestedAmount,
+            status: "PENDING",
+            description: `Withdrawal request for ${type}`,
+            invoiceNo: invoiceNo,
+          } as any,
+        });
+
+        await tx.wallet.update({
+          where: { userId },
+          data: { balance: { decrement: requestedAmount } }
+        });
+
+        return transaction;
       });
 
-      return successResponse(res, { transaction }, "Withdrawal request submitted successfully");
+      return successResponse(res, { transaction: result }, "Withdrawal request submitted successfully");
     } catch (error) {
       next(error);
     }

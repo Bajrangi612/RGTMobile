@@ -153,12 +153,13 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       const Divider(height: 24, color: AppColors.darkGrey),
                       _ProfileRow(
-                        icon: Icons.lock_open_rounded,
-                        title: 'Set up Passkey',
+                        icon: user?.pin != null ? Icons.lock_rounded : Icons.lock_open_rounded,
+                        title: user?.pin != null ? 'Security PIN' : 'Set up Passkey',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => PasskeySetupScreen()),
+                          MaterialPageRoute(builder: (_) => const PasskeySetupScreen()),
                         ),
                       ),
+
                     ],
                   ),
                 ).animate(delay: 300.ms).fadeIn(duration: 400.ms),

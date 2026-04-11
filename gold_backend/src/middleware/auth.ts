@@ -27,18 +27,18 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     };
 
     // Verify user still exists in DB (to prevent stale tokens after DB wipe)
-    console.log(`🔍 [Auth] Checking existence for UID: ${decoded.id}`);
+    // console.log(`🔍 [Auth] Checking existence for UID: ${decoded.id}`);
     const userExists = await prisma.user.findUnique({
       where: { id: decoded.id },
       select: { id: true, role: true }
     });
 
     if (!userExists) {
-      console.log(`❌ [Auth] Stale token detected. User ${decoded.id} not found.`);
+      // console.log(`❌ [Auth] Stale token detected. User ${decoded.id} not found.`);
       return errorResponse(res, "Account no longer exists. Please log in again.", 401);
     }
 
-    console.log(`✅ [Auth] User verified: ${decoded.id}`);
+    // console.log(`✅ [Auth] User verified: ${decoded.id}`);
 
     req.user = decoded;
     next();

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'transaction_detail_screen.dart';
 import '../../../core/theme/app_colors.dart';
+
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../widgets/gold_card.dart';
@@ -362,6 +364,7 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _TransactionTile extends StatelessWidget {
+
   final String title;
   final String date;
   final double amount;
@@ -386,133 +389,92 @@ class _TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showTxnDetails(context),
-      child: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardDark.withValues(alpha: 0.3),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => TransactionDetailScreen(
+                title: title,
+                date: date,
+                amount: amount,
+                isCredit: isCredit,
+                txnId: txnId,
+                status: status,
+                invoiceNo: invoiceNo,
+                mode: mode,
+                metadata: metadata,
+              ),
+            ),
+          );
+        },
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.pureWhite.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: (isCredit ? AppColors.success : AppColors.error).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              isCredit ? Icons.add_rounded : Icons.remove_rounded,
-              color: isCredit ? AppColors.success : AppColors.error,
-              size: 22,
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.cardDark.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.pureWhite.withValues(alpha: 0.05)),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 2),
-                if (txnId != null) 
-                   Text('ID: ${txnId!.substring(0, 8).toUpperCase()}', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.royalGold.withValues(alpha: 0.6))),
-                Text(date, style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontSize: 10)),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Row(
             children: [
-              Text(
-                '${isCredit ? "+" : "-"} ${Formatters.currency(amount)}',
-                style: AppTextStyles.labelLarge.copyWith(
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: (isCredit ? AppColors.success : AppColors.error).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  isCredit ? Icons.add_rounded : Icons.remove_rounded,
                   color: isCredit ? AppColors.success : AppColors.error,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 14,
+                  size: 22,
                 ),
               ),
-              if (mode != null)
-                Text(mode!.toUpperCase(), style: AppTextStyles.caption.copyWith(fontSize: 9, letterSpacing: 1)),
-            ],
-          ),
-        ],
-      ),
-    ),
-    );
-  }
-
-  void _showTxnDetails(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.cardDark,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(color: AppColors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+                    const SizedBox(height: 2),
+                    if (txnId != null) 
+                       Text('ID: ${txnId!.substring(0, 8).toUpperCase()}', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.royalGold.withValues(alpha: 0.6))),
+                    Text(date, style: AppTextStyles.caption.copyWith(color: AppColors.grey, fontSize: 10)),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('Transaction Details', style: AppTextStyles.h4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: (status == 'COMPLETED' ? AppColors.success : AppColors.warning).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                  Text(
+                    '${isCredit ? "+" : "-"} ${Formatters.currency(amount)}',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      color: isCredit ? AppColors.success : AppColors.error,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
                     ),
-                    child: Text(status.toUpperCase(), style: AppTextStyles.caption.copyWith(color: status == 'COMPLETED' ? AppColors.success : AppColors.warning, fontWeight: FontWeight.bold)),
                   ),
+                  if (mode != null)
+                    Text(mode!.toUpperCase(), style: AppTextStyles.caption.copyWith(fontSize: 9, letterSpacing: 1)),
                 ],
               ),
-              const SizedBox(height: 24),
-              _DetailRow(label: 'Date & Time', value: date),
-              if (txnId != null) _DetailRow(label: 'Transaction ID', value: txnId!),
-              if (invoiceNo != null) _DetailRow(label: 'Invoice No', value: invoiceNo!),
-              if (metadata?['paymentMode'] != null) _DetailRow(label: 'Payment Mode', value: metadata!['paymentMode']),
-              
-              if (metadata?['quantity'] != null) const SizedBox(height: 12),
-              if (metadata?['quantity'] != null) _DetailRow(label: 'Quantity', value: metadata!['quantity'].toString()),
-              if (metadata?['weight'] != null) _DetailRow(label: 'Weight (g)', value: '${metadata!['weight']}'),
-              if (metadata?['gst'] != null) _DetailRow(label: 'GST Applied', value: Formatters.currency(_toDouble(metadata!['gst']))),
-              
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                   Text('Total Amount', style: AppTextStyles.labelLarge.copyWith(color: AppColors.grey)),
-                   Text(Formatters.currency(amount), style: AppTextStyles.h3.copyWith(color: AppColors.royalGold)),
-                ],
-              ),
-              const SizedBox(height: 32),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
+}
+
 
   double _toDouble(dynamic val) {
     if (val is num) return val.toDouble();
     if (val is String) return double.tryParse(val) ?? 0.0;
     return 0.0;
   }
-}
+
 
 class _DetailRow extends StatelessWidget {
   final String label;

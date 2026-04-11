@@ -22,8 +22,12 @@ class UserModel {
   final String? bankHolderName;
   final String? bankIfsc;
   final String? bankName;
+  final String? pin;
+  final String? pinUpdatedAt;
+
 
   UserModel({
+
     required this.id,
     required this.name,
     required this.phone,
@@ -46,7 +50,11 @@ class UserModel {
     this.bankHolderName,
     this.bankIfsc,
     this.bankName,
+    this.pin,
+    this.pinUpdatedAt,
   });
+
+
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -72,7 +80,11 @@ class UserModel {
       bankHolderName: json['bankHolderName'],
       bankIfsc: json['bankIfsc'],
       bankName: json['bankName'],
+      pin: json['pin'],
+      pinUpdatedAt: json['pinUpdatedAt'],
     );
+
+
   }
 
   Map<String, dynamic> toJson() => {
@@ -98,7 +110,11 @@ class UserModel {
         'bankHolderName': bankHolderName,
         'bankIfsc': bankIfsc,
         'bankName': bankName,
+        'pin': pin,
+        'pinUpdatedAt': pinUpdatedAt,
       };
+
+
 
   UserModel copyWith({
     String? id,
@@ -123,8 +139,11 @@ class UserModel {
     String? bankHolderName,
     String? bankIfsc,
     String? bankName,
+    String? pin,
+    String? pinUpdatedAt,
   }) {
     return UserModel(
+
       id: id ?? this.id,
       name: name ?? this.name,
       phone: phone ?? this.phone,
@@ -147,16 +166,19 @@ class UserModel {
       bankHolderName: bankHolderName ?? this.bankHolderName,
       bankIfsc: bankIfsc ?? this.bankIfsc,
       bankName: bankName ?? this.bankName,
+      pin: pin ?? this.pin,
+      pinUpdatedAt: pinUpdatedAt ?? this.pinUpdatedAt,
     );
+
+
   }
 
   bool get isKycVerified => kycStatus == 'verified';
   bool get isBankVerified => bankStatus == 'verified';
   bool get isFullyVerified => isKycVerified && isBankVerified;
 
-  bool get isProfileComplete =>
-      address != null && address!.isNotEmpty &&
-      panNo != null && panNo!.isNotEmpty;
+  bool get isProfileComplete => true; // Made optional as per user request
+
 }
 
 class WalletModel {

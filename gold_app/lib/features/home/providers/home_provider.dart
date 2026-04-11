@@ -10,6 +10,7 @@ class HomeState {
   final double buyPrice;
   final double priceChange;
   final List<ProductModel> products;
+  final List<double> priceHistory;
   final bool isLoading;
   final String? error;
 
@@ -18,6 +19,7 @@ class HomeState {
     this.buyPrice = 0,
     this.priceChange = 0,
     this.products = const [],
+    this.priceHistory = const [],
     this.isLoading = false,
     this.error,
   });
@@ -27,6 +29,7 @@ class HomeState {
     double? buyPrice,
     double? priceChange,
     List<ProductModel>? products,
+    List<double>? priceHistory,
     bool? isLoading,
     String? error,
   }) {
@@ -35,6 +38,7 @@ class HomeState {
       buyPrice: buyPrice ?? this.buyPrice,
       priceChange: priceChange ?? this.priceChange,
       products: products ?? this.products,
+      priceHistory: priceHistory ?? this.priceHistory,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -67,6 +71,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         _repository.getGoldPriceData(),
         _repository.getGoldPriceChange(),
         _repository.getProducts(),
+        _repository.getGoldPriceHistory(),
       ]);
 
       final priceData = results[0] as Map<String, double>;
@@ -75,6 +80,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
         buyPrice: priceData['buyPrice'],
         priceChange: results[1] as double,
         products: results[2] as List<ProductModel>,
+        priceHistory: results[3] as List<double>,
         isLoading: false,
       );
     } catch (e) {
@@ -82,12 +88,13 @@ class HomeNotifier extends StateNotifier<HomeState> {
     }
   }
 
+  /// Refresh only price-related data (Optimized for polling)
   Future<void> refreshPrice() async {
     try {
       final results = await Future.wait([
         _repository.getGoldPriceData(),
         _repository.getGoldPriceChange(),
-        _repository.getProducts(),
+        _repository.getGoldPriceHistory(),
       ]);
 
       final priceData = results[0] as Map<String, double>;
@@ -95,8 +102,18 @@ class HomeNotifier extends StateNotifier<HomeState> {
         goldPrice: priceData['sellPrice'],
         buyPrice: priceData['buyPrice'],
         priceChange: results[1] as double,
-        products: results[2] as List<ProductModel>,
+        priceHistory: results[2] as List<double>,
       );
+    } catch (_) {
+      // Fail silently for polling
+    }
+  }
+
+  /// Explicitly refresh product listing
+  Future<void> refreshProducts() async {
+    try {
+      final products = await _repository.getProducts();
+      state = state.copyWith(products: products);
     } catch (_) {}
   }
 }

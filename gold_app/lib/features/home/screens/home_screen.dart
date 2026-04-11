@@ -8,9 +8,12 @@ import '../../product/data/models/product_model.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_button.dart';
+import '../../../widgets/gold_image.dart';
 import '../../../widgets/shimmer_loader.dart';
 import '../../../widgets/bottom_nav_bar.dart';
 import '../providers/home_provider.dart';
+import '../../order/providers/order_provider.dart';
+import '../../wallet/providers/wallet_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../product/screens/product_detail_screen.dart';
 import '../../product/screens/catalog_screen.dart';
@@ -167,7 +170,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          if (_currentIndex == index) {
+            // Optional: Scroll to top if already on this tab
+          }
+          
+          setState(() => _currentIndex = index);
+          
+          // Optimization: Trigger latest data sync for the selected tab
+          switch (index) {
+            case 0: // Home
+              ref.read(homeProvider.notifier).refreshPrice();
+              ref.read(homeProvider.notifier).refreshProducts();
+              break;
+            case 1: // Orders
+              ref.read(orderProvider.notifier).loadOrders();
+              break;
+            case 2: // Referral
+              ref.read(walletProvider.notifier).loadWalletDetails();
+              ref.read(walletProvider.notifier).loadWithdrawalHistory();
+              ref.read(authProvider.notifier).getCurrentUser();
+              break;
+            case 3: // Profile
+              ref.read(authProvider.notifier).getCurrentUser();
+              break;
+            case 4: // Catalog
+              ref.invalidate(categoriesProvider);
+              ref.invalidate(productsProvider);
+              break;
+          }
+        },
       ),
     ) ;
   }
@@ -341,6 +373,7 @@ class _HomeDashboard extends ConsumerWidget {
                   child: _GoldPriceCard(
                     price: homeState.goldPrice,
                     change: homeState.priceChange,
+                    history: homeState.priceHistory,
                     isLoading: homeState.isLoading,
                     isAdmin: authState.user?.isAdmin ?? false,
                     onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
@@ -711,6 +744,7 @@ class _AllocationLabel extends StatelessWidget {
 class _GoldPriceCard extends StatelessWidget {
   final double price;
   final double change;
+  final List<double> history;
   final bool isLoading;
   final bool isAdmin;
   final VoidCallback onRefresh;
@@ -718,6 +752,7 @@ class _GoldPriceCard extends StatelessWidget {
   const _GoldPriceCard({
     required this.price,
     required this.change,
+    required this.history,
     required this.isLoading,
     this.isAdmin = false,
     required this.onRefresh,
@@ -786,7 +821,10 @@ class _GoldPriceCard extends StatelessWidget {
             height: 50,
             width: double.infinity,
             child: CustomPaint(
-              painter: _SparklinePainter(color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.3)),
+              painter: _SparklinePainter(
+                data: history,
+                color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.3),
+              ),
             ),
           ),
         ],
@@ -796,11 +834,14 @@ class _GoldPriceCard extends StatelessWidget {
 }
 
 class _SparklinePainter extends CustomPainter {
+  final List<double> data;
   final Color color;
-  _SparklinePainter({required this.color});
+  _SparklinePainter({required this.data, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
@@ -808,10 +849,23 @@ class _SparklinePainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    path.moveTo(0, size.height * 0.8);
-    path.quadraticBezierTo(size.width * 0.2, size.height * 0.2, size.width * 0.4, size.height * 0.6);
-    path.quadraticBezierTo(size.width * 0.6, size.height * 0.9, size.width * 0.8, size.height * 0.1);
-    path.lineTo(size.width, size.height * 0.4);
+    
+    final double max = data.reduce((a, b) => a > b ? a : b);
+    final double min = data.reduce((a, b) => a < b ? a : b);
+    final double range = max - min == 0 ? 1 : max - min;
+    
+    final double stepX = size.width / (data.length - 1);
+    
+    for (int i = 0; i < data.length; i++) {
+      final double x = i * stepX;
+      final double y = size.height - ((data[i] - min) / range * size.height * 0.8 + size.height * 0.1);
+      
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
 
     canvas.drawPath(path, paint);
   }
@@ -867,131 +921,124 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.cardDark,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image area
-            Expanded(
-              flex: 5,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.surface,
-                      AppColors.cardDarkAlt.withValues(alpha: 0.3),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Stack(
-                  children: [
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: product.image.isNotEmpty 
-                          ? Image.network(
-                              product.image,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) => Icon(
-                                Icons.monetization_on_rounded,
-                                size: 64,
-                                color: AppColors.royalGold.withValues(alpha: 0.8),
-                              ),
-                            )
-                          : Icon(
-                              Icons.monetization_on_rounded,
-                              size: 64,
-                              color: AppColors.royalGold.withValues(alpha: 0.8),
-                            ),
-                      ),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
-                        ),
-                        child: Text(
-                          '${product.weight.toInt()}g',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.royalGold,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: AppColors.cardDark,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.05)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
               ),
-            ),
-            // Info area
-            Expanded(
-              flex: 3,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      product.name,
-                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.pureWhite, fontWeight: FontWeight.bold),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      '${product.purity} · ${product.fineness}',
-                      style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey),
-                    ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          Formatters.currency(product.price),
-                          style: AppTextStyles.priceTag.copyWith(fontSize: 16),
-                        ),
-                        if (product.oldPrice != null) ...[
-                          const SizedBox(width: 4),
-                          Text(
-                            Formatters.currency(product.oldPrice!),
-                            style: AppTextStyles.caption.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                              fontSize: 10,
-                              color: AppColors.grey,
-                            ),
-                          ),
-                        ],
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Image area
+              Expanded(
+                flex: 5,
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.surface,
+                        AppColors.cardDarkAlt.withValues(alpha: 0.3),
                       ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
-                  ],
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: GoldImage(
+                                  imageUrl: product.image,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  fit: BoxFit.contain,
+                                )
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            '${product.weight.toInt()}g',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.royalGold,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+              // Info area
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        product.name,
+                        style: AppTextStyles.labelMedium.copyWith(color: AppColors.pureWhite, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        '${product.purity} · ${product.fineness}',
+                        style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey),
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            Formatters.currency(product.price),
+                            style: AppTextStyles.priceTag.copyWith(fontSize: 16),
+                          ),
+                          if (product.oldPrice != null) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              Formatters.currency(product.oldPrice!),
+                              style: AppTextStyles.caption.copyWith(
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 10,
+                                color: AppColors.grey,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1149,18 +1196,9 @@ class _BannerCarouselState extends State<_BannerCarousel> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    _banners[index],
+                  child: GoldImage(
+                    imageUrl: _banners[index],
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      decoration: BoxDecoration(
-                        gradient: AppColors.goldGradient,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.stars_rounded, color: Colors.white, size: 48),
-                      ),
-                    ),
                   ),
                 ),
               );
@@ -1229,12 +1267,13 @@ class _CategoryList extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 16),
                 child: _CategoryItem(
                   label: cat.name,
-                  imagePath: cat.imageUrl ?? 'assets/images/gold_coin.png',
+                  icon: Icons.workspace_premium,
                   description: 'Certified 24K ${cat.name}',
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => CatalogScreen(initialCategoryId: cat.id)),
                   ),
                 ),
+
               )).toList(),
             ],
           ),
@@ -1248,16 +1287,19 @@ class _CategoryList extends ConsumerWidget {
 
 class _CategoryItem extends StatelessWidget {
   final String label;
-  final String imagePath;
+  final String? imagePath;
+  final IconData? icon;
   final String description;
   final VoidCallback onTap;
 
   const _CategoryItem({
     required this.label,
-    required this.imagePath,
+    this.imagePath,
+    this.icon,
     required this.description,
     required this.onTap,
   });
+
 
   @override
   Widget build(BuildContext context) {
@@ -1287,16 +1329,19 @@ class _CategoryItem extends StatelessWidget {
                 color: AppColors.royalGold.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Image.asset(
-                imagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.monetization_on_rounded,
-                  color: AppColors.royalGold,
-                  size: 32,
-                ),
-              ),
+              child: icon != null 
+                ? Icon(icon, color: AppColors.royalGold, size: 32)
+                : Image.asset(
+                    imagePath!,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => Icon(
+                      Icons.monetization_on_rounded,
+                      color: AppColors.royalGold,
+                      size: 32,
+                    ),
+                  ),
             ),
+
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -1412,69 +1457,82 @@ class _EliteProductCard extends StatelessWidget {
           ),
         ],
       ),
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
-        borderRadius: BorderRadius.circular(24),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Center(
-                  child: Hero(
-                    tag: 'elite_${product.id}',
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.royalGold.withValues(alpha: 0.3),
-                            blurRadius: 40,
-                            spreadRadius: 2,
-                          ),
-                        ],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product))),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Center(
+                    child: Hero(
+                      tag: 'elite_${product.id}',
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.royalGold.withValues(alpha: 0.3),
+                              blurRadius: 40,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: GoldImage(
+                          imageUrl: product.imageUrl ?? '',
+                          fit: BoxFit.contain,
+                        ),
                       ),
-                        child: (product.imageUrl?.startsWith('http') ?? false)
-                            ? Image.network(
-                                product.imageUrl!,
-                                fit: BoxFit.contain,
-                              )
-                            : Image.asset(
-                                (product.imageUrl?.isNotEmpty ?? false) ? product.imageUrl! : 'assets/images/gold_coin.png',
-                                fit: BoxFit.contain,
-                              ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Text(product.name, style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold), maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('${product.weight}g · ${product.purity}', style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
-                  Text(
-                    Formatters.currency(product.price),
-                    style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold),
+                const SizedBox(height: 20),
+                Flexible(
+                  child: Text(
+                    product.name,
+                    style: AppTextStyles.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.royalGold.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
                 ),
-                child: Center(
-                  child: Text('BUY ELITE', style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '${product.weight}g · ${product.purity}',
+                        style: AppTextStyles.caption.copyWith(color: AppColors.grey),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      Formatters.currency(product.price),
+                      style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.royalGold.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
+                  ),
+                  child: Center(
+                    child: Text('BUY ELITE', style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

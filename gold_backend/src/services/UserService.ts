@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { normalizeMobile } from '../utils/phone';
+import bcrypt from 'bcryptjs';
 
 export class UserService {
   static async createCustomer(data: {
@@ -38,4 +39,25 @@ export class UserService {
       include: { wallet: true },
     });
   }
+
+  static async setPin(userId: string, pin: string) {
+    const hashedPin = await bcrypt.hash(pin, 10);
+    return await prisma.user.update({
+      where: { id: userId },
+      data: { 
+        pin: hashedPin,
+        pinUpdatedAt: new Date()
+      },
+    });
+  }
+
+  static async verifyPin(userId: string, pin: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { pin: true },
+    });
+    if (!user || !user.pin) return false;
+    return await bcrypt.compare(pin, user.pin);
+  }
 }
+

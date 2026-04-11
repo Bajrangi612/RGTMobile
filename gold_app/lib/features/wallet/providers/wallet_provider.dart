@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/transaction_model.dart';
 import '../../../core/network/api_service.dart';
@@ -78,7 +79,7 @@ class WalletNotifier extends StateNotifier<WalletState> {
         state = state.copyWith(withdrawalRequests: requests);
       }
     } catch (e) {
-      print('⚠️ Withdrawal history failed: $e');
+      debugPrint('⚠️ Withdrawal history failed: $e');
     }
   }
 

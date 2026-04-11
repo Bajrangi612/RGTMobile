@@ -48,6 +48,16 @@ class ApiService {
               debugPrint('📄 [ApiService] Error data: ${e.response?.data}');
             }
           }
+          
+          // Try to extract the error message from the response body
+          if (e.response?.data != null && e.response?.data is Map) {
+            final data = e.response?.data as Map;
+            if (data.containsKey('message')) {
+              // Create a custom error message for the exception
+              e = e.copyWith(message: data['message']);
+            }
+          }
+          
           return handler.next(e);
         },
       ),
@@ -82,16 +92,22 @@ class ApiService {
 
   // ─── Products & Orders ──────────────────────────────────────────────────
 
-  Future<Response> getProducts({String? categoryId, bool includeInactive = false}) async {
+  Future<Response> getProducts({String? categoryId, bool includeInactive = false, int page = 1, int limit = 50}) async {
     final Map<String, dynamic> params = {};
     if (categoryId != null) params['categoryId'] = categoryId;
     if (includeInactive) params['includeInactive'] = 'true';
+    params['page'] = page;
+    params['limit'] = limit;
     
     return await _dio.get('/products', queryParameters: params);
   }
 
   Future<Response> getGoldPrice() async {
     return await _dio.get('/products/price');
+  }
+
+  Future<Response> getGoldPriceHistory({int limit = 24}) async {
+    return await _dio.get('/products/price-history', queryParameters: {'limit': limit});
   }
 
   Future<Response> getCategories({bool includeInactive = false}) async {
@@ -117,8 +133,8 @@ class ApiService {
     return await _dio.patch('/orders/$id/status', data: {'status': status});
   }
 
-  Future<Response> getAdminOrders() async {
-    return await _dio.get('/orders');
+  Future<Response> getAdminOrders({int page = 1, int limit = 50}) async {
+    return await _dio.get('/orders', queryParameters: {'page': page, 'limit': limit});
   }
 
   Future<Response> getAdminUsers() async {
@@ -245,7 +261,7 @@ class ApiService {
     );
   }
 
-  Future<Response> getMyWithdrawals() async {
-    return await _dio.get('/wallet/my-withdrawals');
+  Future<Response> getMyWithdrawals({int page = 1, int limit = 50}) async {
+    return await _dio.get('/wallet/my-withdrawals', queryParameters: {'page': page, 'limit': limit});
   }
 }

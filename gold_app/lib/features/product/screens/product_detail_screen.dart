@@ -10,6 +10,7 @@ import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/gold_text_field.dart';
 import '../data/models/product_model.dart';
+import '../../../widgets/gold_image.dart';
 import '../presentation/widgets/checkout_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -37,7 +38,18 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
-    final pricing = product.pricing!;
+    final pricing = product.pricing;
+    
+    if (pricing == null) {
+      return Scaffold(
+        backgroundColor: AppColors.deepBlack,
+        appBar: GoldAppBar(title: 'Product Details'),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.royalGold),
+        ),
+      );
+    }
+
     final subtotal = pricing.goldValue * _quantity;
     final gstAmount = pricing.gstAmount * _quantity;
     final totalAmount = pricing.total * _quantity;
@@ -76,24 +88,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             ),
                           ],
                         ),
-                        child: Center(
-                          child: product.image.isNotEmpty
-                            ? Image.network(
-                                product.image,
-                                height: 180,
-                                width: 180,
-                                fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) => Icon(
-                                  Icons.monetization_on_rounded,
-                                  size: 80,
-                                  color: AppColors.royalGold.withOpacity(0.9),
-                                ),
-                              )
-                            : Icon(
-                                Icons.monetization_on_rounded,
-                                size: 80,
-                                color: AppColors.royalGold.withOpacity(0.9),
-                              ),
+                        child: Hero(
+                          tag: 'elite_${product.id}',
+                          child: Center(
+                            child: GoldImage(
+                              imageUrl: product.image,
+                              height: 180,
+                              width: 180,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
                         ),
                       ),
                     ).animate(onPlay: (controller) => controller.repeat(reverse: true))
@@ -248,7 +252,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            'Apply a referral code to earn ₹${ref.watch(settingsProvider).referralReward.toInt()} commission',
+                            'Support your referrer by applying their code!',
                             style: AppTextStyles.caption,
                           ),
                         ],
@@ -306,7 +310,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Share this code to earn ₹${ref.watch(settingsProvider).referralReward.toInt()} fixed reward on every successful referral purchase.',
+                                'Share your code to earn ₹${ref.watch(settingsProvider).referralReward.toInt()} fixed reward for every purchase someone makes with it.',
                                 style: AppTextStyles.caption.copyWith(color: AppColors.success),
                               ),
                             ],
@@ -339,42 +343,6 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 child: GoldButton(
                   text: 'Proceed to Checkout',
                   onPressed: () {
-                    final user = ref.read(authProvider).user;
-                    if (user == null || !user.isProfileComplete) {
-                      showModalBottomSheet(
-                        context: context,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => GoldCard(
-                          margin: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.info_outline, color: AppColors.royalGold, size: 48),
-                              const SizedBox(height: 16),
-                              Text('Complete Profile', style: AppTextStyles.h3),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Please complete your personal and bank details to proceed with gold purchases.',
-                                textAlign: TextAlign.center,
-                                style: AppTextStyles.bodyMedium,
-                              ),
-                              const SizedBox(height: 24),
-                              GoldButton(
-                                text: 'GO TO PROFILE',
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => ProfileScreen()),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
@@ -386,6 +354,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           : null,
                       ),
                     );
+
                   },
                   icon: Icons.shopping_cart_checkout,
                 ),

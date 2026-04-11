@@ -13,7 +13,11 @@ import '../providers/order_provider.dart';
 import '../../home/providers/home_provider.dart';
 import '../../home/screens/home_screen.dart';
 
+import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/extensions.dart';
+
 class SellBackScreen extends ConsumerStatefulWidget {
+
   final OrderModel order;
 
   const SellBackScreen({super.key, required this.order});
@@ -37,16 +41,7 @@ class _SellBackScreenState extends ConsumerState<SellBackScreen> {
     _sellBackAmount = _currentPrice * widget.order.weight;
   }
 
-  Future<void> _verifyPassKey() async {
-    // Note: Passkey length is usually 6 in this app
-    if (_passKey.length < 4) return;
-    setState(() => _isVerifying = true);
-    await Future.delayed(const Duration(milliseconds: 800));
-    setState(() {
-      _isVerifying = false;
-      _step = 1;
-    });
-  }
+
 
   Future<void> _confirmSellBack() async {
     setState(() => _isVerifying = true);
@@ -59,12 +54,42 @@ class _SellBackScreenState extends ConsumerState<SellBackScreen> {
     });
   }
 
+  void _onNumberPressed(String number) {
+    if (_passKey.length < 4) {
+      setState(() => _passKey += number);
+    }
+  }
+
+  void _onBackspace() {
+    if (_passKey.isNotEmpty) {
+      setState(() => _passKey = _passKey.substring(0, _passKey.length - 1));
+    }
+  }
+
+  Future<void> _verifyPassKey() async {
+    if (_passKey.length != 4) return;
+    
+    setState(() => _isVerifying = true);
+    final isValid = await ref.read(authProvider.notifier).verifyPin(_passKey);
+    setState(() => _isVerifying = false);
+
+    if (isValid) {
+      setState(() => _step = 1);
+    } else {
+      if (mounted) {
+        context.showErrorSnackBar('Incorrect PIN. Please try again.');
+        setState(() => _passKey = '');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.deepBlack,
       appBar: _step != 2 ?  GoldAppBar(title: 'Sell back to Store') : null,
       body: Container(
+        width: double.infinity,
         decoration: BoxDecoration(gradient: AppColors.darkGradient),
         child: _buildStep(),
       ),
@@ -86,36 +111,123 @@ class _SellBackScreenState extends ConsumerState<SellBackScreen> {
 
   Widget _buildPassKeyStep() {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Spacer(),
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppColors.royalGold.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
-              ),
-              child: Icon(Icons.lock_rounded, size: 40, color: AppColors.royalGold),
-            ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
-            SizedBox(height: 24),
-            Text('Enter Passkey', style: AppTextStyles.h3).animate(delay: 200.ms).fadeIn(),
-            SizedBox(height: 8),
-            const SizedBox(height: 40), // Placeholder for actual passkey fields
-            GoldButton(
-              text: 'Verify',
-              isLoading: _isVerifying,
-              onPressed: () => _verifyPassKey(),
-            ).animate(delay: 500.ms).fadeIn(),
-            Spacer(flex: 2),
-          ],
-        ),
+      child: Column(
+        children: [
+          const SizedBox(height: 48),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.royalGold.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.3)),
+            ),
+            child: Icon(Icons.lock_rounded, size: 40, color: AppColors.royalGold),
+          ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
+          const SizedBox(height: 24),
+          Text('Enter Security PIN', style: AppTextStyles.h3).animate(delay: 200.ms).fadeIn(),
+          const SizedBox(height: 8),
+          Text('Verify your identity to proceed', style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey)),
+          
+          const SizedBox(height: 48),
+          
+          // PIN Display
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(4, (index) {
+              final hasValue = _passKey.length > index;
+              return Container(
+                width: 16,
+                height: 16,
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: hasValue ? AppColors.royalGold : Colors.transparent,
+                  border: Border.all(
+                    color: hasValue ? AppColors.royalGold : AppColors.grey.withValues(alpha: 0.5),
+                    width: 2,
+                  ),
+                ),
+              );
+            }),
+          ),
+          
+          const Spacer(),
+          
+          // Numeric Keypad
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            child: Column(
+              children: [
+                _buildKeypadRow(['1', '2', '3']),
+                const SizedBox(height: 16),
+                _buildKeypadRow(['4', '5', '6']),
+                const SizedBox(height: 16),
+                _buildKeypadRow(['7', '8', '9']),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const SizedBox(width: 80),
+                    _buildKey('0'),
+                    _buildIconButton(Icons.backspace_outlined, _onBackspace),
+                  ],
+                ),
+                const SizedBox(height: 32),
+                GoldButton(
+                  text: 'VERIFY',
+                  isLoading: _isVerifying,
+                  onPressed: _passKey.length == 4 ? _verifyPassKey : null,
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ],
       ),
     ) ;
   }
+
+  Widget _buildKeypadRow(List<String> keys) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: keys.map((key) => _buildKey(key)).toList(),
+    );
+  }
+
+  Widget _buildKey(String key) {
+    return InkWell(
+      onTap: () => _onNumberPressed(key),
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        width: 70,
+        height: 70,
+        alignment: Alignment.center,
+        child: Text(
+          key,
+          style: AppTextStyles.h4.copyWith(fontWeight: FontWeight.normal),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIconButton(IconData icon, VoidCallback onPressed) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        width: 70,
+        height: 70,
+        alignment: Alignment.center,
+        child: Icon(icon, color: AppColors.pureWhite, size: 24),
+      ),
+    );
+  }
+
 
   Widget _buildConfirmStep() {
     return Column(

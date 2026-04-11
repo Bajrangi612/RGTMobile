@@ -9,17 +9,23 @@ const instance = new Razorpay({
 });
 
 class PaymentService {
-  async createOrder(amount: number, orderId: string, customerId: string, customerPhone: string) {
+  async createOrder(amount: number, orderId: string, customerId: string, customerPhone: string, orderDetails: any) {
     const options = {
       amount: Math.round(amount * 100), // amount in paise
       currency: "INR",
       receipt: orderId,
-      notes: { customerId, customerPhone },
+      notes: { ...orderDetails, customerId, customerPhone },
     };
 
     const order = await instance.orders.create(options);
     return order;
   }
+
+  async fetchOrder(orderId: string) {
+    return await instance.orders.fetch(orderId);
+  }
+
+
 
   async verifyPayment(razorpayOrderId: string): Promise<boolean> {
     try {

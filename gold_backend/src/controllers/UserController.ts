@@ -184,4 +184,54 @@ export class UserController {
       next(error);
     }
   }
+
+  /**
+   * Set or update user security PIN
+   */
+  static async setPin(req: any, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user.id;
+      const { pin } = req.body;
+
+      if (!pin || pin.length !== 4 || !/^\d+$/.test(pin)) {
+        return errorResponse(res, "PIN must be exactly 4 digits", 400);
+      }
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          pin,
+          pinUpdatedAt: new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000))
+        },
+      });
+
+      return successResponse(res, null, "PIN updated successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Verify if the provided PIN is correct
+   */
+  static async verifyPin(req: any, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user.id;
+      const { pin } = req.body;
+
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { pin: true },
+      });
+
+      if (!user?.pin || user.pin !== pin) {
+        return errorResponse(res, "Incorrect PIN", 401);
+      }
+
+      return successResponse(res, null, "PIN verified successfully");
+    } catch (error) {
+      next(error);
+    }
+  }
 }
+

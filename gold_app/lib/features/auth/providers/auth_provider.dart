@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/auth_repository.dart';
 import '../data/models/user_model.dart';
@@ -81,7 +82,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: user);
     } catch (e) {
       // Keep existing user if refresh fails or handle error
-      print('⚠️ Profile refresh failed: $e');
+      debugPrint('⚠️ Profile refresh failed: $e');
     }
   }
 
@@ -183,7 +184,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
   }
+
+  // Set Security PIN
+  Future<bool> setPin(String pin) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final success = await _repository.setPin(pin);
+      if (success) {
+        // Refresh user to get updated pin state
+        await getCurrentUser();
+      }
+      state = state.copyWith(isLoading: false);
+      return success;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  // Verify PIN
+  Future<bool> verifyPin(String pin) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final success = await _repository.verifyPin(pin);
+      state = state.copyWith(isLoading: false, error: success ? null : 'Incorrect PIN');
+      return success;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: 'PIN verification failed');
+      return false;
+    }
+  }
 }
+
 
 // Provider
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

@@ -29,9 +29,17 @@ class OrderService {
     if (referralCode) {
       const dbUser = await prisma.user.findUnique({ where: { id: userId } });
       if (dbUser) {
-        const isSelf = dbUser.referralCode === referralCode.trim().toUpperCase();
-        if (isSelf && paidOrderCount === 0) {
-          throw new Error("You cannot use your own referral code for the first order.");
+        const normalizedCode = referralCode.trim().toUpperCase();
+        const isSelf = dbUser.referralCode === normalizedCode;
+        
+        if (isSelf) {
+          throw new Error("You cannot use your own referral code for your own order.");
+        }
+
+        // Verify the referral code actually exists in the system
+        const referrer = await prisma.user.findUnique({ where: { referralCode: normalizedCode } });
+        if (!referrer) {
+          throw new Error("The referral code provided is invalid or does not exist.");
         }
       }
     }
@@ -39,61 +47,50 @@ class OrderService {
     // 3. Calculate Pricing (Weight * Price * 1.03)
     const pricing = ProductService.calculateProductPrice(product, livePrice);
 
-    // Get IST time
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const nowIST = new Date(Date.now() + istOffset);
-
-    // 3. Create Database Order (Pending)
-    const order = await prisma.order.create({
-      data: {
-        userId,
-        productId,
-        quantity,
-        amount: new Prisma.Decimal(pricing.goldValue),
-        gst: new Prisma.Decimal(pricing.gstAmount),
-        total: new Prisma.Decimal(pricing.total),
-        weight: new Prisma.Decimal(pricing.weight),
-        status: "PAYMENT_PENDING",
-        goldPriceAtPurchase: new Prisma.Decimal(livePrice),
-        referralCode: referralCode,
-        createdAt: nowIST,
-        statusHistory: {
-          create: {
-            status: "PAYMENT_PENDING",
-            notes: "Order initiated and awaiting payment.",
-            createdAt: nowIST,
-          }
-        }
-      },
-    });
-
-    // 4. Create Razorpay Order
+    // 4. Create Razorpay Order with DETAILS IN NOTES
+    // We don't create a DB record yet to satisfy the requirement: "Until Customer Completes his order successfully with payment, dont create new record"
+    const tempReceipt = `RCPT-${Date.now()}-${userId.substring(0, 4)}`;
+    
     const user = await prisma.user.findUnique({ where: { id: userId } });
+    
     let razorpayOrder;
     try {
       razorpayOrder = await PaymentService.createOrder(
         pricing.total * quantity,
-        order.id,
+        tempReceipt,
         userId,
-        user?.phone || "9999999999"
+        user?.phone || "9999999999",
+        {
+          productId,
+          quantity: quantity.toString(),
+          referralCode: referralCode || "",
+          livePrice: livePrice.toString(),
+          pricingTotal: pricing.total.toString(),
+          pricingGold: pricing.goldValue.toString(),
+          pricingGst: pricing.gstAmount.toString(),
+          pricingWeight: pricing.weight.toString(),
+        }
       );
     } catch (paymentError: any) {
       console.error("❌ [OrderService] Razorpay Order Creation Failed:", paymentError.message || paymentError);
       throw new Error(`Payment gateway error: ${paymentError.message || "Failed to initiate payment"}`);
     }
 
-    // 5. Link Razorpay Order ID to our local Order
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { paymentId: (razorpayOrder as any).id },
-    });
-
     return {
-      orderId: order.id,
+      orderId: (razorpayOrder as any).id, // We use Razorpay ID as temporary orderId
       razorpayOrderId: (razorpayOrder as any).id,
       amount: pricing.total * quantity,
       currency: "INR",
     };
+  }
+
+
+  /**
+   * Complete the order after payment verification
+   */
+  private getIST() {
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    return new Date(Date.now() + istOffset);
   }
 
   /**
@@ -101,81 +98,94 @@ class OrderService {
    */
   async verifyAndFinalizeOrder(
     userId: string,
-    orderId: string,
+    razorpayOrderId: string,
     razorpayPaymentId: string,
     razorpaySignature: string
   ) {
-    // 1. Fetch Order
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
-      include: { product: true }
-    });
-
-    if (!order || order.userId !== userId) throw new Error("Order not found");
-    if (order.status === "PAYMENT_SUCCESSFUL") return order; // Already processed
-
-    // 2. Verify Payment via Razorpay Signature
-    if (!order.paymentId) throw new Error("Order has no active payment session");
-    
-    const isValid = PaymentService.verifySignature(order.paymentId, razorpayPaymentId, razorpaySignature);
+    // 1. Verify Payment via Razorpay Signature
+    const isValid = PaymentService.verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
     if (!isValid) throw new Error("Invalid payment signature");
 
+    // 2. Fetch Order Details from Razorpay (since we didn't save it in DB yet)
+    const razorpayOrder = await PaymentService.fetchOrder(razorpayOrderId);
+    const notes = razorpayOrder.notes as any;
 
-    // 3. Update Order Status and Process Rewards
-    const invoiceNo = `INV-${Date.now()}-${order.id.substring(0, 4).toUpperCase()}`;
+    if (!notes || notes.customerId !== userId) {
+      throw new Error("Invalid order session or unauthorized user.");
+    }
+
+    // Check if order already exists (Idempotency)
+    const existingOrder = await prisma.order.findFirst({
+      where: { paymentId: razorpayOrderId }
+    });
+    if (existingOrder) return existingOrder;
+
+    const productId = notes.productId;
+    const quantity = parseInt(notes.quantity);
+    const referralCode = notes.referralCode;
+    const livePrice = new Prisma.Decimal(notes.livePrice);
+    const amount = new Prisma.Decimal(notes.pricingGold);
+    const gst = new Prisma.Decimal(notes.pricingGst);
+    const total = new Prisma.Decimal(notes.pricingTotal);
+    const weight = new Prisma.Decimal(notes.pricingWeight);
+
+    // 3. Create actual Order Record in Database
+    const nowIST = this.getIST();
+    const invoiceNo = `INV-${Date.now()}-${razorpayOrderId.substring(razorpayOrderId.length - 4).toUpperCase()}`;
 
     const result = await prisma.$transaction(async (tx) => {
       // Get delivery settings
       const deliveryDaysSetting = await tx.setting.findUnique({ where: { key: "delivery_days" } });
       const deliveryDays = deliveryDaysSetting ? parseInt(deliveryDaysSetting.value) : 7;
-      const deliveryDate = new Date();
+      const deliveryDate = new Date(nowIST);
       deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
 
-      const latestPrice = await ProductService.getLatestGoldPrice();
-
-      const updatedOrder = await tx.order.update({
-        where: { id: orderId },
+      // Create Order
+      const newOrder = await tx.order.create({
         data: {
-          status: "PAYMENT_SUCCESSFUL",
+          userId,
+          productId,
+          quantity,
+          amount,
+          gst,
+          total,
+          weight,
+          paymentId: razorpayOrderId,
           paymentStatus: "SUCCESS",
+          status: "ORDER_CONFIRMED",
           invoiceNo: invoiceNo,
           deliveryDate: deliveryDate,
-          goldPriceAtPurchase: latestPrice.sellPrice,
-        } as any,
+          goldPriceAtPurchase: livePrice,
+          referralCode: referralCode || null,
+          createdAt: nowIST,
+          statusHistory: {
+            createMany: {
+              data: [
+                { status: "PAYMENT_SUCCESSFUL", notes: "Verified Payment Successfully.", createdAt: nowIST },
+                { status: "ORDER_CONFIRMED", notes: "Order confirmed and fulfillment initiated.", createdAt: nowIST }
+              ]
+            }
+          }
+        },
+        include: { product: true }
       });
 
       // Track Payment in separate table
       await tx.payment.create({
         data: {
-          orderId: order.id,
-          razorpayOrderId: order.paymentId!,
+          orderId: newOrder.id,
+          razorpayOrderId: razorpayOrderId,
           razorpayPaymentId: razorpayPaymentId,
           razorpaySignature: razorpaySignature,
-          amount: order.total,
+          amount: total,
           status: "SUCCESS"
-        }
-      });
-
-      // Transition to ORDER_CONFIRMED (Collection countdown starts)
-      await tx.order.update({
-        where: { id: orderId },
-        data: { 
-          status: "ORDER_CONFIRMED",
-          statusHistory: {
-            createMany: {
-              data: [
-                { status: "PAYMENT_SUCCESSFUL", notes: "Payment verified successfully." },
-                { status: "ORDER_CONFIRMED", notes: "Order confirmed and fulfillment initiated." }
-              ]
-            }
-          }
         }
       });
 
       // Reduce Stock
       await tx.product.update({
-        where: { id: order.productId },
-        data: { stock: { decrement: order.quantity } },
+        where: { id: productId },
+        data: { stock: { decrement: quantity } },
       });
 
       // Create Transaction record for the Purchase
@@ -183,40 +193,39 @@ class OrderService {
         data: {
           userId,
           type: "PURCHASE",
-          amount: order.total,
-          description: `Gold Collection - ${order.product.name} (Qty: ${order.quantity})`,
+          amount: total,
+          description: `Gold Collection - ${newOrder.product.name} (Qty: ${quantity})`,
           status: "COMPLETED",
           invoiceNo: invoiceNo,
+          createdAt: nowIST,
         }
       });
 
       // Handle Referral Reward (Fixed amount set by admin)
-      if (order.referralCode) {
+      if (referralCode) {
         const referrer = await tx.user.findUnique({
-          where: { referralCode: order.referralCode }
+          where: { referralCode }
         });
 
         if (referrer) {
-          // Fetch reward setting (default ₹500 if not found)
-          const rewardSetting = await tx.setting.findUnique({ where: { key: "referral_reward" } });
-          const rewardAmount = rewardSetting ? Number(rewardSetting.value) : 500;
-          
-          await tx.wallet.update({
-            where: { userId: referrer.id },
-            data: { 
-              balance: { increment: rewardAmount }
-            }
-          });
+           const rewardSetting = await tx.setting.findUnique({ where: { key: "referral_reward" } });
+           const rewardAmount = rewardSetting ? Number(rewardSetting.value) : 500;
+           
+           await tx.wallet.update({
+             where: { userId: referrer.id },
+             data: { balance: { increment: rewardAmount } }
+           });
 
-          await tx.transaction.create({
-            data: {
-              userId: referrer.id,
-              type: "REFERRAL_REWARD",
-              amount: new Prisma.Decimal(rewardAmount),
-              description: `Referral reward for facilitating Order #${orderId}`,
-              status: "COMPLETED"
-            }
-          });
+           await tx.transaction.create({
+             data: {
+               userId: referrer.id,
+               type: "REFERRAL_REWARD",
+               amount: new Prisma.Decimal(rewardAmount),
+               description: `Referral reward for facilitating Order #${newOrder.id}`,
+               status: "COMPLETED",
+               createdAt: nowIST,
+             }
+           });
         }
       }
 
@@ -225,74 +234,93 @@ class OrderService {
         data: {
           userId,
           action: "ORDER_PURCHASED",
-          details: { orderId, total: order.total, quantity: order.quantity },
+          details: { orderId: newOrder.id, total, quantity },
+          createdAt: nowIST,
         },
       });
 
-      return updatedOrder;
+      return newOrder;
     });
 
-    // 4. Generate and Sync Invoice (Non-blocking but atomic attempt)
+    // 4. Generate and Sync Invoice
     try {
-      await invoiceService.generateAndSyncInvoice(orderId);
+      await invoiceService.generateAndSyncInvoice(result.id);
     } catch (err) {
-      console.error(`⚠️ Invoice generation failed for order ${orderId}:`, err);
+      console.error(`⚠️ Invoice generation failed for order ${result.id}:`, err);
     }
 
     // 5. Auto-transition to PROCESSING after 2 seconds
     setTimeout(async () => {
       try {
-        await this.updateOrderStatus(orderId, "PROCESSING");
-        console.log(`⏱️ Auto-transitioned order ${orderId} to PROCESSING.`);
+        await this.updateOrderStatus(result.id, "PROCESSING");
       } catch (e) {
-        console.error(`Failed to auto-transition order ${orderId} to PROCESSING:`, e);
+        console.error(`Failed to auto-transition order ${result.id} to PROCESSING:`, e);
       }
     }, 2000);
 
     return result;
   }
 
+
   /**
    * Get purchase history for a user
    */
-  async getUserOrders(userId: string) {
-    return await prisma.order.findMany({
-      where: { userId },
-      include: { 
-        product: true,
-        statusHistory: { orderBy: { createdAt: "asc" } }
-      },
-      orderBy: { createdAt: "desc" },
-    });
+  async getUserOrders(userId: string, page: number = 1, limit: number = 50) {
+    const skip = (page - 1) * limit;
+    
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where: { userId },
+        include: { 
+          product: true,
+          statusHistory: { orderBy: { createdAt: "asc" } }
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      }),
+      prisma.order.count({ where: { userId } })
+    ]);
+
+    return {
+      orders,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+    };
   }
 
   /**
    * Get all orders in the system (Admin only)
    */
-  async getAllOrders() {
-    return await prisma.order.findMany({
-      include: {
-        product: true,
-        statusHistory: { orderBy: { createdAt: "asc" } },
-        user: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            address: true,
+  async getAllOrders(page: number = 1, limit: number = 50) {
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        include: {
+          product: true,
+          statusHistory: { orderBy: { createdAt: "asc" } },
+          user: {
+            select: { id: true, name: true, phone: true, address: true }
           }
-        }
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit
+      }),
+      prisma.order.count()
+    ]);
+
+    return {
+      orders,
+      pagination: { total, page, limit, totalPages: Math.ceil(total / limit) }
+    };
   }
 
   /**
    * Update order status (Admin only)
    */
   async updateOrderStatus(orderId: string, status: string) {
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    const nowIST = new Date(Date.now() + istOffset);
+    const nowIST = this.getIST();
 
     const order = await prisma.order.update({
       where: { id: orderId },
@@ -308,6 +336,7 @@ class OrderService {
         }
       },
     });
+
 
     // Notify User
     await NotificationService.sendPushNotification(

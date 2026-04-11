@@ -3,6 +3,7 @@ import '../../../core/network/api_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../product/data/models/product_model.dart';
+import 'package:flutter/foundation.dart';
 
 class AdminState {
   final bool isAuthenticated;
@@ -146,7 +147,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      print('🚀 Loading Admin Dashboard Data...');
+      debugPrint('🚀 Loading Admin Dashboard Data...');
 
       /// ✅ PARALLEL API CALLS (FAST)
       final results = await Future.wait([
@@ -180,16 +181,16 @@ class AdminNotifier extends StateNotifier<AdminState> {
       List<ProductModel> products = [];
       try {
         final dynamic rawProducts = productsResponse.data['data'];
-        print('📦 Products Data type: ${rawProducts.runtimeType}');
+        debugPrint('📦 Products Data type: ${rawProducts.runtimeType}');
         final productsData = rawProducts is Map ? rawProducts['products'] : null;
         if (productsData is List) {
           products = productsData.map((p) => ProductModel.fromJson(p as Map<String, dynamic>)).toList();
-          print('✅ Parsed ${products.length} products');
+          debugPrint('✅ Parsed ${products.length} products');
         } else {
-          print('⚠️ productsData is not a List: ${productsData.runtimeType}');
+          debugPrint('⚠️ productsData is not a List: ${productsData.runtimeType}');
         }
       } catch (e) {
-        print('⚠️ Products parsing failed: $e');
+        debugPrint('⚠️ Products parsing failed: $e');
       }
 
       /// =======================
@@ -198,16 +199,16 @@ class AdminNotifier extends StateNotifier<AdminState> {
       List<dynamic> categories = [];
       try {
         final dynamic rawCat = categoriesResponse.data['data'];
-        print('📂 Categories Data type: ${rawCat.runtimeType}');
+        debugPrint('📂 Categories Data type: ${rawCat.runtimeType}');
         final catData = rawCat is Map ? rawCat['categories'] : null;
         if (catData is List) {
           categories = catData;
-          print('✅ Parsed ${categories.length} categories');
+          debugPrint('✅ Parsed ${categories.length} categories');
         } else {
-          print('⚠️ catData is not a List: ${catData.runtimeType}');
+          debugPrint('⚠️ catData is not a List: ${catData.runtimeType}');
         }
       } catch (e) {
-        print('⚠️ Categories parsing failed: $e');
+        debugPrint('⚠️ Categories parsing failed: $e');
       }
 
       /// =======================
@@ -218,21 +219,21 @@ class AdminNotifier extends StateNotifier<AdminState> {
         final dynamic rawOrders = ordersResponse.data['data'];
         final ordersData = rawOrders is Map ? rawOrders['orders'] : null;
         if (ordersData is List) orders = ordersData;
-      } catch (e) { print('⚠️ Orders parsing failed: $e'); }
+      } catch (e) { debugPrint('⚠️ Orders parsing failed: $e'); }
 
       List<dynamic> users = [];
       try {
         final dynamic rawUsers = usersResponse.data['data'];
         final usersData = rawUsers is Map ? rawUsers['users'] : null;
         if (usersData is List) users = usersData;
-      } catch (e) { print('⚠️ Users parsing failed: $e'); }
+      } catch (e) { debugPrint('⚠️ Users parsing failed: $e'); }
 
       List<dynamic> transactions = [];
       try {
         final dynamic rawTxns = transactionsResponse.data['data'];
         final txnsData = rawTxns is Map ? rawTxns['transactions'] : null;
         if (txnsData is List) transactions = txnsData;
-      } catch (e) { print('⚠️ Transactions parsing failed: $e'); }
+      } catch (e) { debugPrint('⚠️ Transactions parsing failed: $e'); }
 
       /// =======================
       /// ✅ FINAL STATE UPDATE
@@ -250,9 +251,9 @@ class AdminNotifier extends StateNotifier<AdminState> {
         isLoading: false,
       );
 
-      print('🏁 Admin Data Load Complete');
+      debugPrint('🏁 Admin Data Load Complete');
     } catch (e) {
-      print('❌ Critical error: $e');
+      debugPrint('❌ Critical error: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

@@ -116,9 +116,11 @@ class OrderDetailScreen extends ConsumerWidget {
                                   dateString: order.deliveryDate != null 
                                       ? DateFormat('EEEE, MMM dd').format(order.deliveryDate!)
                                       : null,
-                                  child: order.deliveryDate != null 
-                                    ? LiveCountdown(targetDate: order.deliveryDate!)
-                                    : Text('Ready for Pickup', style: AppTextStyles.h4.copyWith(color: AppColors.deepBlack)),
+                                  child: (order.status.toUpperCase() == 'READY_FOR_PICKUP' || order.status.toUpperCase() == 'READY') 
+                                    ? Text('ORDER READY', style: AppTextStyles.h3.copyWith(color: AppColors.deepBlack, fontWeight: FontWeight.bold))
+                                    : order.deliveryDate != null 
+                                      ? LiveCountdown(targetDate: order.deliveryDate!)
+                                      : Text('Processing', style: AppTextStyles.h4.copyWith(color: AppColors.deepBlack)),
                                 ),
                               ],
                             ),
@@ -164,7 +166,7 @@ class OrderDetailScreen extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Order Timeline', style: AppTextStyles.labelLarge),
+                              Text('Order Timeline (IST)', style: AppTextStyles.labelLarge),
                               Icon(Icons.history_rounded, color: AppColors.royalGold, size: 20),
                             ],
                           ),
@@ -177,16 +179,26 @@ class OrderDetailScreen extends ConsumerWidget {
                               ),
                             )
                           else
-                            ...order.statusHistory.sortedByDateDesc().asMap().entries.map((entry) {
+                            ...(order.statusHistory
+                                .where((h) => h.status.toUpperCase() != 'PAYMENT_PENDING')
+                                .toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+                                .asMap()
+                                .entries.map((entry) {
+
                               final index = entry.key;
                               final history = entry.value;
-                              final isLast = index == order.statusHistory.length - 1;
+                              final isLast = index == (order.statusHistory.length - (order.statusHistory.any((h) => h.status == 'PAYMENT_PENDING') ? 2 : 1));
                               final statusType = statusFromString(history.status);
                               
+                              String title = statusType.name.toUpperCase().replaceAll('_', ' ');
+                              if (history.status.toUpperCase() == 'PAYMENT_SUCCESSFUL') {
+                                title = 'VERIFIED PAYMENT SUCCESSFULLY';
+                              }
+
                               return _TimelineStep(
-                                title: statusType.name.toUpperCase().replaceAll('_', ' '),
+                                title: title,
                                 subtitle: history.notes ?? 'Standard fulfillment step.',
-                                date: DateFormat('MMM dd, hh:mm a').format(history.createdAt),
+                                date: DateFormat('MMM dd, hh:mm a').format(history.createdAt.add(const Duration(hours: 0))), // Backend already sends in IST
                                 isCompleted: true,
                                 isLast: isLast,
                                 status: statusType,
@@ -195,6 +207,7 @@ class OrderDetailScreen extends ConsumerWidget {
                         ],
                       ),
                     ).animate(delay: 300.ms).fadeIn(duration: 400.ms),
+
                   ],
                 ),
               ),
