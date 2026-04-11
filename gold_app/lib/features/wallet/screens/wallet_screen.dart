@@ -82,26 +82,12 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       
                       const SizedBox(height: 24),
 
-                      // Stats Row
+                      // Stats Header
                       Row(
                         children: [
-                          Expanded(
-                            child: _StatCard(
-                              label: 'Gold Advance',
-                              value: wallet?.goldAdvance ?? 0.0,
-                              icon: Icons.auto_graph_rounded,
-                              color: AppColors.royalGold,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: _StatCard(
-                              label: 'Referral Rewards',
-                              value: wallet?.referralRewards ?? 0.0,
-                              icon: Icons.card_giftcard_rounded,
-                              color: AppColors.success,
-                            ),
-                          ),
+                          Icon(Icons.analytics_rounded, color: AppColors.royalGold, size: 20),
+                          const SizedBox(width: 8),
+                          Text('ACCOUNT ACTIVITY', style: AppTextStyles.labelLarge),
                         ],
                       ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.1),
 

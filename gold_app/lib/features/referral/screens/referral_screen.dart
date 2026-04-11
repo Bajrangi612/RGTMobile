@@ -144,8 +144,8 @@ class ReferralScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Text(
-                            (user?.wallet?.referralRewards ?? 0.0) > 0 
-                              ? (user!.wallet!.referralRewards / 500).toInt().toString() 
+                            (user?.wallet?.balance ?? 0.0) > 0 
+                              ? (user!.wallet!.balance / 500).toInt().toString() 
                               : '0', 
                             style: AppTextStyles.h2.copyWith(color: AppColors.royalGold),
                           ),
@@ -162,11 +162,11 @@ class ReferralScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Text(
-                            Formatters.currency(user?.wallet?.referralRewards ?? 0.0), 
+                            Formatters.currency(user?.wallet?.balance ?? 0.0), 
                             style: AppTextStyles.h2.copyWith(color: AppColors.success),
                           ),
                           SizedBox(height: 4),
-                          Text('Earned', style: AppTextStyles.caption),
+                          Text('Account Balance', style: AppTextStyles.caption),
                         ],
                       ),
                     ),
@@ -181,7 +181,7 @@ class ReferralScreen extends ConsumerWidget {
                 text: 'Withdraw Rewards',
                 isOutlined: true,
                 icon: Icons.payments_rounded,
-                onPressed: () => _showWithdrawDialog(context, ref, user?.wallet?.referralRewards ?? 0.0, settings.minWithdrawal),
+                onPressed: () => _showWithdrawDialog(context, ref, user?.wallet?.balance ?? 0.0, settings.minWithdrawal),
               ).animate(delay: 450.ms).fadeIn(),
 
               if (referralTransactions.isNotEmpty) ...[

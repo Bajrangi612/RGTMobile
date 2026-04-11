@@ -92,7 +92,7 @@ class AdminUserDetailScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     _InfoRow('Wallet Balance', '₹${user['wallet']?['balance'] ?? '0.00'}'),
-                    _InfoRow('Referral Earnings', '₹${user['wallet']?['referralRewards'] ?? '0.00'}', isGold: true),
+                    _InfoRow('Wallet Balance', '₹${user['wallet']?['balance'] ?? '0.00'}', isGold: true),
                     const Divider(color: Colors.white10),
                     _InfoRow('Total Assets', '₹${user['totalCollectionValue'] ?? '0.00'}'),
                   ],
