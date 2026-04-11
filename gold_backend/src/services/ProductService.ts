@@ -124,6 +124,7 @@ class ProductService {
    * @param livePrice The current gold price per gram
    * @returns object with breaking down of price
    */
+  async calculateProductPrice(product: any, livePrice: number) {
     const weight = Number(product.weight);
     const makingCharges = Number(product.makingCharges || 0);
     const fixedPrice = Number(product.fixedPrice || 0);

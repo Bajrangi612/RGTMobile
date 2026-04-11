@@ -114,8 +114,8 @@ class InvoiceService {
       };
 
       drawSummaryRow('Taxable Value:', `₹${order.amount.toFixed(2)}`);
-      drawSummaryRow('CGST (1.5%):', `₹${(order.gst / 2).toFixed(2)}`);
-      drawSummaryRow('SGST (1.5%):', `₹${(order.gst / 2).toFixed(2)}`);
+      drawSummaryRow('CGST (1.5%):', `₹${(Number(order.gst) / 2).toFixed(2)}`);
+      drawSummaryRow('SGST (1.5%):', `₹${(Number(order.gst) / 2).toFixed(2)}`);
       this.generateHr(doc, currentY);
       currentY += 10;
       drawSummaryRow('Total Amount:', `₹${order.total.toFixed(2)}`, true);

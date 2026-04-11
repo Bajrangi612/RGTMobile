@@ -33,6 +33,15 @@ export class AdminController {
    */
   static async getDashboardStats(req: Request, res: Response, next: NextFunction) {
     try {
+      const [userCount, orderCount, financialTotals] = await Promise.all([
+        prisma.user.count(),
+        prisma.order.count({ where: { status: { notIn: ["PAYMENT_PENDING", "CANCELLED"] } } }),
+        prisma.order.aggregate({
+          where: { status: { notIn: ["PAYMENT_PENDING", "CANCELLED"] } },
+          _sum: { total: true, amount: true, gst: true, weight: true }
+        })
+      ]);
+
       // 2. Weekly Revenue Breakdown (Daily Groups)
       const now = new Date();
       const dailyRevenue = [];

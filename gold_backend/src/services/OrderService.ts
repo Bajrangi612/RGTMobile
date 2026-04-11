@@ -36,7 +36,7 @@ class OrderService {
     }
 
     // 3. Calculate Pricing (Weight * Price * 1.03)
-    const pricing = ProductService.calculateEffectivePrice(product, livePrice);
+    const pricing = ProductService.calculateProductPrice(product, livePrice);
 
     // Get IST time
     const istOffset = 5.5 * 60 * 60 * 1000;
@@ -275,6 +275,7 @@ class OrderService {
   /**
    * Update order status (Admin only)
    */
+  async updateOrderStatus(orderId: string, status: string) {
     const istOffset = 5.5 * 60 * 60 * 1000;
     const nowIST = new Date(Date.now() + istOffset);
 

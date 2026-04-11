@@ -19,7 +19,7 @@ export class ProductController {
         const productPojo = JSON.parse(JSON.stringify(p));
         return {
           ...productPojo,
-          pricing: ProductService.calculateEffectivePrice(p as any, livePrice)
+          pricing: ProductService.calculateProductPrice(p as any, livePrice)
         };
       });
 
@@ -57,7 +57,7 @@ export class ProductController {
       const livePriceObj = await ProductService.getLatestGoldPrice();
       const livePrice = livePriceObj ? Number(livePriceObj.sellPrice) : 0;
       
-      const pricing = ProductService.calculateEffectivePrice(product, livePrice);
+      const pricing = ProductService.calculateProductPrice(product, livePrice);
 
       return successResponse(res, { product, pricing }, "Product details fetched");
     } catch (error) {
