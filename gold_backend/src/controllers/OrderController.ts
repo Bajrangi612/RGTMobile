@@ -101,7 +101,7 @@ export class OrderController {
     try {
       const orderId = req.params.id as string;
       const userId = req.user!.id as string;
-      const order = await OrderService.cancelOrder(userId, orderId);
+      const order = await OrderService.cancelOrder(orderId, userId);
       return successResponse(res, { order }, "Order cancelled successfully");
     } catch (error) {
       next(error);
@@ -115,7 +115,7 @@ export class OrderController {
     try {
       const orderId = req.params.id as string;
       const userId = req.user!.id as string;
-      const order = await OrderService.sellBackOrder(userId, orderId);
+      const order = await OrderService.initiateBuyback(orderId, userId);
       return successResponse(res, { order }, "Order sold back successfully");
     } catch (error) {
       next(error);
