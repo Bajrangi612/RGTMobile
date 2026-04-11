@@ -10,7 +10,7 @@ const router = Router();
  */
 router.get('/download-invoice/:orderId', async (req: Request, res: Response) => {
   try {
-    const { orderId } = req.params;
+    const orderId = req.params.orderId as string;
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
