@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -15,6 +16,7 @@ import '../presentation/widgets/checkout_sheet.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../profile/screens/profile_screen.dart';
+import '../../../core/network/api_service.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -28,6 +30,69 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   int _quantity = 1;
   final _referralController = TextEditingController();
+  String? _refereeName;
+  bool _isValidatingReferral = false;
+  String? _referralError;
+  Timer? _debounceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _referralController.addListener(_onReferralChanged);
+  }
+
+  void _onReferralChanged() {
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+    
+    final code = _referralController.text.trim();
+    if (code.isEmpty) {
+      setState(() {
+        _refereeName = null;
+        _referralError = null;
+        _isValidatingReferral = false;
+      });
+      return;
+    }
+
+    _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+      _validateReferral(code);
+    });
+  }
+
+  Future<void> _validateReferral(String code) async {
+    // Only validate if it looks like a 10 digit number or our old codes
+    if (code.length < 5) return;
+
+    final currentUser = ref.read(authProvider).user;
+    if (currentUser != null && code == currentUser.referralCode && currentUser.orderCount == 0) {
+      setState(() {
+        _refereeName = null;
+        _referralError = "You cannot use your own code for your first order";
+      });
+      return;
+    }
+
+    setState(() => _isValidatingReferral = true);
+
+    try {
+      final response = await ApiService().verifyReferralCode(code);
+      if (mounted) {
+        setState(() {
+          _refereeName = response.data['data']['name'];
+          _referralError = null;
+          _isValidatingReferral = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _refereeName = null;
+          _referralError = "Invalid referral code";
+          _isValidatingReferral = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -50,7 +115,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       );
     }
 
-    final subtotal = pricing.goldValue * _quantity;
+    final subtotal = pricing.discountedGoldValue * _quantity;
     final gstAmount = pricing.gstAmount * _quantity;
     final totalAmount = pricing.total * _quantity;
 
@@ -130,37 +195,42 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     SizedBox(height: 24),
 
                     // Price Card
-                     GoldCard(
-                      hasGoldBorder: true,
-                      hasGlow: true,
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('Price per unit', style: AppTextStyles.bodyMedium),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: [
-                                  if (product.oldPrice != null) ...[
+                      GoldCard(
+                        hasGoldBorder: true,
+                        hasGlow: true,
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Base Gold Value', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey)),
+                                    const SizedBox(height: 4),
                                     Text(
-                                      Formatters.currency(product.oldPrice!),
+                                      Formatters.currency(pricing.marketPrice),
                                       style: AppTextStyles.caption.copyWith(
                                         decoration: TextDecoration.lineThrough,
-                                        fontSize: 14,
+                                        fontSize: 16,
+                                        color: Colors.white24,
                                       ),
                                     ),
-                                    SizedBox(width: 8),
                                   ],
-                                  Text(
-                                    Formatters.currency(product.price),
-                                    style: AppTextStyles.priceTag,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text('Special Offer', style: AppTextStyles.labelSmall.copyWith(color: AppColors.success)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      Formatters.currency(pricing.discountedGoldValue),
+                                      style: AppTextStyles.priceTag.copyWith(fontSize: 32),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           SizedBox(height: 16),
                           // Exclusivity Badge
                           Container(
@@ -248,9 +318,46 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                             label: 'Enter referral code',
                             hint: 'e.g., RGXK7M2N',
                             textCapitalization: TextCapitalization.characters,
-                            prefixIcon: Icon(Icons.confirmation_number_outlined, color: AppColors.grey),
+                            prefixIcon: Icon(Icons.confirmation_number_outlined, color: AppColors.royalGold.withOpacity(_refereeName != null ? 1 : 0.5)),
                           ),
-                          SizedBox(height: 8),
+                          if (_isValidatingReferral)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, left: 4),
+                              child: const SizedBox(
+                                height: 12,
+                                width: 12,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.amber), // Use standard color if const is required, or remove const
+                              ),
+                            ),
+                          if (_refereeName != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, left: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.check_circle_outline, color: AppColors.success, size: 14),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Verified: $_refereeName',
+                                    style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (_referralError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8, left: 4),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.error_outline, color: AppColors.error, size: 14),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _referralError!,
+                                    style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 8),
                           Text(
                             'Support your referrer by applying their code!',
                             style: AppTextStyles.caption,

@@ -28,6 +28,10 @@ class AdminState {
   final List<dynamic> buybackRequests;
   final double referralReward;
   final double minWithdrawal;
+  final double buybackMargin;
+  final double makingChargePercent;
+  final double globalDiscount;
+  final double gstOnMakingPercent;
   final List<dynamic> weeklyData;
   final String? error;
 
@@ -54,6 +58,10 @@ class AdminState {
     this.buybackRequests = const [],
     this.referralReward = 500.0,
     this.minWithdrawal = 1000.0,
+    this.buybackMargin = 3.0,
+    this.makingChargePercent = 7.0,
+    this.globalDiscount = 0.0,
+    this.gstOnMakingPercent = 5.0,
     this.weeklyData = const [],
     this.error,
   });
@@ -81,6 +89,10 @@ class AdminState {
     List<dynamic>? buybackRequests,
     double? referralReward,
     double? minWithdrawal,
+    double? buybackMargin,
+    double? makingChargePercent,
+    double? globalDiscount,
+    double? gstOnMakingPercent,
     List<dynamic>? weeklyData,
     String? error,
   }) {
@@ -107,6 +119,10 @@ class AdminState {
       buybackRequests: buybackRequests ?? this.buybackRequests,
       referralReward: referralReward ?? this.referralReward,
       minWithdrawal: minWithdrawal ?? this.minWithdrawal,
+      buybackMargin: buybackMargin ?? this.buybackMargin,
+      makingChargePercent: makingChargePercent ?? this.makingChargePercent,
+      globalDiscount: globalDiscount ?? this.globalDiscount,
+      gstOnMakingPercent: gstOnMakingPercent ?? this.gstOnMakingPercent,
       weeklyData: weeklyData ?? this.weeklyData,
       error: error,
     );
@@ -250,6 +266,24 @@ class AdminNotifier extends StateNotifier<AdminState> {
         weeklyData: weeklyData,
         isLoading: false,
       );
+
+      // ✅ FETCH CONFIGS FOR MARGINS/CHARGES
+      try {
+        final configRes = await ApiService().get('/configs');
+        final config = configRes.data['data'];
+        state = state.copyWith(
+          buybackMargin: _toDouble(config['buyback_margin'] ?? 3.0),
+          makingChargePercent: _toDouble(config['making_charge_percent'] ?? 7.0),
+          globalDiscount: _toDouble(config['global_discount_percent'] ?? 0.0),
+          gstOnMakingPercent: _toDouble(config['gst_on_making_percent'] ?? 5.0),
+          referralReward: _toDouble(config['referral_reward'] ?? 500.0),
+          minWithdrawal: _toDouble(config['min_withdrawal'] ?? 1000.0),
+          deliveryTimeDays: int.tryParse(config['delivery_days']?.toString() ?? '7') ?? 7,
+          gstRate: _toDouble(config['gst_rate'] ?? 3.0),
+        );
+      } catch (e) {
+        debugPrint('⚠️ Config load failed: $e');
+      }
 
       debugPrint('🏁 Admin Data Load Complete');
     } catch (e) {
@@ -405,6 +439,10 @@ class AdminNotifier extends StateNotifier<AdminState> {
     int? lowStockThreshold,
     double? referralReward,
     double? minWithdrawal,
+    double? buybackMargin,
+    double? makingChargePercent,
+    double? globalDiscount,
+    double? gstOnMakingPercent,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -422,6 +460,19 @@ class AdminNotifier extends StateNotifier<AdminState> {
         await ApiService().updateAdminSettings({'gst_rate': gstRate});
       }
       
+      if (buybackMargin != null) {
+        await ApiService().updateAdminSettings({'buyback_margin': buybackMargin});
+      }
+      if (makingChargePercent != null) {
+        await ApiService().updateAdminSettings({'making_charge_percent': makingChargePercent});
+      }
+      if (globalDiscount != null) {
+        await ApiService().updateAdminSettings({'global_discount_percent': globalDiscount});
+      }
+      if (gstOnMakingPercent != null) {
+        await ApiService().updateAdminSettings({'gst_on_making_percent': gstOnMakingPercent});
+      }
+      
       state = state.copyWith(
         commissionRate: commissionRate ?? state.commissionRate,
         deliveryTimeDays: deliveryTimeDays ?? state.deliveryTimeDays,
@@ -430,6 +481,10 @@ class AdminNotifier extends StateNotifier<AdminState> {
         lowStockThreshold: lowStockThreshold ?? state.lowStockThreshold,
         referralReward: referralReward ?? state.referralReward,
         minWithdrawal: minWithdrawal ?? state.minWithdrawal,
+        buybackMargin: buybackMargin ?? state.buybackMargin,
+        makingChargePercent: makingChargePercent ?? state.makingChargePercent,
+        globalDiscount: globalDiscount ?? state.globalDiscount,
+        gstOnMakingPercent: gstOnMakingPercent ?? state.gstOnMakingPercent,
         isLoading: false,
       );
       

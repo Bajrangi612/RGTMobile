@@ -22,6 +22,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   final _commissionController = TextEditingController();
   final _intervalController = TextEditingController();
   final _lowStockController = TextEditingController();
+  final _buybackMarginController = TextEditingController();
+  final _makingChargeController = TextEditingController();
+  final _discountController = TextEditingController();
+  final _makingGstController = TextEditingController();
 
   @override
   void initState() {
@@ -34,6 +38,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     _commissionController.text = state.commissionRate.toStringAsFixed(1);
     _intervalController.text = state.orderIntervalMinutes.toString();
     _lowStockController.text = state.lowStockThreshold.toString();
+    _buybackMarginController.text = state.buybackMargin.toStringAsFixed(1);
+    _makingChargeController.text = state.makingChargePercent.toStringAsFixed(1);
+    _discountController.text = state.globalDiscount.toStringAsFixed(1);
+    _makingGstController.text = state.gstOnMakingPercent.toStringAsFixed(1);
   }
 
   @override
@@ -45,6 +53,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     _commissionController.dispose();
     _intervalController.dispose();
     _lowStockController.dispose();
+    _buybackMarginController.dispose();
+    _makingChargeController.dispose();
+    _discountController.dispose();
+    _makingGstController.dispose();
     super.dispose();
   }
 
@@ -57,6 +69,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
       commissionRate: double.tryParse(_commissionController.text),
       orderIntervalMinutes: int.tryParse(_intervalController.text),
       lowStockThreshold: int.tryParse(_lowStockController.text),
+      buybackMargin: double.tryParse(_buybackMarginController.text),
+      makingChargePercent: double.tryParse(_makingChargeController.text),
+      globalDiscount: double.tryParse(_discountController.text),
+      gstOnMakingPercent: double.tryParse(_makingGstController.text),
     );
 
     if (mounted) {
@@ -96,10 +112,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                         ),
                         _Divider(),
                         _ConfigField(
-                          label: 'GST Rate (%)',
+                          label: 'Gold GST Rate (%)',
                           controller: _gstController,
                           icon: Icons.percent_rounded,
-                          helperText: 'Default tax applied to all gold purchases',
+                          helperText: 'Additional tax applied to market gold price',
                         ),
                         _Divider(),
                         _ConfigField(
@@ -114,6 +130,34 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                           controller: _minWithdrawalController,
                           icon: Icons.account_balance_wallet_rounded,
                           helperText: 'Minimum amount required for payout request',
+                        ),
+                        _Divider(),
+                        _ConfigField(
+                          label: 'Buyback Difference (%)',
+                          controller: _buybackMarginController,
+                          icon: Icons.currency_exchange_rounded,
+                          helperText: 'Difference between market sell price and buyback price',
+                        ),
+                        _Divider(),
+                        _ConfigField(
+                          label: 'Making Charges (%)',
+                          controller: _makingChargeController,
+                          icon: Icons.handyman_rounded,
+                          helperText: 'Markup based on gold market value',
+                        ),
+                        _Divider(),
+                        _ConfigField(
+                          label: 'Marketing Discount (%)',
+                          controller: _discountController,
+                          icon: Icons.sell_rounded,
+                          helperText: 'Applied specifically to the market gold value',
+                        ),
+                        _Divider(),
+                        _ConfigField(
+                          label: 'GST on Making (%)',
+                          controller: _makingGstController,
+                          icon: Icons.receipt_long_rounded,
+                          helperText: 'Tax applied specifically to the making charge portion',
                         ),
                       ],
                     ),

@@ -102,24 +102,42 @@ class ProductModel {
 }
 
 class ProductPricing {
-  final double goldValue;
+  final double marketPrice;
+  final double discountAmount;
+  final double discountedGoldValue;
+  final double goldGst;
+  final double makingCharges;
+  final double makingGst;
   final double gstAmount;
   final double total;
   final double weight;
+  final double discountPercent;
 
   ProductPricing({
-    required this.goldValue,
+    required this.marketPrice,
+    required this.discountAmount,
+    required this.discountedGoldValue,
+    required this.goldGst,
+    required this.makingCharges,
+    required this.makingGst,
     required this.gstAmount,
     required this.total,
     required this.weight,
+    this.discountPercent = 0.0,
   });
 
   factory ProductPricing.fromJson(Map<String, dynamic> json) {
     return ProductPricing(
-      goldValue: _toDouble(json['goldValue']),
+      marketPrice: _toDouble(json['marketPrice']),
+      discountAmount: _toDouble(json['discountAmount']),
+      discountedGoldValue: _toDouble(json['discountedGoldValue']),
+      goldGst: _toDouble(json['goldGst']),
+      makingCharges: _toDouble(json['makingCharges']),
+      makingGst: _toDouble(json['makingGst']),
       gstAmount: _toDouble(json['gstAmount']),
       total: _toDouble(json['total']),
       weight: _toDouble(json['weight']),
+      discountPercent: _toDouble(json['discountPercent']),
     );
   }
 
@@ -130,10 +148,16 @@ class ProductPricing {
 
   Map<String, dynamic> toJson() {
     return {
-      'goldValue': goldValue,
+      'marketPrice': marketPrice,
+      'discountAmount': discountAmount,
+      'discountedGoldValue': discountedGoldValue,
+      'goldGst': goldGst,
+      'makingCharges': makingCharges,
+      'makingGst': makingGst,
       'gstAmount': gstAmount,
       'total': total,
       'weight': weight,
+      'discountPercent': discountPercent,
     };
   }
 }

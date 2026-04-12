@@ -31,6 +31,7 @@ import '../../admin/screens/admin_gold_price_screen.dart';
 import '../../admin/screens/admin_withdrawal_manager_screen.dart';
 import '../../admin/screens/admin_buyback_manager_screen.dart';
 import '../../../core/providers/navigation_provider.dart';
+import '../../../widgets/offer_popup.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -41,6 +42,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late final List<Widget> _screens;
+  static bool _hasShownOffer = false;
 
   @override
   void initState() {
@@ -57,6 +59,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(homeProvider.notifier).loadDashboard();
+      
+      if (!_hasShownOffer) {
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: true,
+              builder: (context) => const OfferPopup(),
+            );
+            _hasShownOffer = true;
+          }
+        });
+      }
     });
   }
 
@@ -1018,24 +1033,22 @@ class _ProductCard extends StatelessWidget {
                         '${product.purity} · ${product.fineness}',
                         style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey),
                       ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (product.pricing != null)
+                            Text(
+                              Formatters.currency(product.pricing!.marketPrice),
+                              style: AppTextStyles.caption.copyWith(
+                                decoration: TextDecoration.lineThrough,
+                                fontSize: 10,
+                                color: AppColors.grey.withValues(alpha: 0.5),
+                              ),
+                            ),
                           Text(
                             Formatters.currency(product.price),
                             style: AppTextStyles.priceTag.copyWith(fontSize: 16),
                           ),
-                          if (product.oldPrice != null) ...[
-                            const SizedBox(width: 4),
-                            Text(
-                              Formatters.currency(product.oldPrice!),
-                              style: AppTextStyles.caption.copyWith(
-                                decoration: TextDecoration.lineThrough,
-                                fontSize: 10,
-                                color: AppColors.grey,
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ],

@@ -48,45 +48,84 @@ class OrderDetailScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 56,
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: AppColors.royalGold.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: Icon(
-                                  Icons.monetization_on_rounded,
-                                  color: AppColors.royalGold,
-                                  size: 32,
-                                ),
-                              ),
-                              SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.03),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(order.productName, style: AppTextStyles.h4),
-                                    SizedBox(height: 4),
-                                    Text('Order #${order.id}', style: AppTextStyles.caption),
+                                     Column(
+                                       crossAxisAlignment: CrossAxisAlignment.start,
+                                       children: [
+                                         Text(
+                                           'PRICING BREAKDOWN', 
+                                           style: AppTextStyles.labelMedium.copyWith(
+                                             color: AppColors.royalGold,
+                                             letterSpacing: 1.5,
+                                             fontWeight: FontWeight.bold,
+                                           )
+                                         ),
+                                         const SizedBox(height: 4),
+                                         Text('Precision Audit Values', style: AppTextStyles.caption.copyWith(fontSize: 10, color: Colors.white24)),
+                                       ],
+                                     ),
+                                     StatusBadge(status: order.statusType),
                                   ],
                                 ),
-                              ),
-                              StatusBadge(status: order.statusType),
-                            ],
-                          ),
-                          SizedBox(height: 20),
-                          _DetailRow('Weight', '${order.weight.toInt()} gram'),
-                          _DetailRow('Gold Price', Formatters.currency(order.goldPriceAtPurchase ?? 0)),
-                          _DetailRow('Taxable Amount', Formatters.currency(order.amount)),
-                          _DetailRow('GST (3%)', Formatters.currency(order.gstAmount)),
-                          _DetailRow('Total Price', Formatters.currency(order.totalPrice), isBold: true),
-                          _DetailRow('Payment', order.paymentMethod),
-                          _DetailRow('Order Date', DateFormat('dd/MM/yyyy HH:mm').format(order.createdAt)),
+                                const SizedBox(height: 24),
+                                _DetailRow(
+                                  label: 'Market Gold Value', 
+                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingMarket'] ?? '0') ?? 0),
+                                  icon: Icons.show_chart_rounded,
+                                ),
+                                _DetailRow(
+                                  label: 'Portfolio Discount', 
+                                  value: '- ${Formatters.currency(double.tryParse(order.pricingNotes['pricingDiscount'] ?? '0') ?? 0)}',
+                                  icon: Icons.local_offer_rounded,
+                                  valueColor: Colors.greenAccent,
+                                ),
+                                _DetailRow(
+                                  label: 'Gold GST (IGST/CGST)', 
+                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingGoldGst'] ?? '0') ?? 0),
+                                  icon: Icons.account_balance_rounded,
+                                ),
+                                _DetailRow(
+                                  label: 'Making Charge', 
+                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingMaking'] ?? '0') ?? 0),
+                                  icon: Icons.architecture_rounded,
+                                ),
+                                _DetailRow(
+                                  label: 'GST on Making', 
+                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingMakingGst'] ?? '0') ?? 0),
+                                  icon: Icons.receipt_long_rounded,
+                                ),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Divider(color: Colors.white12, height: 1),
+                                ),
+                                _DetailRow(
+                                  label: 'Final Payable Total', 
+                                  value: Formatters.currency(order.totalPrice), 
+                                  isBold: true,
+                                  icon: Icons.payments_rounded,
+                                ),
+                              ],
+                            ),
+                          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+                          const SizedBox(height: 24),
+                          
+                          // Technical Specs
+                          _DetailRow(label: 'Net Weight', value: '${order.weight.toStringAsFixed(3)} gram', icon: Icons.scale_rounded),
+                          _DetailRow(label: 'Payment Method', value: order.paymentMethod, icon: Icons.credit_card_rounded),
+                          _DetailRow(label: 'Transaction Date', value: DateFormat('dd MMM yyyy • HH:mm').format(order.createdAt), icon: Icons.calendar_today_rounded),
                           if (order.referralCode != null && order.referralCode!.isNotEmpty)
-                            _DetailRow('Referral', order.referralCode!),
+                            _DetailRow(label: 'Referral', value: order.referralCode!),
                         ],
                       ),
                     ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05),
@@ -430,22 +469,47 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
   final bool isBold;
+  final IconData? icon;
+  final Color? valueColor;
 
-  const _DetailRow(this.label, this.value, {this.isBold = false});
+  const _DetailRow({
+    required this.label, 
+    required this.value, 
+    this.isBold = false,
+    this.icon,
+    this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodySmall),
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, color: isBold ? AppColors.royalGold : Colors.white24, size: 16),
+                const SizedBox(width: 10),
+              ],
+              Text(
+                label, 
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: isBold ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                )
+              ),
+            ],
+          ),
           Text(
             value,
-            style: isBold
-                ? AppTextStyles.bodyMedium.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold)
-                : AppTextStyles.bodyMedium,
+            style: TextStyle(
+              color: valueColor ?? (isBold ? AppColors.royalGold : Colors.white),
+              fontSize: isBold ? 16 : 14,
+              fontWeight: isBold ? FontWeight.w900 : FontWeight.w600,
+              fontFamily: isBold ? null : 'monospace',
+            ),
           ),
         ],
       ),

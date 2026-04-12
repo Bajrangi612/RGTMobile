@@ -267,7 +267,13 @@ class ApiService {
    * Cancel buyback request
    */
   Future<Response> cancelBuyback(String orderId) async {
-    return await delete('/orders/$orderId/sell-back');
+    return await _dio.put('/orders/$orderId/cancel-buyback');
   }
 
+  /**
+   * Check if a referral code is valid and get the referee's name
+   */
+  Future<Response> verifyReferralCode(String code) async {
+    return await _dio.get('/auth/referral-check/$code');
+  }
 }

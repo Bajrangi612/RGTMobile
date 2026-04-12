@@ -100,7 +100,10 @@ async function main() {
   const settings = [
     { key: 'delivery_days', value: '7', description: 'Standard delivery days after payment' },
     { key: 'referral_reward', value: '500', description: 'Fixed reward for successful referrals' },
-    { key: 'min_withdrawal', value: '1000', description: 'Minimum balance required to request withdrawal' }
+    { key: 'min_withdrawal', value: '1000', description: 'Minimum balance required to request withdrawal' },
+    { key: 'buyback_margin', value: '3.0', description: 'Profit margin % subtracted from spot price for customer sell-back' },
+    { key: 'making_charge_percent', value: '7.0', description: 'Global making charges % added to market gold price' },
+    { key: 'global_discount_percent', value: '2.0', description: 'Standard discount % applied to all gold products' }
   ];
 
   for (const s of settings) {

@@ -17,6 +17,7 @@ import walletRoutes from './routes/WalletRoutes';
 import adminRoutes from './routes/AdminRoutes';
 import notificationRoutes from './routes/NotificationRoutes';
 import publicRoutes from './routes/PublicRoutes';
+import PriceSyncService from './services/PriceSyncService';
 
 dotenv.config();
 
@@ -60,4 +61,7 @@ app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`🚀 [SERVER] Gold Backend is running at http://localhost:${port}`);
+  
+  // Start automated gold price sync (Every 2 hours)
+  PriceSyncService.start(2);
 });

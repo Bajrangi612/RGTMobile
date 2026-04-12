@@ -4,6 +4,7 @@ import PaymentService from "./PaymentService";
 import { Prisma } from "@prisma/client";
 import invoiceService from "./InvoiceService";
 import NotificationService from "./NotificationService";
+import { normalizeMobile } from "../utils/phone";
 
 class OrderService {
   /**
@@ -30,7 +31,7 @@ class OrderService {
     if (referralCode) {
       const dbUser = await prisma.user.findUnique({ where: { id: userId } });
       if (dbUser) {
-        const normalizedCode = referralCode.trim().toUpperCase();
+        const normalizedCode = normalizeMobile(referralCode);
         const isSelf = dbUser.referralCode === normalizedCode;
         
         // Cannot use own code for the very first order
@@ -47,7 +48,7 @@ class OrderService {
     }
 
     // 3. Calculate Pricing (Weight * Price * 1.03)
-    const pricing = ProductService.calculateProductPrice(product, livePrice);
+    const pricing = await ProductService.calculateProductPrice(product, livePrice);
 
     // 4. Create Razorpay Order with DETAILS IN NOTES
     // We don't create a DB record yet to satisfy the requirement: "Until Customer Completes his order successfully with payment, dont create new record"
@@ -68,7 +69,12 @@ class OrderService {
           referralCode: referralCode || "",
           livePrice: livePrice.toString(),
           pricingTotal: pricing.total.toString(),
-          pricingGold: pricing.goldValue.toString(),
+          pricingMarket: pricing.marketPrice.toString(),
+          pricingDiscount: pricing.discountAmount.toString(),
+          pricingDiscountedGold: pricing.discountedGoldValue.toString(),
+          pricingGoldGst: pricing.goldGst.toString(),
+          pricingMaking: pricing.makingCharges.toString(),
+          pricingMakingGst: pricing.makingGst.toString(),
           pricingGst: pricing.gstAmount.toString(),
           pricingWeight: pricing.weight.toString(),
         }
@@ -205,25 +211,35 @@ class OrderService {
 
       // Handle Referral Reward (Fixed amount set by admin)
       if (referralCode) {
+        const normalizedReferralCode = normalizeMobile(referralCode);
         const referrer = await tx.user.findUnique({
-          where: { referralCode }
+          where: { referralCode: normalizedReferralCode }
         });
 
         if (referrer) {
+           // Fetch buyer name to personalize the reward log
+           const buyer = await tx.user.findUnique({ where: { id: userId }, select: { name: true } });
+           const buyerName = buyer?.name || "A Friend";
+           const formattedDate = nowIST.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+
            const rewardSetting = await tx.setting.findUnique({ where: { key: "referral_reward" } });
-           const rewardAmount = rewardSetting ? Number(rewardSetting.value) : 500;
+           const rewardRate = rewardSetting ? Number(rewardSetting.value) : 500;
+           
+           // Calculate dynamic reward: Rate * Total Grams
+           const totalGrams = Number(newOrder.weight);
+           const finalRewardAmount = rewardRate * totalGrams;
            
            await tx.wallet.update({
              where: { userId: referrer.id },
-             data: { balance: { increment: rewardAmount } }
+             data: { balance: { increment: finalRewardAmount } }
            });
 
            await tx.transaction.create({
              data: {
                userId: referrer.id,
                type: "REFERRAL_REWARD",
-               amount: new Prisma.Decimal(rewardAmount),
-               description: `Referral reward for facilitating Order #${newOrder.id}`,
+               amount: new Prisma.Decimal(finalRewardAmount),
+               description: `Reward for ${buyerName}'s purchase on ${formattedDate} (${totalGrams}g @ ₹${rewardRate}/g)`,
                status: "COMPLETED",
                createdAt: nowIST,
              }

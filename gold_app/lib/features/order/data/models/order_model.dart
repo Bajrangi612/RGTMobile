@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:intl/intl.dart';
 import '../../../product/data/models/product_model.dart';
 import '../../../../widgets/status_badge.dart';
@@ -99,6 +100,20 @@ class OrderModel {
   String? get deliveredDate => status.toUpperCase() == 'PICKED' ? 'Picked' : null;
   double get referralCommission => 0.0;
   String get paymentMethod => 'Online (Razorpay)';
+
+  Map<String, String> get pricingNotes {
+    try {
+      if (statusHistory.isEmpty) return {};
+      final firstNote = statusHistory.first.notes;
+      if (firstNote == null) return {};
+      
+      final decoded = jsonDecode(firstNote);
+      if (decoded is Map) {
+        return decoded.map((key, value) => MapEntry(key.toString(), value.toString()));
+      }
+    } catch (_) {}
+    return {};
+  }
   
   bool get canCancel => 
     status.toUpperCase() == 'ORDER_PLACED' || 

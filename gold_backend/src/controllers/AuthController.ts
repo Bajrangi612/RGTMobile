@@ -204,4 +204,26 @@ export class AuthController {
       next(error);
     }
   }
+
+  static async verifyReferralCode(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { code } = req.params;
+      if (!code) return errorResponse(res, 'Referral code is required', 400);
+
+      const normalizedCode = (code as string).replace(/\D/g, '').slice(-10);
+      
+      const referrer = await prisma.user.findUnique({
+        where: { referralCode: normalizedCode },
+        select: { name: true, id: true }
+      });
+
+      if (!referrer) {
+        return errorResponse(res, 'Invalid referral code', 404);
+      }
+
+      return successResponse(res, { name: referrer.name }, 'Referral code verified');
+    } catch (error) {
+      next(error);
+    }
+  }
 }

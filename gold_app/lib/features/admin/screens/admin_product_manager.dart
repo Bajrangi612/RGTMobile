@@ -324,8 +324,6 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _weightController;
-  late final TextEditingController _makingChargesController;
-  late final TextEditingController _fixedPriceController;
   late final TextEditingController _stockController;
   late final TextEditingController _imageUrlController;
   String _purity = '24K';
@@ -343,8 +341,6 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
     _nameController = TextEditingController(text: widget.product?.name);
     _descriptionController = TextEditingController(text: widget.product?.description);
     _weightController = TextEditingController(text: widget.product?.weight.toString() ?? '1.0');
-    _makingChargesController = TextEditingController(text: widget.product?.makingCharges.toString() ?? '0');
-    _fixedPriceController = TextEditingController(text: widget.product?.fixedPrice.toString() ?? '0');
     _stockController = TextEditingController(text: widget.product?.stock.toString() ?? '0');
     _imageUrlController = TextEditingController(text: widget.product?.imageUrl);
     _purity = widget.product?.purity ?? '24K';
@@ -367,8 +363,6 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
     _nameController.dispose();
     _descriptionController.dispose();
     _weightController.dispose();
-    _makingChargesController.dispose();
-    _fixedPriceController.dispose();
     _stockController.dispose();
     _imageUrlController.dispose();
     super.dispose();
@@ -410,8 +404,6 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
         'weight': double.tryParse(_weightController.text) ?? 1.0,
-        'makingCharges': double.tryParse(_makingChargesController.text) ?? 0.0,
-        'fixedPrice': double.tryParse(_fixedPriceController.text) ?? 0.0,
         'purity': _purity,
         'stock': int.tryParse(_stockController.text) ?? 0,
         'imageUrl': imageUrl,
@@ -624,34 +616,26 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
 
               const SizedBox(height: 16),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _LabeledField(
-                      label: 'Making Charges (₹)',
-                      child: TextFormField(
-                        controller: _makingChargesController,
-                        keyboardType: TextInputType.number,
-                        style: AppTextStyles.bodyMedium,
-                        decoration: _inputDecoration('0'),
-                        validator: (v) => double.tryParse(v ?? '') == null ? 'Invalid' : null,
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.royalGold.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.1)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: AppColors.royalGold, size: 18),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Pricing & Making Charges are automatically calculated based on global settings.',
+                        style: AppTextStyles.caption.copyWith(color: AppColors.pureWhite.withOpacity(0.5)),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _LabeledField(
-                      label: 'Fixed Price (₹)',
-                      child: TextFormField(
-                        controller: _fixedPriceController,
-                        keyboardType: TextInputType.number,
-                        style: AppTextStyles.bodyMedium,
-                        decoration: _inputDecoration('0 (Optional)'),
-                        validator: (v) => double.tryParse(v ?? '') == null ? 'Invalid' : null,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
 
               const SizedBox(height: 16),

@@ -419,9 +419,18 @@ class _CatalogProductCard extends ConsumerWidget {
                         '${product.purity} · ${product.fineness}',
                         style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey),
                       ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (pricing != null)
+                            Text(
+                              Formatters.currency(pricing.marketPrice),
+                              style: AppTextStyles.caption.copyWith(
+                                decoration: TextDecoration.lineThrough,
+                                color: Colors.white24,
+                                fontSize: 10,
+                              ),
+                            ),
                           Text(
                             Formatters.currency(pricing?.total ?? 0),
                             style: AppTextStyles.priceTag.copyWith(fontSize: 16),

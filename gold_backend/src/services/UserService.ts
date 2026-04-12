@@ -18,7 +18,7 @@ export class UserService {
           email: data.email,
           password: Math.random().toString(36).slice(-8), // Dummy password
           role: 'CUSTOMER',
-          referralCode: Math.random().toString(36).substring(2, 10).toUpperCase(),
+          referralCode: phone,
         },
       });
 

@@ -53,7 +53,7 @@ class ReferralScreen extends ConsumerWidget {
               ).animate().fadeIn(duration: 300.ms),
               SizedBox(height: 8),
               Text(
-                'Earn ${Formatters.currency(settings.referralReward)} for every successful referral',
+                'Earn ${Formatters.currency(settings.referralReward)} per Gram for every successful referral',
                 style: AppTextStyles.bodySmall,
                 textAlign: TextAlign.center,
               ).animate(delay: 100.ms).fadeIn(),
@@ -151,7 +151,7 @@ class ReferralScreen extends ConsumerWidget {
                       text: 'Share via WhatsApp',
                       onPressed: () {
                         Share.share(
-                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ${Formatters.currency(settings.referralReward)} cashback on your first order. Download now!',
+                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ${Formatters.currency(settings.referralReward)} cashback per gram on your first order. Download now!',
                           subject: 'Royal Gold Store Invitation',
                         );
                       },
@@ -279,7 +279,7 @@ class ReferralScreen extends ConsumerWidget {
                     _HowItWorksStep(
                       number: '3',
                       text:
-                          'You get flat ${Formatters.currency(settings.referralReward)} for every successful purchase made with your code',
+                          'You get ${Formatters.currency(settings.referralReward)} per Gram for every successful purchase made with your code',
                     ),
                     _HowItWorksStep(
                       number: '4',

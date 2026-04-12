@@ -120,10 +120,10 @@ class _AdminConfigScreenState extends ConsumerState<AdminConfigScreen> {
                   child: Column(
                     children: [
                       GoldTextField(
-                        label: 'Referral Reward (₹)',
+                        label: 'Referral Reward (₹ / Gram)',
                         controller: _referralController,
                         keyboardType: TextInputType.number,
-                        hint: 'e.g., 500',
+                        hint: 'e.g., 500 per gram',
                       ),
                       const SizedBox(height: 16),
                       GoldTextField(

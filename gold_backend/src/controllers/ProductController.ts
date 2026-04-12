@@ -19,13 +19,13 @@ export class ProductController {
       const livePrice = livePriceObj ? Number(livePriceObj.sellPrice) : 0;
 
       // Map products with current dynamic pricing
-      const productsWithPrice = result.products.map((p: any) => {
+      const productsWithPrice = await Promise.all(result.products.map(async (p: any) => {
         const productPojo = JSON.parse(JSON.stringify(p));
         return {
           ...productPojo,
-          pricing: ProductService.calculateProductPrice(p as any, livePrice)
+          pricing: await ProductService.calculateProductPrice(p as any, livePrice)
         };
-      });
+      }));
 
       return successResponse(res, { 
         products: productsWithPrice, 
@@ -65,7 +65,7 @@ export class ProductController {
       const livePriceObj = await ProductService.getLatestGoldPrice();
       const livePrice = livePriceObj ? Number(livePriceObj.sellPrice) : 0;
       
-      const pricing = ProductService.calculateProductPrice(product, livePrice);
+      const pricing = await ProductService.calculateProductPrice(product, livePrice);
 
       return successResponse(res, { product, pricing }, "Product details fetched");
     } catch (error) {

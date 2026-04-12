@@ -2,27 +2,17 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import { successResponse, errorResponse } from "../utils/response";
 import { Prisma } from "@prisma/client";
+import PriceSyncService from "../services/PriceSyncService";
 
 export class AdminController {
   /**
-   * Update the global gold price (Buy/Sell)
+   * Manually trigger the global gold price sync from market sources
    */
   static async updateGoldPrice(req: Request, res: Response, next: NextFunction) {
     try {
-      const { buyPrice, sellPrice } = req.body;
-
-      if (!buyPrice || !sellPrice) {
-        return errorResponse(res, "Both buyPrice and sellPrice are required", 400);
-      }
-
-      const newPrice = await prisma.goldPrice.create({
-        data: {
-          buyPrice: new Prisma.Decimal(buyPrice),
-          sellPrice: new Prisma.Decimal(sellPrice),
-        },
-      });
-
-      return successResponse(res, newPrice, "Gold price updated successfully", 201);
+      console.log("👮 [Admin] Manual price sync triggered...");
+      const newPrice = await PriceSyncService.performSync();
+      return successResponse(res, newPrice, "Gold price synchronized with live market successfully", 201);
     } catch (error) {
       next(error);
     }

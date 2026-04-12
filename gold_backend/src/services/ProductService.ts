@@ -141,31 +141,64 @@ class ProductService {
    * @param livePrice The current gold price per gram
    * @returns object with breaking down of price
    */
-  calculateProductPrice(product: any, livePrice: number) {
+  async calculateProductPrice(product: any, livePrice: number) {
     const weight = Number(product.weight);
-    const makingCharges = Number(product.makingCharges || 0);
     const fixedPrice = Number(product.fixedPrice || 0);
 
+    // Fetch Dynamic Pricing Settings
+    const gstSetting = await prisma.setting.findUnique({ where: { key: 'gst_rate' } });
+    const makingChargeSetting = await prisma.setting.findUnique({ where: { key: 'making_charge_percent' } });
+    const makingGstSetting = await prisma.setting.findUnique({ where: { key: 'gst_on_making_percent' } });
+    const discountSetting = await prisma.setting.findUnique({ where: { key: 'global_discount_percent' } });
+
+    const GOLD_GST_RATE = (gstSetting ? parseFloat(gstSetting.value) : 3.0) / 100;
+    const MAKING_CHARGE_RATE = (makingChargeSetting ? parseFloat(makingChargeSetting.value) : 6.0) / 100;
+    const MAKING_GST_RATE = (makingGstSetting ? parseFloat(makingGstSetting.value) : 5.0) / 100;
+    const GLOBAL_DISCOUNT_RATE = (discountSetting ? parseFloat(discountSetting.value) : 0.0) / 100;
+
+    const marketValue = weight * livePrice;
     let goldValue: number;
+    let discountedGoldValue: number = marketValue;
+    let makingChargeValue: number = 0;
+    let gstOnMaking: number = 0;
+    let goldGst: number = 0;
+    let discountAmount: number = 0;
     
     if (fixedPrice > 0) {
       goldValue = fixedPrice;
+      discountedGoldValue = fixedPrice;
     } else {
-      goldValue = (weight * livePrice) + makingCharges;
+      // 1. Market Gold Value: Live Price * Weight
+      // 2. Discounted Value: Market Value - Discount %
+      discountAmount = marketValue * GLOBAL_DISCOUNT_RATE;
+      discountedGoldValue = marketValue - discountAmount;
+      
+      // 3. GST (IGST & CGST): % of Discounted gold value
+      goldGst = discountedGoldValue * GOLD_GST_RATE;
+      
+      // 4. Making Charge: % of Market Gold Value
+      makingChargeValue = marketValue * MAKING_CHARGE_RATE;
+      
+      // 5. GST on Making: % of Making Charge
+      gstOnMaking = makingChargeValue * MAKING_GST_RATE;
     }
     
-    // Fetch GST from settings or fallback to 3%
-    const gstRate = 0.03; // Logic to be updated to fetch from DB if needed
-    const gstAmount = goldValue * gstRate;
-    const total = goldValue + gstAmount;
+    // 6. Final Payable Amount
+    const total = discountedGoldValue + goldGst + makingChargeValue + gstOnMaking;
 
     return {
-      goldValue: Number(goldValue.toFixed(2)),
-      gstAmount: Number(gstAmount.toFixed(2)),
+      marketPrice: Number(marketValue.toFixed(2)),
+      discountAmount: Number(discountAmount.toFixed(2)),
+      discountedGoldValue: Number(discountedGoldValue.toFixed(2)),
+      goldGst: Number(goldGst.toFixed(2)),
+      makingCharges: Number(makingChargeValue.toFixed(2)),
+      makingGst: Number(gstOnMaking.toFixed(2)),
+      gstAmount: Number((goldGst + gstOnMaking).toFixed(2)),
       total: Number(total.toFixed(2)),
       purity: product.purity,
       weight: weight,
       ratePerGram: livePrice.toFixed(2),
+      discountPercent: (discountSetting ? parseFloat(discountSetting.value) : 0.0),
     };
   }
 

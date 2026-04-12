@@ -8,6 +8,7 @@ import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/status_badge.dart';
 import '../../../widgets/shimmer_loader.dart';
+import '../../../widgets/live_countdown.dart';
 import '../providers/order_provider.dart';
 import '../data/models/order_model.dart';
 import 'order_detail_screen.dart';
@@ -238,9 +239,32 @@ class _OrderCard extends StatelessWidget {
                 children: [
                   Text(order.productName, style: AppTextStyles.labelLarge),
                   SizedBox(height: 4),
-                  Text(
-                    'Qty: ${order.quantity} | ${Formatters.date(order.orderDate)}',
-                    style: AppTextStyles.caption,
+                  Row(
+                    children: [
+                      Text(
+                        'Qty: ${order.quantity} | ${Formatters.date(order.orderDate)}',
+                        style: AppTextStyles.caption,
+                      ),
+                      if (order.isActive && order.deliveryDate != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white24),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(Icons.timer_outlined, color: AppColors.royalGold.withValues(alpha: 0.6), size: 12),
+                        const SizedBox(width: 4),
+                        LiveCountdown(
+                          targetDate: order.deliveryDate!,
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.royalGold,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
