@@ -390,7 +390,7 @@ class OrderService {
    * Only allowed before fulfillment processing reaches a certain stage
    */
   async cancelOrder(orderId: string, userId: string) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: { user: true }
@@ -446,6 +446,7 @@ class OrderService {
     );
 
     return result;
+  }
 
   /**
    * Buyback Program (Sell Back Gold)
