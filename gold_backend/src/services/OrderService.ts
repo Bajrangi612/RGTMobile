@@ -71,7 +71,7 @@ class OrderService {
           pricingTotal: pricing.total.toString(),
           pricingMarket: pricing.marketPrice.toString(),
           pricingDiscount: pricing.discountAmount.toString(),
-          pricingDiscountedGold: pricing.discountedGoldValue.toString(),
+          pricingGold: pricing.discountedGoldValue.toString(),
           pricingGoldGst: pricing.goldGst.toString(),
           pricingMaking: pricing.makingCharges.toString(),
           pricingMakingGst: pricing.makingGst.toString(),
@@ -131,11 +131,11 @@ class OrderService {
     const productId = notes.productId;
     const quantity = parseInt(notes.quantity);
     const referralCode = notes.referralCode;
-    const livePrice = new Prisma.Decimal(notes.livePrice);
-    const amount = new Prisma.Decimal(notes.pricingGold);
-    const gst = new Prisma.Decimal(notes.pricingGst);
-    const total = new Prisma.Decimal(notes.pricingTotal);
-    const weight = new Prisma.Decimal(notes.pricingWeight);
+    const livePrice = new Prisma.Decimal(notes.livePrice || "0");
+    const amount = new Prisma.Decimal(notes.pricingGold || "0");
+    const gst = new Prisma.Decimal(notes.pricingGst || "0");
+    const total = new Prisma.Decimal(notes.pricingTotal || "0");
+    const weight = new Prisma.Decimal(notes.pricingWeight || "0");
     const marketPrice = new Prisma.Decimal(notes.pricingMarket || "0");
     const makingCharges = new Prisma.Decimal(notes.pricingMaking || "0");
     const makingGst = new Prisma.Decimal(notes.pricingMakingGst || "0");
