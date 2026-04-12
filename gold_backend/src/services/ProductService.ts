@@ -122,17 +122,70 @@ class ProductService {
     const price = await prisma.goldPrice.findFirst({
       orderBy: { timestamp: "desc" },
     });
+    
+    if (price) return price;
 
-    // Fallback: Always return a safe price if DB is empty
-    if (!price) {
+    // AUTO-INITIALIZE: If DB is empty, fetch and save immediately
+    console.log("⚠️ [ProductService] Gold Price DB is empty. Initializing live fetch...");
+    try {
+      return await this.performLiveMarketSync();
+    } catch (e) {
+      console.warn("⚠️ [ProductService] Initial fetch failed, using safe fallback.");
       return {
         buyPrice: new Prisma.Decimal(7500.0),
         sellPrice: new Prisma.Decimal(7600.0),
         timestamp: new Date(),
       };
     }
+  }
 
-    return price;
+  /**
+   * Fetch live data from global markets and update the database
+   */
+  async performLiveMarketSync() {
+    const BINANCE_PRICE_URL = "https://api.binance.com/api/v3/ticker/price?symbol=PAXGUSDT";
+    const EXCHANGE_RATE_URL = "https://api.exchangerate-api.com/v4/latest/USD";
+    const TROY_OUNCE_TO_GRAMS = 31.1035;
+    const IMPORT_DUTY_MULTIPLIER = 1.06;
+    const GST_MULTIPLIER = 1.03;
+
+    try {
+      // 1. Fetch Global Spot (Troy Ounce) from Binance (PAXG is 1:1 with Gold Ounce)
+      const priceRes = await fetch(BINANCE_PRICE_URL);
+      if (!priceRes.ok) throw new Error("Binance API unavailable");
+      const priceData: any = await priceRes.json();
+      const goldPriceUSDPerOunce = parseFloat(priceData.price);
+
+      // 2. Fetch USD to INR rate
+      let usdToInr = 83.5;
+      try {
+        const exRes = await fetch(EXCHANGE_RATE_URL);
+        if (exRes.ok) {
+          const exData: any = await exRes.json();
+          usdToInr = exData.rates.INR;
+        }
+      } catch (e) {
+        console.warn("⚠️ [ProductService] Using fallback exchange rate due to API error");
+      }
+
+      // 3. Indian Market Math: Calculate Institutional Base Price Per Gram
+      const basePricePerGramINR = (goldPriceUSDPerOunce / TROY_OUNCE_TO_GRAMS) * usdToInr;
+      const sellPricePerGram = basePricePerGramINR * IMPORT_DUTY_MULTIPLIER * GST_MULTIPLIER;
+
+      // 4. Fetch Buyback Margin from Settings
+      const marginSetting = await prisma.setting.findUnique({ where: { key: "buyback_margin" } });
+      const marginPercent = marginSetting ? parseFloat(marginSetting.value) : 3.0;
+      const buyPricePerGram = sellPricePerGram * (1 - marginPercent / 100);
+
+      // 5. Update Database
+      return await this.updateGoldPrice(
+        Number(buyPricePerGram.toFixed(2)),
+        Number(sellPricePerGram.toFixed(2))
+      );
+    } catch (error) {
+      console.error("❌ [ProductService] Live market sync failed:", error);
+      throw error;
+    }
   }
 
   /**

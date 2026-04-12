@@ -38,48 +38,13 @@ class PriceSyncService {
    * Fetch live data and update the database
    */
   async performSync() {
-    console.log("🔄 [PriceSync] Fetching latest market data...");
-    
+    console.log("🔄 [PriceSync] Triggering automated market sync...");
     try {
-      // 1. Fetch Global Spot (Troy Ounce) from Binance (PAXG is 1:1 with Gold Ounce)
-      const priceRes = await fetch(BINANCE_PRICE_URL);
-      if (!priceRes.ok) throw new Error("Binance API unavailable");
-      const priceData: any = await priceRes.json();
-      const goldPriceUSDPerOunce = parseFloat(priceData.price);
-
-      // 2. Fetch USD to INR rate
-      let usdToInr = 83.5; 
-      try {
-        const exRes = await fetch(EXCHANGE_RATE_URL);
-        if (exRes.ok) {
-          const exData: any = await exRes.json();
-          usdToInr = exData.rates.INR;
-        }
-      } catch (e) {
-        console.warn("⚠️ [PriceSync] Using fallback exchange rate due to API error");
-      }
-
-      // 3. Indian Market Math: Calculate Institutional Base Price Per Gram (Incl. Duty & 3% GST)
-      // Formula: (Global Price / 31.1035) * USD_INR * 1.06 (Import Duty) * 1.03 (GST)
-      const basePricePerGramINR = (goldPriceUSDPerOunce / TROY_OUNCE_TO_GRAMS) * usdToInr;
-      const sellPricePerGram = basePricePerGramINR * IMPORT_DUTY_MULTIPLIER * GST_MULTIPLIER;
-
-      // 4. Fetch Buyback Margin from Settings
-      const marginSetting = await prisma.setting.findUnique({ where: { key: "buyback_margin" } });
-      const marginPercent = marginSetting ? parseFloat(marginSetting.value) : 3.0;
-      const buyPricePerGram = sellPricePerGram * (1 - marginPercent / 100);
-
-      // 5. Update Database
-      const newPrice = await ProductService.updateGoldPrice(
-        Number(buyPricePerGram.toFixed(2)),
-        Number(sellPricePerGram.toFixed(2))
-      );
-
-      console.log(`✅ [PriceSync] Successfully synced! Sell: ₹${sellPricePerGram.toFixed(2)} | Buy: ₹${buyPricePerGram.toFixed(2)} (Margin: ${marginPercent}%)`);
+      const newPrice = await ProductService.performLiveMarketSync();
+      console.log(`✅ [PriceSync] Synced! Sell: ₹${Number(newPrice.sellPrice).toFixed(2)} | Buy: ₹${Number(newPrice.buyPrice).toFixed(2)}`);
       return newPrice;
-
     } catch (error) {
-      console.error("❌ [PriceSync] Critical price sync error:", error);
+      console.error("❌ [PriceSync] Scheduled sync failed:", error);
       throw error;
     }
   }
