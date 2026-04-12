@@ -136,6 +136,11 @@ class OrderService {
     const gst = new Prisma.Decimal(notes.pricingGst);
     const total = new Prisma.Decimal(notes.pricingTotal);
     const weight = new Prisma.Decimal(notes.pricingWeight);
+    const marketPrice = new Prisma.Decimal(notes.pricingMarket || "0");
+    const makingCharges = new Prisma.Decimal(notes.pricingMaking || "0");
+    const makingGst = new Prisma.Decimal(notes.pricingMakingGst || "0");
+    const goldGst = new Prisma.Decimal(notes.pricingGoldGst || "0");
+    const discountAmount = new Prisma.Decimal(notes.pricingDiscount || "0");
 
     // 3. Create actual Order Record in Database
     const nowIST = this.getIST();
@@ -164,6 +169,11 @@ class OrderService {
           invoiceNo: invoiceNo,
           deliveryDate: deliveryDate,
           goldPriceAtPurchase: livePrice,
+          marketPrice,
+          makingCharges,
+          makingGst,
+          goldGst,
+          discountAmount,
           referralCode: referralCode || null,
           createdAt: nowIST,
           statusHistory: {

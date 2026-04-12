@@ -1160,10 +1160,10 @@ class _BannerCarouselState extends State<_BannerCarousel> {
   Timer? _timer;
 
   final List<String> _banners = [
-    'assets/images/banner_1.png',
-    'assets/images/banner_2.png',
-    'assets/images/banner_3.png',
-    'assets/images/banner_4.png',
+    'assets/images/banner_1.webp',
+    'assets/images/banner_2.webp',
+    'assets/images/banner_3.webp',
+    'assets/images/banner_4.webp',
   ];
 
   @override

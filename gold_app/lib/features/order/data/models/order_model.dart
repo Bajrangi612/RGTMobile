@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../product/data/models/product_model.dart';
-import '../../../../widgets/status_badge.dart';
+import 'package:gold_app/core/utils/formatters.dart';
+import 'package:gold_app/features/product/data/models/product_model.dart';
+import 'package:gold_app/widgets/status_badge.dart';
 import 'order_status_history_model.dart';
 
 class OrderModel {
@@ -22,6 +22,11 @@ class OrderModel {
   final DateTime? deliveryDate;
   final double? goldPriceAtPurchase;
   final String? invoiceUrl;
+  final double? marketPrice;
+  final double? makingCharges;
+  final double? makingGst;
+  final double? goldGst;
+  final double? discountAmountAudit;
   final List<OrderStatusHistoryModel> statusHistory;
   final String? customerName;
   final String? customerPhone;
@@ -45,6 +50,11 @@ class OrderModel {
     this.deliveryDate,
     this.goldPriceAtPurchase,
     this.invoiceUrl,
+    this.marketPrice,
+    this.makingCharges,
+    this.makingGst,
+    this.goldGst,
+    this.discountAmountAudit,
     this.statusHistory = const [],
     this.customerName,
     this.customerPhone,
@@ -77,6 +87,11 @@ class OrderModel {
       deliveryDate: json['deliveryDate'] != null ? DateTime.parse(json['deliveryDate']) : null,
       goldPriceAtPurchase: json['goldPriceAtPurchase'] != null ? parseDouble(json['goldPriceAtPurchase']) : null,
       invoiceUrl: json['invoiceUrl'],
+      marketPrice: json['marketPrice'] != null ? parseDouble(json['marketPrice']) : null,
+      makingCharges: json['makingCharges'] != null ? parseDouble(json['makingCharges']) : null,
+      makingGst: json['makingGst'] != null ? parseDouble(json['makingGst']) : null,
+      goldGst: json['goldGst'] != null ? parseDouble(json['goldGst']) : null,
+      discountAmountAudit: json['discountAmount'] != null ? parseDouble(json['discountAmount']) : null,
       customerName: json['user']?['name'],
       customerPhone: json['user']?['phone'],
       customerAddress: json['user']?['address'],
@@ -135,15 +150,18 @@ class OrderModel {
     ? (pricingRecord!.gstAmount * quantity) / 2 
     : gst / 2;
 
-  double get sgst => pricingRecord != null 
-    ? (pricingRecord!.gstAmount * quantity) / 2 
-    : gst / 2;
+  double get sgst => goldGst != null 
+    ? (goldGst! / 2) + (makingGst != null ? makingGst! / 2 : 0)
+    : (pricingRecord != null 
+      ? (pricingRecord!.gstAmount * quantity) / 2 
+      : gst / 2);
 
-  double get discountAmount => pricingRecord != null 
+  double get discountAmount => discountAmountAudit ?? (pricingRecord != null 
     ? pricingRecord!.discountAmount * quantity 
-    : 0.0;
+    : 0.0);
   
-  bool get hasPricingBreakdown => pricingRecord != null;
+  bool get hasPricingAudit => marketPrice != null;
+  bool get hasPricingBreakdown => pricingRecord != null || hasPricingAudit;
   
   bool get canCancel => 
     status.toUpperCase() == 'ORDER_PLACED' || 

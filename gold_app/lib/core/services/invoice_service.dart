@@ -30,10 +30,10 @@ class InvoiceService {
       ),
     );
 
-    final bisLogo = await _loadAssetImage('assets/images/BIS.png');
+    final bisLogo = await _loadAssetImage('assets/images/BIS.webp');
     final isoLogo = await _loadAssetImage('assets/images/ISO.webp');
     final brandLogo = await _loadAssetImage('assets/images/Royal_Gold_Traders.webp');
-    final stampLogo = await _loadAssetImage('assets/images/stamps_logo.png');
+    final stampLogo = await _loadAssetImage('assets/images/stamps_logo.webp');
 
     pdf.addPage(
       pw.Page(

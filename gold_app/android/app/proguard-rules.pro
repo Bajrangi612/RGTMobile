@@ -12,8 +12,18 @@
 # Keep local_auth classes or they might be stripped
 -keep class com.dexterous.flutterlocalauth.** { *; }
 
+# Compression & Optimization
+-optimizationpasses 5
+-allowaccessmodification
+-dontpreverify
+
 # Don't warn about Play Core and Flutter Deferred Components
 -dontwarn com.google.android.play.core.**
 -dontwarn io.flutter.embedding.engine.deferredcomponents.**
 
-# Add any other plugin specific rules here if needed
+# Keep generic types for JSON parsing if used
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class com.google.gson.reflect.TypeToken { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keep class com.google.gson.* { *; }

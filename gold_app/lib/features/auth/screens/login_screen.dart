@@ -156,7 +156,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       /// 💎 Logo (Clean)
                       Center(
                         child: Image.asset(
-                          'assets/images/logo.png',
+                          'assets/images/logo.webp',
                           width: 110,
                           fit: BoxFit.contain,
                         ),

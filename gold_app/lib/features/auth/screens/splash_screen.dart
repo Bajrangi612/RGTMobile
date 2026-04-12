@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../providers/auth_provider.dart';
-import 'login_screen.dart';
-import '../../home/screens/home_screen.dart';
-import '../../admin/screens/admin_dashboard_screen.dart';
-import 'complete_profile_screen.dart';
+import 'package:gold_app/core/theme/app_colors.dart';
+import 'package:gold_app/core/theme/app_text_styles.dart';
+import 'package:gold_app/core/providers/navigation_provider.dart';
+import 'package:gold_app/features/auth/providers/auth_provider.dart';
+import 'package:gold_app/features/auth/screens/login_screen.dart';
+import 'package:gold_app/features/home/screens/home_screen.dart';
+import 'package:gold_app/features/admin/screens/admin_dashboard_screen.dart';
+import 'package:gold_app/features/auth/screens/complete_profile_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -78,7 +79,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               children: [
                 // Animated Official Logo
                 Image.asset(
-                  'assets/images/logo.png',
+                  'assets/images/logo.webp',
                   width: 180,
                   height: 180,
                   fit: BoxFit.contain,

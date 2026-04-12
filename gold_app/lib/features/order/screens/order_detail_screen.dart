@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/formatters.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../widgets/gold_button.dart';
-import '../../../widgets/gold_card.dart';
-import '../../../widgets/gold_app_bar.dart';
-import '../../../widgets/status_badge.dart';
-import '../data/models/order_model.dart';
-import '../providers/order_provider.dart';
-import '../../auth/providers/auth_provider.dart';
-import 'sell_back_screen.dart';
-import '../../../core/services/invoice_service.dart';
-import '../../../widgets/live_countdown.dart';
+import 'package:gold_app/core/theme/app_colors.dart';
+import 'package:gold_app/core/theme/app_text_styles.dart';
+import 'package:gold_app/core/utils/formatters.dart';
+import 'package:gold_app/core/utils/extensions.dart';
+import 'package:gold_app/widgets/gold_button.dart';
+import 'package:gold_app/widgets/gold_card.dart';
+import 'package:gold_app/widgets/gold_app_bar.dart';
+import 'package:gold_app/widgets/status_badge.dart';
+import 'package:gold_app/features/order/data/models/order_model.dart';
+import 'package:gold_app/features/order/providers/order_provider.dart';
+import 'package:gold_app/features/auth/providers/auth_provider.dart';
+import 'package:gold_app/features/order/screens/sell_back_screen.dart';
+import 'package:gold_app/core/services/invoice_service.dart';
+import 'package:gold_app/widgets/live_countdown.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -105,8 +105,8 @@ class OrderDetailScreen extends ConsumerWidget {
                                   value: Formatters.currency(double.tryParse(order.pricingNotes['pricingMakingGst'] ?? '0') ?? 0),
                                   icon: Icons.receipt_long_rounded,
                                 ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
                                   child: Divider(color: AppColors.grey.withValues(alpha: 0.2), height: 1),
                                 ),
                                 _DetailRow(

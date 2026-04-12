@@ -51,9 +51,10 @@ class GoldImage extends StatelessWidget {
 
     // Fallback for simple paths that might be assets without prefix
     if (imageUrl.contains('.png') || imageUrl.contains('.jpg') || imageUrl.contains('.webp')) {
+       final cleanUrl = imageUrl.replaceAll('.png', '.webp');
        // Try as asset if it has an extension but no http
        return Image.asset(
-        'assets/images/$imageUrl',
+        'assets/images/$cleanUrl',
         width: width,
         height: height,
         fit: fit,
@@ -81,15 +82,24 @@ class GoldImage extends StatelessWidget {
     return Center(
       child: ClipOval(
         child: Image.asset(
-          'assets/images/default_gold_coin.png',
+          'assets/images/default_gold_coin.webp',
           width: width,
           height: height,
           fit: fit,
-          errorBuilder: (context, error, stackTrace) => Icon(
-            Icons.monetization_on_rounded,
-            size: (width ?? 40) * 0.8,
-            color: AppColors.royalGold.withValues(alpha: 0.3),
-          ),
+          errorBuilder: (context, error, stackTrace) {
+            // Final fallback to original PNG just in case
+            return Image.asset(
+              'assets/images/default_gold_coin.png',
+              width: width,
+              height: height,
+              fit: fit,
+              errorBuilder: (c, e, s) => Icon(
+                Icons.monetization_on_rounded,
+                size: (width ?? 40) * 0.8,
+                color: AppColors.royalGold.withValues(alpha: 0.3),
+              ),
+            );
+          },
         ),
       ),
     );

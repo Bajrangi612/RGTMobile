@@ -50,7 +50,7 @@ class OfferPopup extends ConsumerWidget {
                     height: 200,
                     width: double.infinity,
                     child: GoldImage(
-                      imageUrl: 'assets/images/premium_gold_offer.png', 
+                      imageUrl: 'assets/images/premium_gold_offer.webp', 
                       fit: BoxFit.cover,
                     ),
                   ),

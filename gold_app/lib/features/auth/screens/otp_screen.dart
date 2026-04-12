@@ -3,16 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'dart:async';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/extensions.dart';
-import '../../../widgets/gold_button.dart';
-import '../../../widgets/gold_card.dart';
-import '../providers/auth_provider.dart';
-import '../../home/screens/home_screen.dart';
-import '../../admin/screens/admin_dashboard_screen.dart';
-import 'complete_profile_screen.dart';
+import 'package:gold_app/core/theme/app_colors.dart';
+import 'package:gold_app/core/theme/app_text_styles.dart';
+import 'package:gold_app/core/constants/app_constants.dart';
+import 'package:gold_app/core/utils/extensions.dart';
+import 'package:gold_app/core/providers/navigation_provider.dart';
+import 'package:gold_app/widgets/gold_button.dart';
+import 'package:gold_app/widgets/gold_card.dart';
+import 'package:gold_app/features/auth/providers/auth_provider.dart';
+import 'package:gold_app/features/home/screens/home_screen.dart';
+import 'package:gold_app/features/admin/screens/admin_dashboard_screen.dart';
+import 'package:gold_app/features/auth/screens/complete_profile_screen.dart';
 
 class OtpScreen extends ConsumerStatefulWidget {
   final String phone;

@@ -1,4 +1,4 @@
-import '../../../core/utils/formatters.dart';
+import 'package:gold_app/core/utils/formatters.dart';
 
 class OrderStatusHistoryModel {
   final String id;

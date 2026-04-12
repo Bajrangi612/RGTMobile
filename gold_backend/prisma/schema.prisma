@@ -59,6 +59,11 @@ model Order {
   paymentStatus       String?
   deliveryDate        DateTime?
   goldPriceAtPurchase Decimal?    @db.Decimal(15, 2)
+  marketPrice         Decimal?    @db.Decimal(15, 2)
+  makingCharges       Decimal?    @db.Decimal(15, 2)
+  makingGst           Decimal?    @db.Decimal(15, 2)
+  goldGst             Decimal?    @db.Decimal(15, 2)
+  discountAmount      Decimal?    @db.Decimal(15, 2)
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
   referralCode        String?
