@@ -77,15 +77,15 @@ class StatusBadge extends StatelessWidget {
       case StatusType.qualityChecking:
         return 'Quality Checking';
       case StatusType.ready:
-        return 'Reday for PIckup';
+        return 'Ready for Pickup';
       case StatusType.delivered:
         return 'Delivered';
       case StatusType.sellBackApplied:
-        return 'Applied for sell back';
+        return 'Applied for Sell Back';
       case StatusType.resold:
         return 'Resold';
       case StatusType.cancelled:
-        return 'cancel';
+        return 'Cancelled';
     }
   }
 

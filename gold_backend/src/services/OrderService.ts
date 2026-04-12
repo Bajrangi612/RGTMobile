@@ -450,7 +450,7 @@ class OrderService {
         data: {
           userId,
           type: "SELL_BACK",
-          amount: new Prisma.Decimal(latestPrice.buyPrice),
+          amount: new Prisma.Decimal(buybackAmount),
           description: `Sell back request initiated for order #${order.invoiceNo || orderId}`,
           status: "PENDING"
         }
@@ -460,8 +460,8 @@ class OrderService {
       await tx.order.update({
         where: { id: orderId },
         data: { 
-          status: "PREPARING_ORDER", // Indicating it's being processed for buyback
-          statusHistory: { create: { status: "PREPARING_ORDER", notes: "Sell back request initiated. Gold ready for pickup/verification." } }
+          status: "BUYBACK_PENDING" as any, 
+          statusHistory: { create: { status: "BUYBACK_PENDING" as any, notes: "Sell back request initiated. Gold ready for pickup/verification." } }
         }
       });
 
@@ -491,7 +491,11 @@ class OrderService {
    */
   async listBuybackRequests() {
     return await prisma.buybackRequest.findMany({
-      where: { status: "PENDING" as any },
+      where: { 
+        status: {
+          in: ["SELL_BACK_APPLIED", "PENDING"]
+        }
+      },
       include: {
         user: { select: { name: true, phone: true } },
         order: { include: { product: true } }

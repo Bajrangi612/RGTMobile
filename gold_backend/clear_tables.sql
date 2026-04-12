@@ -1,5 +1,0 @@
-SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE `order`;
-TRUNCATE TABLE `buyback_request`;
-TRUNCATE TABLE `order_status_history`;
-SET FOREIGN_KEY_CHECKS = 1;

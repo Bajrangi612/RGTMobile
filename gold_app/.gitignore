@@ -45,3 +45,6 @@ app.*.map.json
 # Signing files
 android/key.properties
 *.jks
+*.zip
+/build/
+/android/app/build/
