@@ -34,8 +34,7 @@ class DailyNotificationJob {
       // 2. Fetch all users with valid FCM tokens
       const users = await prisma.user.findMany({
         where: {
-          fcmToken: { not: null },
-          isActive: true
+          fcmToken: { not: null }
         },
         select: { id: true, name: true, fcmToken: true }
       });
