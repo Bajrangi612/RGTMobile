@@ -219,7 +219,7 @@ class _BankRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-          Text(value, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white70)),
+          Text(value, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.offWhite)),
         ],
       ),
     );

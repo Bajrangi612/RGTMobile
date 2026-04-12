@@ -144,7 +144,7 @@ class _TransactionCardState extends State<_TransactionCard> {
                         Text(
                           Formatters.currency(double.tryParse(widget.txn['amount']?.toString() ?? '0.0') ?? 0.0),
                           style: AppTextStyles.labelLarge.copyWith(
-                            color: isPurchase ? AppColors.pureWhite : AppColors.success,
+                            color: isPurchase ? AppColors.royalGold : AppColors.success,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

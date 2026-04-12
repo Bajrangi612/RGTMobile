@@ -129,13 +129,14 @@ class AdminOrderDetailScreen extends ConsumerWidget {
                       ),
                     )
                   : Column(
-                      children: orderModel.statusHistory
+                      children: (orderModel.statusHistory
                           .where((h) => !['PAYMENT_PENDING', 'PAYMENT_SUCCESSFUL'].contains(h.status.toUpperCase()))
-                          .toList()
-                          ..sort((a, b) => b.createdAt.compareTo(a.createdAt))
-                          ..map((history) {
+                          .toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+                          .asMap().entries.map((entry) {
+                            final index = entry.key;
+                            final history = entry.value;
                             final validHistory = orderModel.statusHistory.where((h) => !['PAYMENT_PENDING', 'PAYMENT_SUCCESSFUL'].contains(h.status.toUpperCase())).toList();
-                            final isLast = history.createdAt == validHistory.last.createdAt;
+                            final isLast = index == (validHistory.length - 1);
                             final statusType = statusFromString(history.status);
 
                             return _TimelineStep(
@@ -146,7 +147,7 @@ class AdminOrderDetailScreen extends ConsumerWidget {
                               isCompleted: true,
                               isLast: isLast,
                               status: statusType,
-                            );
+                            ).animate(delay: (index * 150).ms).fadeIn(duration: 400.ms).slideX(begin: 0.1, curve: Curves.easeOutQuad);
                           }).toList(),
                     ),
             ).animate(delay: 250.ms).fadeIn(),

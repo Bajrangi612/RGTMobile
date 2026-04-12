@@ -91,10 +91,10 @@ class AdminUserDetailScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    _InfoRow('Wallet Balance', '₹${user['wallet']?['balance'] ?? '0.00'}'),
                     _InfoRow('Wallet Balance', '₹${user['wallet']?['balance'] ?? '0.00'}', isGold: true),
+                    _InfoRow('Gold Balance', '${user['wallet']?['goldBalance'] ?? '0.000'}g', isGold: true),
                     const Divider(color: Colors.white10),
-                    _InfoRow('Total Assets', '₹${user['totalCollectionValue'] ?? '0.00'}'),
+                    _InfoRow('Total Assets', '₹${user['totalCollectionValue'] ?? '0.00'}', isGold: true),
                   ],
                 ),
               ).animate(delay: 200.ms).fadeIn(),
@@ -252,16 +252,18 @@ class _InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppTextStyles.bodySmall),
+          Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.grey)),
           Text(
             value, 
             style: AppTextStyles.labelLarge.copyWith(
-              color: isGold ? AppColors.royalGold : null,
+              color: isGold ? AppColors.royalGold : AppColors.offWhite,
+              fontWeight: isGold ? FontWeight.bold : FontWeight.w500,
               fontStyle: isItalic ? FontStyle.italic : null,
+              fontSize: 13,
             ),
           ),
         ],

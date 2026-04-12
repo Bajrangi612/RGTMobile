@@ -125,7 +125,10 @@ class _UserCard extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     'Balance: ₹${balance.toStringAsFixed(2)} | ${goldBalance.toStringAsFixed(3)}g',
-                    style: AppTextStyles.caption.copyWith(color: Colors.white70),
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.royalGold,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),

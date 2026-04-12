@@ -201,7 +201,7 @@ class OrderDetailScreen extends ConsumerWidget {
                                 isCompleted: true,
                                 isLast: isLast,
                                 status: statusType,
-                              );
+                              ).animate(delay: (index * 150).ms).fadeIn(duration: 400.ms).slideX(begin: 0.1, curve: Curves.easeOutQuad);
                             }),
                         ],
                       ),

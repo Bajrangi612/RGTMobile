@@ -108,36 +108,52 @@ class AdminOrderManager extends ConsumerWidget {
   }
 }
 
-class _OrderList extends StatelessWidget {
+class _OrderList extends ConsumerWidget {
   final List<dynamic> orders;
   const _OrderList({required this.orders});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (orders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+      return RefreshIndicator(
+        onRefresh: () => ref.read(adminProvider.notifier).loadInitialData(),
+        color: AppColors.royalGold,
+        backgroundColor: AppColors.cardDark,
+        child: ListView(
           children: [
-            Icon(Icons.inventory_2_outlined, size: 64, color: AppColors.grey.withValues(alpha: 0.2)),
-            const SizedBox(height: 16),
-            Text('No orders in this category', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey)),
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.inventory_2_outlined, size: 64, color: AppColors.grey.withValues(alpha: 0.2)),
+                    const SizedBox(height: 16),
+                    Text('No orders in this category', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey)),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: orders.length,
-      itemBuilder: (context, index) {
-        final order = orders[index];
-        final status = statusFromString(order['status'] ?? 'pending');
-        
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: GestureDetector(
-            onTap: () => Navigator.push(
+    return RefreshIndicator(
+      onRefresh: () => ref.read(adminProvider.notifier).loadInitialData(),
+      color: AppColors.royalGold,
+      backgroundColor: AppColors.cardDark,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: orders.length,
+        itemBuilder: (context, index) {
+          final order = orders[index];
+          final status = statusFromString(order['status'] ?? 'pending');
+          
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: GestureDetector(
+              onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => AdminOrderDetailScreen(order: order)),
             ),
@@ -231,8 +247,9 @@ class _OrderList extends StatelessWidget {
           ),
         ).animate(delay: (index * 50).ms).fadeIn().slideY(begin: 0.1);
       },
-    );
-  }
+    ),
+  );
+}
 
   double _toDouble(dynamic value) {
     if (value is num) return value.toDouble();
