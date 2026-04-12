@@ -48,3 +48,8 @@ android/key.properties
 *.zip
 /build/
 /android/app/build/
+
+# Firebase & Secrets
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+*.env
