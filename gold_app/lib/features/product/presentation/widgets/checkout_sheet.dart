@@ -14,6 +14,7 @@ import '../../../order/providers/order_provider.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/providers/navigation_provider.dart';
+import '../../../order/screens/order_detail_screen.dart';
 
 class CheckoutSheet extends ConsumerStatefulWidget {
   final ProductModel product;
@@ -64,10 +65,24 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
         await ref.read(orderProvider.notifier).loadOrders();
 
         if (mounted) {
-          // Switch to My Orders tab before popping
+          // Switch to My Orders tab
           ref.read(navigationProvider.notifier).state = 1;
-          Navigator.pop(context); // Close sheet
+
+          // Close the bottom sheet
+          Navigator.pop(context);
+
+          // Get the order that was just correctly verified
+          final completedOrder = ref.read(purchaseProvider).completedOrder;
           
+          if (completedOrder != null) {
+            // Navigate to Order Details
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => OrderDetailScreen(order: completedOrder),
+              ),
+            );
+          }
+
           // Show success snackbar
           messenger.showSnackBar(
             const SnackBar(

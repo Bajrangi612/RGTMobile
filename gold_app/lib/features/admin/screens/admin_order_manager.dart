@@ -193,7 +193,7 @@ class _OrderList extends StatelessWidget {
                           children: [
                             Text('Est. Readiness', style: AppTextStyles.caption),
                             Text(
-                              Formatters.deliveryCountdown(order['deliveryDate']),
+                              Formatters.deliveryCountdown(order['deliveryDate'], status: order['status']),
                               style: AppTextStyles.bodySmall.copyWith(color: AppColors.royalGold),
                             ),
                           ],

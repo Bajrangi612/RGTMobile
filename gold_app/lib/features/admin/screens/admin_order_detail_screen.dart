@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
@@ -85,7 +86,7 @@ class AdminOrderDetailScreen extends ConsumerWidget {
                     value: user?.address ?? 'Not provided'),
                   const Divider(height: 24),
                   _InfoRow(icon: Icons.calendar_month_rounded, label: 'Collection Countdown', 
-                    value: Formatters.deliveryCountdown(order['deliveryDate'])),
+                    value: Formatters.deliveryCountdown(order['deliveryDate'], status: order['status'])),
                 ],
               ),
             ).animate(delay: 100.ms).fadeIn().slideX(begin: 0.1),
@@ -113,6 +114,42 @@ class AdminOrderDetailScreen extends ConsumerWidget {
                 ],
               ),
             ).animate(delay: 200.ms).fadeIn(),
+
+            const SizedBox(height: 32),
+
+            /// ⏳ Order Timeline
+            Text('ORDER TIMELINE (IST)', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey)),
+            const SizedBox(height: 12),
+            GoldCard(
+              child: orderModel.statusHistory.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text('Logging fulfillment steps...', style: AppTextStyles.bodySmall),
+                      ),
+                    )
+                  : Column(
+                      children: orderModel.statusHistory
+                          .where((h) => !['PAYMENT_PENDING', 'PAYMENT_SUCCESSFUL'].contains(h.status.toUpperCase()))
+                          .toList()
+                          ..sort((a, b) => b.createdAt.compareTo(a.createdAt))
+                          ..map((history) {
+                            final validHistory = orderModel.statusHistory.where((h) => !['PAYMENT_PENDING', 'PAYMENT_SUCCESSFUL'].contains(h.status.toUpperCase())).toList();
+                            final isLast = history.createdAt == validHistory.last.createdAt;
+                            final statusType = statusFromString(history.status);
+
+                            return _TimelineStep(
+                              title: StatusBadge(status: statusType).badgeLabel,
+                              subtitle: history.notes ?? 'Status updated successfully.',
+                              date: DateFormat('MMM dd').format(history.createdAt),
+                              time: DateFormat('hh:mm:ss a').format(history.createdAt),
+                              isCompleted: true,
+                              isLast: isLast,
+                              status: statusType,
+                            );
+                          }).toList(),
+                    ),
+            ).animate(delay: 250.ms).fadeIn(),
 
             const SizedBox(height: 32),
 
@@ -260,6 +297,112 @@ class _AmountRow extends StatelessWidget {
           Text(Formatters.currency(amount), style: AppTextStyles.bodyMedium),
         ],
       ),
+    );
+  }
+}
+
+class _TimelineStep extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final String date;
+  final String time;
+  final bool isCompleted;
+  final bool isLast;
+  final StatusType status;
+
+  const _TimelineStep({
+    required this.title,
+    required this.subtitle,
+    required this.date,
+    required this.time,
+    this.isCompleted = false,
+    this.isLast = false,
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final statusBadge = StatusBadge(status: status, small: true);
+    final color = statusBadge.color;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Left Column: Date & Time
+        SizedBox(
+          width: 70,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(date, style: AppTextStyles.labelLarge.copyWith(fontSize: 11, color: AppColors.pureWhite)),
+              Text(time, style: AppTextStyles.caption.copyWith(fontSize: 9)),
+            ],
+          ),
+        ),
+        
+        const SizedBox(width: 16),
+
+        // Middle Column: Line and Circle
+        Column(
+          children: [
+            Container(
+              width: 14,
+              height: 14,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                boxShadow: [
+                  BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10),
+                ],
+              ),
+              child: const Icon(Icons.check, size: 8, color: Colors.white),
+            ),
+            if (!isLast)
+              Container(
+                width: 2,
+                height: 50,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [color, color.withValues(alpha: 0.1)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        
+        const SizedBox(width: 16),
+
+        // Right Column: Status info
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title, 
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: AppColors.royalGold, 
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  )
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle, 
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 11, 
+                    color: AppColors.grey,
+                    height: 1.4,
+                  )
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

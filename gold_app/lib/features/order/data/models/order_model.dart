@@ -103,7 +103,9 @@ class OrderModel {
   bool get canCancel => 
     status.toUpperCase() == 'ORDER_PLACED' || 
     status.toUpperCase() == 'ORDER_CONFIRMED' || 
-    status.toUpperCase() == 'PREPARING_ORDER';
+    status.toUpperCase() == 'PREPARING_ORDER' ||
+    status.toUpperCase() == 'PROCESSING' ||
+    status.toUpperCase() == 'QUALITY_CHECKING';
 
   bool get canResell => 
     status.toUpperCase() == 'READY_FOR_PICKUP' || 

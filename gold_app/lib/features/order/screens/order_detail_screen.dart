@@ -116,8 +116,8 @@ class OrderDetailScreen extends ConsumerWidget {
                                   dateString: order.deliveryDate != null 
                                       ? DateFormat('EEEE, MMM dd').format(order.deliveryDate!)
                                       : null,
-                                  child: (order.status.toUpperCase() == 'READY_FOR_PICKUP' || order.status.toUpperCase() == 'READY') 
-                                    ? Text('ORDER READY', style: AppTextStyles.h3.copyWith(color: AppColors.deepBlack, fontWeight: FontWeight.bold))
+                                  child: ['READY_FOR_PICKUP', 'READY', 'DELIVERED', 'PICKED_UP', 'ORDER_CANCELLED', 'CANCELLED', 'SOLD_BACK', 'BUYBACK', 'RESOLD', 'PAYMENT_SETTLED', 'BUYBACK_PENDING', 'SELL_BACK_APPLIED', 'BUYBACK_APPROVED'].contains(order.status.toUpperCase()) 
+                                    ? Text(Formatters.deliveryCountdown(order.deliveryDate, status: order.status).toUpperCase(), style: AppTextStyles.h3.copyWith(color: AppColors.deepBlack, fontWeight: FontWeight.bold))
                                     : order.deliveryDate != null 
                                       ? LiveCountdown(targetDate: order.deliveryDate!)
                                       : Text('Processing', style: AppTextStyles.h4.copyWith(color: AppColors.deepBlack)),
@@ -180,26 +180,24 @@ class OrderDetailScreen extends ConsumerWidget {
                             )
                           else
                             ...(order.statusHistory
-                                .where((h) => h.status.toUpperCase() != 'PAYMENT_PENDING')
+                                .where((h) => !['PAYMENT_PENDING', 'PAYMENT_SUCCESSFUL'].contains(h.status.toUpperCase()))
                                 .toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
                                 .asMap()
                                 .entries.map((entry) {
 
                               final index = entry.key;
                               final history = entry.value;
-                              final isLast = index == (order.statusHistory.where((h) => h.status.toUpperCase() != 'PAYMENT_PENDING').length - 1);
+                              final validHistory = order.statusHistory.where((h) => !['PAYMENT_PENDING', 'PAYMENT_SUCCESSFUL'].contains(h.status.toUpperCase())).toList();
+                              final isLast = index == (validHistory.length - 1);
                               final statusType = statusFromString(history.status);
                               
-                              String title = statusType.name.toUpperCase().replaceAll('_', ' ');
-                              if (history.status.toUpperCase() == 'PAYMENT_SUCCESSFUL') {
-                                title = 'VERIFIED PAYMENT';
-                              }
+                              String title = StatusBadge(status: statusType).badgeLabel;
 
                               return _TimelineStep(
                                 title: title,
                                 subtitle: history.notes ?? 'Status updated successfully.',
                                 date: DateFormat('MMM dd').format(history.createdAt),
-                                time: DateFormat('hh:mm a').format(history.createdAt),
+                                time: DateFormat('hh:mm:ss a').format(history.createdAt),
                                 isCompleted: true,
                                 isLast: isLast,
                                 status: statusType,

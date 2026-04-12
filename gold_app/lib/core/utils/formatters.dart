@@ -113,7 +113,16 @@ class Formatters {
   }
 
   // Countdown days
-  static String deliveryCountdown(dynamic deliveryDate) {
+  static String deliveryCountdown(dynamic deliveryDate, {String? status}) {
+    if (status != null) {
+      final s = status.toUpperCase();
+      if (['READY_FOR_PICKUP', 'READY'].contains(s)) return 'Ready';
+      if (['DELIVERED', 'PICKED_UP'].contains(s)) return 'Collected';
+      if (['ORDER_CANCELLED', 'CANCELLED'].contains(s)) return 'Cancelled';
+      if (['SOLD_BACK', 'BUYBACK', 'RESOLD', 'PAYMENT_SETTLED'].contains(s)) return 'Resold';
+      if (['BUYBACK_PENDING', 'SELL_BACK_APPLIED', 'BUYBACK_APPROVED'].contains(s)) return 'Buyback Processing';
+    }
+
     if (deliveryDate == null) return 'Pending';
     
     DateTime? dt;

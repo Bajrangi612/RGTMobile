@@ -21,9 +21,10 @@ class OrderService {
     const livePriceObj = await ProductService.getLatestGoldPrice();
     const livePrice = Number(livePriceObj.sellPrice);
 
-    // 2. Validate Referral Logic (Cannot use own code on 1st order)
-    const paidOrderCount = await prisma.order.count({
-      where: { userId, status: "ORDER_CONFIRMED" as any }
+    // 2. Validate Referral Logic
+    // Status does not matter: if they have any order, it's not their first.
+    const orderCount = await prisma.order.count({
+      where: { userId }
     });
     
     if (referralCode) {
@@ -32,7 +33,8 @@ class OrderService {
         const normalizedCode = referralCode.trim().toUpperCase();
         const isSelf = dbUser.referralCode === normalizedCode;
         
-        if (isSelf && paidOrderCount === 0) {
+        // Cannot use own code for the very first order
+        if (isSelf && orderCount === 0) {
           throw new Error("You cannot use your own referral code for your first order.");
         }
 
@@ -562,7 +564,7 @@ class OrderService {
           where: { id: request.orderId },
           data: { 
             status: "READY_FOR_PICKUP" as any,
-            statusHistory: { create: { status: "READY_FOR_PICKUP" as any, notes: `Buyback rejected: ${adminNotes}` } }
+            statusHistory: { create: { status: "BUYBACK_REJECTED" as any, notes: `Buyback rejected: ${adminNotes}` } }
           }
         });
 
@@ -653,7 +655,7 @@ class OrderService {
         where: { id: orderId },
         data: { 
           status: "READY_FOR_PICKUP" as any,
-          statusHistory: { create: { status: "READY_FOR_PICKUP" as any, notes: "Buyback request cancelled by customer." } }
+          statusHistory: { create: { status: "BUYBACK_REJECTED" as any, notes: "Buyback request cancelled by customer." } }
         }
       });
 
