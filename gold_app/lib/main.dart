@@ -5,9 +5,20 @@ import 'package:gold_app/core/providers/theme_provider.dart';
 import 'package:gold_app/core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/screens/splash_screen.dart';
+import 'package:gold_app/core/services/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase & Notifications
+  try {
+    // Note: This requires google-services.json to be present
+    await Firebase.initializeApp();
+    await NotificationService.initialize();
+  } catch (e) {
+    debugPrint('Firebase/Notification initialization skipped: $e');
+  }
 
   // Set system UI overlay style for premium dark theme
   SystemChrome.setSystemUIOverlayStyle(

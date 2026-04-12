@@ -260,6 +260,15 @@ class OrderService {
       return newOrder;
     });
 
+    // Notify User about Confirmation
+    await NotificationService.sendPushNotification(
+      userId,
+      '🎉 Order Confirmed!',
+      `Your order for ${quantity}x ${result.product.name} (Inv: #${result.invoiceNo}) is confirmed and being prepared.`,
+      'ORDER_CONFIRMED',
+      { orderId: result.id }
+    );
+
     // 4. Generate and Sync Invoice
     try {
       await invoiceService.generateAndSyncInvoice(result.id);
@@ -426,14 +435,24 @@ class OrderService {
 
       return updatedOrder;
     });
-  }
+
+    // Notify User about Cancellation
+    await NotificationService.sendPushNotification(
+      userId,
+      '🚫 Order Cancelled',
+      `Your order #${orderId.substring(0, 8)} has been cancelled. Refund processing is initiated.`,
+      'ORDER_CANCELLED',
+      { orderId }
+    );
+
+    return result;
 
   /**
    * Buyback Program (Sell Back Gold)
    * Only allowed if status is READY_FOR_PICKUP (User has the gold in vault)
    */
   async initiateBuyback(orderId: string, userId: string) {
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: orderId },
         include: { product: true }
@@ -500,6 +519,17 @@ class OrderService {
 
       return request;
     });
+
+    // Notify User about Buyback Initiation
+    await NotificationService.sendPushNotification(
+      userId,
+      '📈 Sell-Back Request Received',
+      `Your request to sell back order #${orderId.substring(0, 8)} has been received and is under review.`,
+      'BUYBACK_INITIATED',
+      { orderId }
+    );
+
+    return result;
   }
 
   /**
@@ -524,7 +554,7 @@ class OrderService {
    * Process Admin action on Buyback
    */
   async processBuybackAction(requestId: string, action: 'APPROVE' | 'REJECT', adminNotes?: string) {
-    return await prisma.$transaction(async (tx) => {
+    const request = await prisma.$transaction(async (tx) => {
       const request = await tx.buybackRequest.findUnique({
         where: { id: requestId },
         include: { order: true }
@@ -615,6 +645,20 @@ class OrderService {
 
       return request;
     });
+
+    // Notify User about the Decision
+    const isApproved = action === 'APPROVE';
+    await NotificationService.sendPushNotification(
+      request.userId,
+      isApproved ? '✅ Sell-Back Approved' : '❌ Sell-Back Request Update',
+      isApproved 
+        ? `Your request for order #${request.order.invoiceNo || request.orderId.substring(0,8)} has been approved.`
+        : `Your sell-back request was not approved. ${adminNotes || "See details in app."}`,
+      'BUYBACK_DECISION',
+      { orderId: request.orderId }
+    );
+
+    return request;
   }
 
   /**
@@ -630,9 +674,10 @@ class OrderService {
       take: readyStockCount
     });
 
-    return await prisma.$transaction(async (tx) => {
+    const updatedOrders = await prisma.$transaction(async (tx) => {
+      const results = [];
       for (const order of pendingOrders) {
-        await tx.order.update({
+        const updated = await tx.order.update({
           where: { id: order.id },
           data: { 
             status: "READY_FOR_PICKUP" as any,
@@ -644,6 +689,7 @@ class OrderService {
             }
           }
         });
+        results.push(updated);
       }
 
       // Decrement ready stock from the product
@@ -651,7 +697,22 @@ class OrderService {
         where: { id: productId },
         data: { readyStock: { decrement: pendingOrders.length } }
       });
+
+      return results;
     });
+
+    // Notify all affected users
+    for (const order of updatedOrders) {
+      NotificationService.sendPushNotification(
+        order.userId,
+        '✨ Golden News: Ready for Pickup!',
+        `Your gold order #${order.id.substring(0,8)} is now ready for collection or vaulting.`,
+        'ORDER_READY',
+        { orderId: order.id }
+      ).catch(e => console.error(`Failed to notify user ${order.userId} about auto-approval:`, e));
+    }
+
+    return updatedOrders;
   }
 
   /**

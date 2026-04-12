@@ -18,6 +18,7 @@ import adminRoutes from './routes/AdminRoutes';
 import notificationRoutes from './routes/NotificationRoutes';
 import publicRoutes from './routes/PublicRoutes';
 import PriceSyncService from './services/PriceSyncService';
+import DailyNotificationJob from './services/DailyNotificationJob';
 
 dotenv.config();
 
@@ -64,4 +65,7 @@ app.listen(port, () => {
   
   // Start automated gold price sync (Every 2 hours)
   PriceSyncService.start(2);
+
+  // Start daily morning notifications (09:00 AM IST)
+  DailyNotificationJob.start();
 });

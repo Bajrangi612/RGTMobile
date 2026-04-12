@@ -44,10 +44,27 @@ class Formatters {
     return '${grams}g';
   }
 
+  // Centralized IST helper
+  static DateTime get nowIST => DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+
+  static DateTime asIST(dynamic dateValue) {
+    if (dateValue == null) return nowIST;
+    DateTime dt;
+    if (dateValue is DateTime) {
+      dt = dateValue;
+    } else if (dateValue is String) {
+      dt = DateTime.tryParse(dateValue) ?? nowIST;
+    } else {
+      return nowIST;
+    }
+    // Always treat as UTC and convert to IST for global consistency
+    return dt.toUtc().add(const Duration(hours: 5, minutes: 30));
+  }
+
   // Date (15/01/2025) 
   static String date(String isoDate) {
     try {
-      final dt = DateTime.parse(isoDate);
+      final dt = asIST(isoDate);
       return DateFormat('dd/MM/yyyy').format(dt);
     } catch (e) {
       return isoDate;
@@ -57,7 +74,7 @@ class Formatters {
   // Date time (15/01/2025, 10:30 AM)
   static String dateTime(String isoDate) {
     try {
-      final dt = DateTime.parse(isoDate);
+      final dt = asIST(isoDate);
       return DateFormat('dd/MM/yyyy, hh:mm a').format(dt);
     } catch (e) {
       return isoDate;
@@ -66,22 +83,8 @@ class Formatters {
 
   // Relative time (2 days ago, just now)
   static String relativeTime(dynamic dateValue) {
-    if (dateValue == null) return 'N/A';
-    
-    DateTime dt;
-    try {
-      if (dateValue is DateTime) {
-        dt = dateValue;
-      } else if (dateValue is String) {
-        dt = DateTime.parse(dateValue);
-      } else {
-        return 'N/A';
-      }
-    } catch (e) {
-      return 'N/A';
-    }
-
-    final now = DateTime.now();
+    final dt = asIST(dateValue);
+    final now = nowIST;
     final diff = now.difference(dt);
 
     if (diff.inSeconds < 60) return 'Just now';
@@ -125,16 +128,9 @@ class Formatters {
 
     if (deliveryDate == null) return 'Pending';
     
-    DateTime? dt;
-    if (deliveryDate is DateTime) {
-      dt = deliveryDate;
-    } else if (deliveryDate is String) {
-      dt = DateTime.tryParse(deliveryDate);
-    }
+    final dt = asIST(deliveryDate);
+    final now = nowIST;
     
-    if (dt == null) return 'Pending';
-    
-    final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final delivery = DateTime(dt.year, dt.month, dt.day);
     final diff = delivery.difference(today).inDays;

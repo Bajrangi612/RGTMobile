@@ -74,6 +74,19 @@ class ApiService {
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
+  Future<Response> logout() async {
+    return await _dio.post('/auth/logout');
+  }
+
+  // --- NOTIFICATIONS ---
+  
+  Future<Response> updateFcmToken(String token) async {
+    return await _dio.post(
+      '/notifications/token',
+      data: {'token': token},
+    );
+  }
+
   Future<Response> getMe() async {
     return await _dio.get('/auth/me');
   }

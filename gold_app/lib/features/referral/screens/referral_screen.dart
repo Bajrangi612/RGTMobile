@@ -480,7 +480,7 @@ class _WithdrawalTile extends StatelessWidget {
                 Text(
                   Formatters.relativeTime(
                     req['createdAt']?.toString() ??
-                        DateTime.now().toIso8601String(),
+                        Formatters.nowIST.toIso8601String(),
                   ),
                   style: AppTextStyles.caption.copyWith(color: AppColors.grey),
                 ),

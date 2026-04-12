@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:intl/intl.dart';
+import '../../../core/utils/formatters.dart';
 import '../../../product/data/models/product_model.dart';
 import '../../../../widgets/status_badge.dart';
 import 'order_status_history_model.dart';
@@ -82,7 +83,7 @@ class OrderModel {
       statusHistory: json['statusHistory'] != null 
         ? (json['statusHistory'] as List).map((h) => OrderStatusHistoryModel.fromJson(h)).toList()
         : [],
-      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+      createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : Formatters.nowIST,
     );
   }
 
@@ -114,6 +115,35 @@ class OrderModel {
     } catch (_) {}
     return {};
   }
+
+  // PRECISE PRICING BREAKDOWN (from attached product/pricing)
+  ProductPricing? get pricingRecord => product?.pricing;
+  
+  double get baseGoldValue => pricingRecord != null 
+    ? pricingRecord!.marketPrice * quantity 
+    : amount; // Fallback to raw amount
+
+  double get discountedValue => pricingRecord != null 
+    ? pricingRecord!.discountedGoldValue * quantity 
+    : amount;
+
+  double get makingChargesValue => pricingRecord != null 
+    ? pricingRecord!.makingCharges * quantity 
+    : 0.0;
+
+  double get cgst => pricingRecord != null 
+    ? (pricingRecord!.gstAmount * quantity) / 2 
+    : gst / 2;
+
+  double get sgst => pricingRecord != null 
+    ? (pricingRecord!.gstAmount * quantity) / 2 
+    : gst / 2;
+
+  double get discountAmount => pricingRecord != null 
+    ? pricingRecord!.discountAmount * quantity 
+    : 0.0;
+  
+  bool get hasPricingBreakdown => pricingRecord != null;
   
   bool get canCancel => 
     status.toUpperCase() == 'ORDER_PLACED' || 

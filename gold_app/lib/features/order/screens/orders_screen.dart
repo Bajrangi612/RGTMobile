@@ -48,7 +48,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
                 children: [
                   if (Navigator.of(context).canPop())
                     IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 20),
+                      icon: Icon(Icons.arrow_back_ios, color: AppColors.pureWhite, size: 20),
                       onPressed: () => Navigator.pop(context),
                     ),
                   Text(
@@ -237,31 +237,70 @@ class _OrderCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(order.productName, style: AppTextStyles.labelLarge),
-                  SizedBox(height: 4),
-                  Row(
+                  Text(
+                    order.productName, 
+                    style: AppTextStyles.labelLarge,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
                       Text(
                         'Qty: ${order.quantity} | ${Formatters.date(order.orderDate)}',
-                        style: AppTextStyles.caption,
+                        style: AppTextStyles.caption.copyWith(fontSize: 10),
                       ),
-                      if (order.isActive && order.deliveryDate != null) ...[
-                        const SizedBox(width: 8),
+                      if (order.deliveryDate != null || order.isActive) ...[
                         Container(
-                          width: 4,
-                          height: 4,
+                          width: 3,
+                          height: 3,
                           decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white24),
                         ),
-                        const SizedBox(width: 8),
-                        Icon(Icons.timer_outlined, color: AppColors.royalGold.withValues(alpha: 0.6), size: 12),
-                        const SizedBox(width: 4),
-                        LiveCountdown(
-                          targetDate: order.deliveryDate!,
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.royalGold,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 10,
-                          ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.timer_outlined, color: AppColors.royalGold.withValues(alpha: 0.6), size: 10),
+                            const SizedBox(width: 4),
+                            Builder(
+                              builder: (context) {
+                                final status = order.status.toUpperCase();
+                                final isFinalStatus = ['READY_FOR_PICKUP', 'READY', 'DELIVERED', 'PICKED_UP', 'ORDER_CANCELLED', 'CANCELLED', 'SOLD_BACK', 'BUYBACK', 'RESOLD', 'PAYMENT_SETTLED', 'BUYBACK_PENDING', 'SELL_BACK_APPLIED', 'BUYBACK_APPROVED'].contains(status);
+                                
+                                if (isFinalStatus) {
+                                  return Text(
+                                    Formatters.deliveryCountdown(order.deliveryDate, status: order.status).toUpperCase(),
+                                    style: AppTextStyles.caption.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold, fontSize: 9),
+                                  );
+                                }
+                                
+                                if (order.deliveryDate != null) {
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      LiveCountdown(
+                                        targetDate: order.deliveryDate!,
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.royalGold,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '| Delivery on time',
+                                        style: AppTextStyles.caption.copyWith(color: AppColors.success, fontSize: 8, fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  );
+                                }
+                                
+                                return const SizedBox.shrink();
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ],
@@ -269,19 +308,20 @@ class _OrderCard extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
                   Formatters.currency(order.totalPrice),
-                  style: AppTextStyles.priceTag.copyWith(fontSize: 15),
+                  style: AppTextStyles.priceTag.copyWith(fontSize: 14),
                 ),
                 Text(
                   '(Incl. GST)',
-                  style: AppTextStyles.caption.copyWith(fontSize: 8, color: AppColors.success),
+                  style: AppTextStyles.caption.copyWith(fontSize: 7, color: AppColors.success),
                 ),
-                SizedBox(height: 6),
-                 StatusBadge(status: order.statusType, small: true),
+                const SizedBox(height: 8),
+                StatusBadge(status: order.statusType, small: true),
               ],
             ),
           ],

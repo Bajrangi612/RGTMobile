@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
@@ -45,23 +46,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
     
     final code = _referralController.text.trim();
-    if (code.isEmpty) {
-      setState(() {
-        _refereeName = null;
-        _referralError = null;
-        _isValidatingReferral = false;
-      });
+
+    // Reset validation state immediately if not yet 10 digits
+    if (code.length != 10) {
+      if (_refereeName != null || _referralError != null || _isValidatingReferral) {
+        setState(() {
+          _refereeName = null;
+          _referralError = null;
+          _isValidatingReferral = false;
+        });
+      }
       return;
     }
 
-    _debounceTimer = Timer(const Duration(milliseconds: 600), () {
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       _validateReferral(code);
     });
   }
 
   Future<void> _validateReferral(String code) async {
-    // Only validate if it looks like a 10 digit number or our old codes
-    if (code.length < 5) return;
+    // Only validate if exactly 10 characters
+    if (code.length != 10) return;
 
     final currentUser = ref.read(authProvider).user;
     if (currentUser != null && code == currentUser.referralCode && currentUser.orderCount == 0) {
@@ -206,14 +211,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text('Base Gold Value', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey)),
+                                    Text('Base Gold Value', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.offWhite)),
                                     const SizedBox(height: 4),
                                     Text(
                                       Formatters.currency(pricing.marketPrice),
                                       style: AppTextStyles.caption.copyWith(
                                         decoration: TextDecoration.lineThrough,
                                         fontSize: 16,
-                                        color: Colors.white24,
+                                        color: AppColors.grey.withOpacity(0.4),
                                       ),
                                     ),
                                   ],
@@ -256,19 +261,55 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               ],
                             ),
                           ),
+                          const SizedBox(height: 12),
+
+                          // Delivery & Security Trust Badges
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.03),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.white.withOpacity(0.05)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _TrustIcon(icon: Icons.local_shipping_outlined, label: 'On-Time Delivery'),
+                                _TrustIcon(icon: Icons.verified_outlined, label: 'BIS Hallmarked'),
+                                _TrustIcon(icon: Icons.lock_outline, label: 'Fully Insured'),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                            Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Subtotal', style: AppTextStyles.bodyMedium),
-                              Text(Formatters.currency(subtotal), style: AppTextStyles.bodyMedium),
+                              Text('Gold Value', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.offWhite)),
+                              Text(Formatters.currency(pricing.discountedGoldValue * _quantity), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite)),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('GST (3%)', style: AppTextStyles.bodyMedium),
-                              Text(Formatters.currency(gstAmount), style: AppTextStyles.bodyMedium),
+                              Text('Making Charges', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.offWhite)),
+                              Text(Formatters.currency(pricing.makingCharges * _quantity), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('CGST (1.5% + SGST)', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.offWhite)),
+                              Text(Formatters.currency((pricing.gstAmount * _quantity) / 2), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite)),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text('SGST (1.5% + SGST)', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.offWhite)),
+                              Text(Formatters.currency((pricing.gstAmount * _quantity) / 2), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.pureWhite)),
                             ],
                           ),
                           Divider(height: 32, color: AppColors.darkGrey),
@@ -409,7 +450,10 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       width: 80,
                                       height: 36,
                                       onPressed: () {
-                                        // Handle Share logic (e.g., share_plus)
+                                        Share.share(
+                                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: ${currentUser.referralCode} to earn ${Formatters.currency(ref.read(settingsProvider).referralReward)} cashback per gram on your first order. Download now!',
+                                          subject: 'Royal Gold Store Invitation',
+                                        );
                                       },
                                     ),
                                   ],
@@ -417,8 +461,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'Share your code to earn ₹${ref.watch(settingsProvider).referralReward.toInt()} fixed reward for every purchase someone makes with it.',
-                                style: AppTextStyles.caption.copyWith(color: AppColors.success),
+                                'You earn ${Formatters.currency(ref.watch(settingsProvider).referralReward)} per Gram. For this ${product.weight}g coin, you will receive ${Formatters.currency(ref.watch(settingsProvider).referralReward * product.weight)} reward!',
+                                style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -470,6 +514,27 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TrustIcon extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _TrustIcon({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white70, size: 16),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(fontSize: 8, color: Colors.white38),
+        ),
+      ],
     );
   }
 }

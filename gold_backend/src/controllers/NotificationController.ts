@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import { successResponse, errorResponse } from "../utils/response";
 import { AuthRequest } from "../middleware/auth";
+import NotificationService from "../services/NotificationService";
 
 export class NotificationController {
   /**
@@ -68,10 +69,26 @@ export class NotificationController {
 
       if (!token) return errorResponse(res, "Token is required", 400);
 
+      // Check if user already had a token (to avoid duplicate welcome notifications)
+      const userBefore = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { fcmToken: true, name: true }
+      });
+
       await prisma.user.update({
         where: { id: userId },
         data: { fcmToken: token }
       });
+
+      // Send Welcome Notification if this is their first token registration
+      if (!userBefore?.fcmToken) {
+        await NotificationService.sendPushNotification(
+          userId,
+          `Welcome to Royal Gold, ${userBefore?.name?.split(' ')[0] || 'User'}!`,
+          "Start your gold investment journey today with premium quality coins.",
+          "WELCOME"
+        );
+      }
 
       return successResponse(res, null, "FCM token updated successfully");
     } catch (error) {

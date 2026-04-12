@@ -1,3 +1,5 @@
+import '../../../core/utils/formatters.dart';
+
 class OrderStatusHistoryModel {
   final String id;
   final String status;
@@ -18,7 +20,7 @@ class OrderStatusHistoryModel {
       notes: json['notes'],
       createdAt: json['createdAt'] != null 
         ? DateTime.parse(json['createdAt']) 
-        : DateTime.now(),
+        : Formatters.nowIST,
     );
   }
 

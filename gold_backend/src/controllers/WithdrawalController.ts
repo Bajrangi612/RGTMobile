@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 import { successResponse, errorResponse } from "../utils/response";
+import NotificationService from "../services/NotificationService";
 
 export class WithdrawalController {
   /**
@@ -48,6 +49,14 @@ export class WithdrawalController {
 
         return newRequest;
       });
+
+      // Notify User
+      NotificationService.sendPushNotification(
+        userId,
+        '💸 Withdrawal Request Received',
+        `Your request to withdraw ₹${amount} is being processed.`,
+        'WITHDRAWAL_REQUEST'
+      ).catch(e => console.error('Failed to notify withdrawal request:', e));
 
       return successResponse(res, { request }, "Withdrawal request raised successfully");
     } catch (error) {
@@ -188,6 +197,21 @@ export class WithdrawalController {
           where: { id: id as string },
           data: { status, adminNotes: adminNotes as string }
         });
+      }
+
+      // Notify User about the Decision
+      const isCompleted = status === "COMPLETED";
+      const isRejected = status === "REJECTED";
+
+      if (isCompleted || isRejected) {
+        NotificationService.sendPushNotification(
+          request.userId,
+          isCompleted ? '✅ Withdrawal Successful' : '❌ Withdrawal Rejected',
+          isCompleted 
+            ? `Your withdrawal of ₹${request.amount} has been successfully processed to your bank.`
+            : `Your withdrawal request was rejected. ₹${request.amount} has been refunded to your wallet.`,
+          'WITHDRAWAL_STATUS'
+        ).catch(e => console.error('Failed to notify withdrawal update:', e));
       }
 
       return successResponse(res, {}, `Withdrawal status updated to ${status}`);

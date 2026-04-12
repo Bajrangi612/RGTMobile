@@ -11,6 +11,8 @@ import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_card.dart';
 import '../providers/auth_provider.dart';
 import '../../profile/screens/legal_policy_screen.dart';
+import '../../home/screens/home_screen.dart';
+import '../../../core/providers/navigation_provider.dart';
 import 'otp_screen.dart';
 
 import 'package:local_auth/local_auth.dart';
@@ -59,9 +61,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
       if (didAuth && mounted) {
         final success = await ref.read(authProvider.notifier).checkAuthStatus();
-        // If status becomes authenticated, the landing screen will automatically switch
+        // If status becomes authenticated, redirect to Home
         if (ref.read(authProvider).status == AuthStatus.authenticated) {
+           ref.read(navigationProvider.notifier).state = 0; // Reset index
            context.showSuccessSnackBar('Welcome back!');
+           Navigator.of(context).pushAndRemoveUntil(
+             MaterialPageRoute(builder: (_) => const HomeScreen()),
+             (route) => false,
+           );
         } else {
            // If token expired, fall back to OTP
            context.showErrorSnackBar('Session expired. Please use OTP.');

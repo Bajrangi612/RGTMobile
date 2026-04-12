@@ -11,6 +11,7 @@ import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_image.dart';
 import '../../../widgets/shimmer_loader.dart';
 import '../../../widgets/bottom_nav_bar.dart';
+import '../../auth/screens/login_screen.dart';
 import '../providers/home_provider.dart';
 import '../../order/providers/order_provider.dart';
 import '../../wallet/providers/wallet_provider.dart';
@@ -204,7 +205,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               title: Text('Logout', style: AppTextStyles.bodyMedium.copyWith(color: Colors.redAccent)),
               onTap: () async {
                 await ref.read(authProvider.notifier).logout();
-                if (mounted) Navigator.pushReplacementNamed(context, '/login');
+                if (mounted) {
+                  ref.read(navigationProvider.notifier).state = 0; // Reset tab index
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
               },
             ),
           ],

@@ -40,6 +40,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     
     Widget nextScreen;
     if (authState.status == AuthStatus.authenticated) {
+      ref.read(navigationProvider.notifier).state = 0; // Reset to Dashboard on start
       final user = authState.user;
       if (user?.isAdmin == true) {
         nextScreen = const AdminDashboardScreen();

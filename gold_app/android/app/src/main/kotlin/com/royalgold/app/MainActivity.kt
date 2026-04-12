@@ -1,4 +1,4 @@
-package com.royalgold.traders
+package com.royalgold.app
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

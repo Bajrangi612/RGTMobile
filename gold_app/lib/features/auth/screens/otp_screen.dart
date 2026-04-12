@@ -73,6 +73,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       Navigator.of(context).pushAndRemoveUntil(
         PageRouteBuilder(
           pageBuilder: (_, __, ___) {
+            ref.read(navigationProvider.notifier).state = 0; // Ensure we start on Dashboard
             final latestUser = ref.read(authProvider).user;
             if (latestUser?.isAdmin == true) {
               return const AdminDashboardScreen();

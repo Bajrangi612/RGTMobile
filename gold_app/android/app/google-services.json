@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "109844574045",
+    "project_id": "royal-gold-d8a44",
+    "storage_bucket": "royal-gold-d8a44.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:109844574045:android:8293a6bee510ef399f02b4",
+        "android_client_info": {
+          "package_name": "com.royalgold.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDZR_l1OzJczmwTTZxu8sld8OL6nh7B75Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

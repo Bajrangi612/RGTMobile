@@ -5,6 +5,7 @@ class SettingsState {
   final double referralReward;
   final double minWithdrawal;
   final double gstRate;
+  final double globalDiscount;
   final int deliveryDays;
   final bool isLoading;
   final String? error;
@@ -13,6 +14,7 @@ class SettingsState {
     this.referralReward = 500.0,
     this.minWithdrawal = 1000.0,
     this.gstRate = 3.0,
+    this.globalDiscount = 0.0,
     this.deliveryDays = 7,
     this.isLoading = false,
     this.error,
@@ -22,6 +24,7 @@ class SettingsState {
     double? referralReward,
     double? minWithdrawal,
     double? gstRate,
+    double? globalDiscount,
     int? deliveryDays,
     bool? isLoading,
     String? error,
@@ -30,6 +33,7 @@ class SettingsState {
       referralReward: referralReward ?? this.referralReward,
       minWithdrawal: minWithdrawal ?? this.minWithdrawal,
       gstRate: gstRate ?? this.gstRate,
+      globalDiscount: globalDiscount ?? this.globalDiscount,
       deliveryDays: deliveryDays ?? this.deliveryDays,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -52,6 +56,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         referralReward: _toDouble(data['referral_reward'], 500.0),
         minWithdrawal: _toDouble(data['min_withdrawal'], 1000.0),
         gstRate: _toDouble(data['gst_rate'], 3.0),
+        globalDiscount: _toDouble(data['global_discount_percent'], 0.0),
         deliveryDays: (data['delivery_days'] as num?)?.toInt() ?? 7,
         isLoading: false,
       );

@@ -1,4 +1,5 @@
 import { prisma } from "../lib/prisma";
+import admin from "../lib/firebase";
 
 class NotificationService {
   constructor() {}
@@ -21,10 +22,20 @@ class NotificationService {
         select: { fcmToken: true }
       });
 
-      if (user?.fcmToken) {
-        console.log(`[FCM MOCK] Sending to ${user.fcmToken}: ${title} - ${body}`);
+      if (user?.fcmToken && admin.apps.length > 0) {
+        try {
+          await admin.messaging().send({
+            token: user.fcmToken,
+            notification: { title, body },
+            data: { ...data, type },
+          });
+          console.log(`✅ [FCM] Sent notification to user ${userId}`);
+        } catch (fcmError) {
+          console.error(`❌ [FCM] Failed to send to token:`, fcmError);
+          // Optional: clear invalid token if it's expired
+        }
       } else {
-        console.log(`[FCM] No token found for user ${userId}, skipped push notification.`);
+        console.log(`ℹ️ [FCM] No dispatch: ${!user?.fcmToken ? 'No token' : 'Admin SDK not initialized'}`);
       }
       
     } catch (error) {
@@ -33,7 +44,17 @@ class NotificationService {
   }
 
   async sendToTopic(topic: string, title: string, body: string, data?: any) {
-    console.log(`[FCM MOCK] Sending to topic ${topic}: ${title} - ${body}`);
+    if (admin.apps.length === 0) return;
+    try {
+      await admin.messaging().send({
+        topic,
+        notification: { title, body },
+        data: data ? { ...data } : undefined,
+      });
+      console.log(`✅ [FCM] Sent notification to topic: ${topic}`);
+    } catch (error) {
+      console.error("Error sending to topic:", error);
+    }
   }
 }
 

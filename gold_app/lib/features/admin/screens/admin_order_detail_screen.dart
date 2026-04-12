@@ -100,14 +100,23 @@ class AdminOrderDetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                   _AmountRow(label: 'Gold Value', amount: (double.tryParse(order['amount']?.toString() ?? '0') ?? 0.0)),
-                   _AmountRow(label: 'GST (3%)', amount: (double.tryParse(order['gst']?.toString() ?? '0') ?? 0.0)),
+                   _AmountRow(label: 'Base Gold Value', amount: orderModel.baseGoldValue),
+                   if (orderModel.discountAmount > 0)
+                    _AmountRow(
+                      label: 'Marketing Discount', 
+                      amount: -orderModel.discountAmount, 
+                      valueColor: AppColors.success
+                    ),
+                   _AmountRow(label: 'Making Charges', amount: orderModel.makingChargesValue),
+                   const Divider(height: 16, color: Colors.white10),
+                   _AmountRow(label: 'CGST (1.5%)', amount: orderModel.cgst),
+                   _AmountRow(label: 'SGST (1.5%)', amount: orderModel.sgst),
                    const Divider(height: 24),
                    Row(
                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                      children: [
                        Text('Total Paid', style: AppTextStyles.labelLarge),
-                       Text(Formatters.currency(double.tryParse(order['total']?.toString() ?? '0') ?? 0.0),
+                       Text(Formatters.currency(orderModel.total),
                         style: AppTextStyles.h4.copyWith(color: AppColors.royalGold)),
                      ],
                    ),
@@ -285,7 +294,8 @@ class _InfoRow extends StatelessWidget {
 class _AmountRow extends StatelessWidget {
   final String label;
   final double amount;
-  const _AmountRow({required this.label, required this.amount});
+  final Color? valueColor;
+  const _AmountRow({required this.label, required this.amount, this.valueColor});
 
   @override
   Widget build(BuildContext context) {
@@ -295,7 +305,7 @@ class _AmountRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: AppTextStyles.caption.copyWith(color: AppColors.grey)),
-          Text(Formatters.currency(amount), style: AppTextStyles.bodyMedium),
+          Text(Formatters.currency(amount), style: AppTextStyles.bodyMedium.copyWith(color: valueColor)),
         ],
       ),
     );

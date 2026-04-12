@@ -11,17 +11,22 @@ import 'gold_image.dart';
 import 'live_countdown.dart';
 import '../features/product/screens/catalog_screen.dart';
 
+import '../core/providers/settings_provider.dart';
+
 class OfferPopup extends ConsumerWidget {
   const OfferPopup({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeState = ref.watch(homeProvider);
+    final settings = ref.watch(settingsProvider);
+    
     final marketPrice = homeState.buyPrice; // Base market price
-    final offerPrice = marketPrice * 0.98; // Generic 2% discount for the offer banner
+    final discountPercent = settings.globalDiscount;
+    final offerPrice = marketPrice * (1 - (discountPercent / 100));
     
     // Target date: 2 days from now at 12 AM (Midnight)
-    final now = DateTime.now();
+    final now = Formatters.nowIST;
     final targetDate = DateTime(now.year, now.month, now.day + 2);
 
     return Dialog(
@@ -45,7 +50,7 @@ class OfferPopup extends ConsumerWidget {
                     height: 200,
                     width: double.infinity,
                     child: GoldImage(
-                      imageUrl: 'assets/images/premium_gold_offer.png', // Fallback to asset if local path differs
+                      imageUrl: 'assets/images/premium_gold_offer.png', 
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -93,7 +98,7 @@ class OfferPopup extends ConsumerWidget {
                         Icon(Icons.auto_awesome, color: AppColors.royalGold, size: 14),
                         const SizedBox(width: 8),
                         Text(
-                          'EXCLUSIVE FESTIVE RELEASE',
+                          'FESTIVE SPECIAL OFFER',
                           style: AppTextStyles.labelSmall.copyWith(
                             color: AppColors.royalGold,
                             fontWeight: FontWeight.bold,
@@ -107,16 +112,16 @@ class OfferPopup extends ConsumerWidget {
                   const SizedBox(height: 20),
 
                   Text(
-                    'Elite Portfolio Rewards',
+                    'Special Gold Savings',
                     style: AppTextStyles.h3.copyWith(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
 
                   const SizedBox(height: 8),
 
-                  const Text(
-                    'Invest in 24K pure gold with 0% Making Charges and exclusive institutional rates.',
-                    style: TextStyle(color: Colors.white60, fontSize: 13, height: 1.5),
+                  Text(
+                    'Flat ${discountPercent.toStringAsFixed(1)}% Discount on 24K pure gold at the best rates in India!',
+                    style: const TextStyle(color: Colors.white60, fontSize: 13, height: 1.5),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 400.ms),
 
@@ -128,7 +133,7 @@ class OfferPopup extends ConsumerWidget {
                     children: [
                       Column(
                         children: [
-                          const Text('MARKET RATE', style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 1)),
+                          const Text('Market Price', style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 1)),
                           const SizedBox(height: 4),
                           Text(
                             Formatters.currency(marketPrice),
@@ -142,7 +147,7 @@ class OfferPopup extends ConsumerWidget {
                       Container(width: 1, height: 30, color: Colors.white12),
                       Column(
                         children: [
-                          Text('OFFER RATE', style: AppTextStyles.labelSmall.copyWith(color: AppColors.success)),
+                          Text('Our Special Price', style: AppTextStyles.labelSmall.copyWith(color: AppColors.success)),
                           const SizedBox(height: 4),
                           Text(
                             Formatters.currency(offerPrice),
@@ -167,7 +172,7 @@ class OfferPopup extends ConsumerWidget {
                     child: Column(
                       children: [
                          Text(
-                          'OFFER EXPIRES IN',
+                          'DEAL ENDS IN',
                           style: AppTextStyles.labelSmall.copyWith(color: AppColors.grey, letterSpacing: 4),
                         ),
                         const SizedBox(height: 12),
@@ -186,10 +191,25 @@ class OfferPopup extends ConsumerWidget {
                     ),
                   ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
+
+                  // Trust Badges
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.verified_user_rounded, color: AppColors.success, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Guaranteed On-Time Delivery',
+                        style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 650.ms),
+
+                  const SizedBox(height: 24),
 
                   GoldButton(
-                    text: 'SHOP THE COLLECTION',
+                    text: 'BUY GOLD NOW',
                     onPressed: () {
                       Navigator.pop(context);
                       Navigator.of(context).push(

@@ -1,3 +1,5 @@
+import '../../../core/utils/formatters.dart';
+
 class TransactionModel {
   final String id;
   final String userId;
@@ -30,7 +32,7 @@ class TransactionModel {
       status: json['status'] ?? 'COMPLETED',
       description: json['description'] ?? '',
       invoiceNo: json['invoiceNo'],
-      date: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
+      date: DateTime.parse(json['createdAt'] ?? Formatters.nowIST.toIso8601String()),
       metadata: json['metadata'],
     );
   }

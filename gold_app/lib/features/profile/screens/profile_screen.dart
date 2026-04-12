@@ -143,10 +143,6 @@ class ProfileScreen extends ConsumerWidget {
                       _ProfileRow(
                         icon: Icons.account_balance,
                         title: 'Bank Account / Refunds',
-                        trailing: StatusBadge(
-                          status: statusFromString(user?.bankStatus ?? 'pending'),
-                          small: true,
-                        ),
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(builder: (_) => BankDetailsScreen()),
                         ),

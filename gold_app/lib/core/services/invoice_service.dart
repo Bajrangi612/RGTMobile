@@ -261,12 +261,12 @@ class InvoiceService {
               _dataCell('711319'),
               _dataCell('${order.productName} (24 CT)'),
               _dataCell(order.quantity.toString()),
-              _dataCell(order.quantity.toStringAsFixed(3)),
+              _dataCell(order.weight.toStringAsFixed(3)),
               _dataCell('0.000 / 0.00'),
-              _dataCell(order.quantity.toStringAsFixed(3)),
-              _dataCell(order.price.toStringAsFixed(2)),
+              _dataCell(order.weight.toStringAsFixed(3)),
+              _dataCell(order.discountedValue.toStringAsFixed(2)),
               _dataCell('6.00'),
-              _dataCell(order.price.toStringAsFixed(2)),
+              _dataCell((order.discountedValue + order.makingChargesValue).toStringAsFixed(2)),
             ],
           ),
           // Total Row
@@ -276,12 +276,12 @@ class InvoiceService {
               _dataCell(''),
               _dataCell(''),
               _dataCell(order.quantity.toString(), bold: true),
-              _dataCell(order.quantity.toStringAsFixed(3), bold: true),
+              _dataCell(order.weight.toStringAsFixed(3), bold: true),
               _dataCell(''),
-              _dataCell(order.quantity.toStringAsFixed(3), bold: true),
-              _dataCell(order.price.toStringAsFixed(2), bold: true),
+              _dataCell(order.weight.toStringAsFixed(3), bold: true),
+              _dataCell(order.discountedValue.toStringAsFixed(2), bold: true),
               _dataCell(''),
-              _dataCell(order.price.toStringAsFixed(2), bold: true),
+              _dataCell((order.discountedValue + order.makingChargesValue).toStringAsFixed(2), bold: true),
             ],
           ),
         ],
@@ -304,9 +304,10 @@ class InvoiceService {
   }
 
   static pw.Widget _buildSummaryTripleBlock(OrderModel order) {
-    final taxable = order.price;
-    final gst = taxable * 0.015; // 1.5% each
-    final total = taxable + (gst * 2);
+    final taxable = order.discountedValue + order.makingChargesValue;
+    final cgst = order.cgst;
+    final sgst = order.sgst;
+    final total = order.total;
 
     return pw.Padding(
       padding: const pw.EdgeInsets.all(10),
@@ -315,10 +316,11 @@ class InvoiceService {
           // Invoice Summary
           pw.Expanded(
             child: _summaryTable('INVOICE SUMMARY', [
-              ['Gross Amount', total.toStringAsFixed(2)],
+              ['Gold Value', order.discountedValue.toStringAsFixed(2)],
+              ['Making Charges', order.makingChargesValue.toStringAsFixed(2)],
               ['Taxable Amount', taxable.toStringAsFixed(2)],
-              ['CGST 1.50%', gst.toStringAsFixed(2)],
-              ['SGST 1.50%', gst.toStringAsFixed(2)],
+              ['CGST 1.50%', cgst.toStringAsFixed(2)],
+              ['SGST 1.50%', sgst.toStringAsFixed(2)],
               ['Invoice Total', total.toStringAsFixed(2)],
             ], highlightLast: true),
           ),

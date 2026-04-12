@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_text_styles.dart';
 import '../core/theme/app_colors.dart';
 
+import '../core/utils/formatters.dart';
+
 class LiveCountdown extends StatefulWidget {
   final DateTime targetDate;
   final TextStyle? style;
@@ -29,9 +31,10 @@ class _LiveCountdownState extends State<LiveCountdown> {
   }
 
   void _calculateRemaining() {
-    final now = DateTime.now();
-    _remaining = widget.targetDate.isAfter(now) 
-        ? widget.targetDate.difference(now) 
+    final now = Formatters.nowIST;
+    final target = Formatters.asIST(widget.targetDate);
+    _remaining = target.isAfter(now) 
+        ? target.difference(now) 
         : Duration.zero;
   }
 
@@ -69,7 +72,7 @@ class _LiveCountdownState extends State<LiveCountdown> {
   Widget build(BuildContext context) {
     return Text(
       _formatDuration(_remaining),
-      style: widget.style ?? AppTextStyles.h2.copyWith(color: AppColors.deepBlack),
+      style: widget.style ?? AppTextStyles.h2.copyWith(color: AppColors.pureWhite),
     );
   }
 }

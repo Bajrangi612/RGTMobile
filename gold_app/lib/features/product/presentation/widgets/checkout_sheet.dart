@@ -383,23 +383,23 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
 
                 _PriceDetail(
                   icon: Icons.account_balance_rounded,
-                  label: 'Gold GST (IGST/CGST)', 
-                  value: Formatters.currency(pricing.goldGst * _quantity),
-                  helperText: 'Consolidated Tax: 3%',
+                  label: 'CGST (1.5% Gold + Making)', 
+                  value: Formatters.currency((pricing.gstAmount * _quantity) / 2),
+                  helperText: 'Central Goods & Service Tax',
                 ).animate().fadeIn(delay: 600.ms).slideX(begin: 0.1),
+
+                _PriceDetail(
+                  icon: Icons.account_balance_rounded,
+                  label: 'SGST (1.5% Gold + Making)', 
+                  value: Formatters.currency((pricing.gstAmount * _quantity) / 2),
+                  helperText: 'State Goods & Service Tax',
+                ).animate().fadeIn(delay: 700.ms).slideX(begin: 0.1),
 
                 _PriceDetail(
                   icon: Icons.architecture_rounded,
                   label: 'Making Charge', 
                   value: Formatters.currency(pricing.makingCharges * _quantity),
                   helperText: 'Crafting Fee: 6% Markup',
-                ).animate().fadeIn(delay: 700.ms).slideX(begin: 0.1),
-
-                _PriceDetail(
-                  icon: Icons.receipt_rounded,
-                  label: 'GST on Making', 
-                  value: Formatters.currency(pricing.makingGst * _quantity),
-                  helperText: 'Service Tax: 5%',
                 ).animate().fadeIn(delay: 800.ms).slideX(begin: 0.1),
                 
                 const Padding(

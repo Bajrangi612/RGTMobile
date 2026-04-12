@@ -72,7 +72,7 @@ class OrderDetailScreen extends ConsumerWidget {
                                            )
                                          ),
                                          const SizedBox(height: 4),
-                                         Text('Precision Audit Values', style: AppTextStyles.caption.copyWith(fontSize: 10, color: Colors.white24)),
+                                         Text('Precision Audit Values', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey)),
                                        ],
                                      ),
                                      StatusBadge(status: order.statusType),
@@ -107,7 +107,7 @@ class OrderDetailScreen extends ConsumerWidget {
                                 ),
                                 const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 16),
-                                  child: Divider(color: Colors.white12, height: 1),
+                                  child: Divider(color: AppColors.grey.withValues(alpha: 0.2), height: 1),
                                 ),
                                 _DetailRow(
                                   label: 'Final Payable Total', 
@@ -133,7 +133,7 @@ class OrderDetailScreen extends ConsumerWidget {
                     SizedBox(height: 16),
 
                     // Delivery View
-                    if (order.isActive) ...[
+                    if (order.isActive && !order.isDelivered && order.status.toUpperCase() != 'READY_FOR_PICKUP') ...[
                       GoldCard(
                         hasGlow: true,
                         child: Column(
@@ -156,10 +156,10 @@ class OrderDetailScreen extends ConsumerWidget {
                                       ? DateFormat('EEEE, MMM dd').format(order.deliveryDate!)
                                       : null,
                                   child: ['READY_FOR_PICKUP', 'READY', 'DELIVERED', 'PICKED_UP', 'ORDER_CANCELLED', 'CANCELLED', 'SOLD_BACK', 'BUYBACK', 'RESOLD', 'PAYMENT_SETTLED', 'BUYBACK_PENDING', 'SELL_BACK_APPLIED', 'BUYBACK_APPROVED'].contains(order.status.toUpperCase()) 
-                                    ? Text(Formatters.deliveryCountdown(order.deliveryDate, status: order.status).toUpperCase(), style: AppTextStyles.h3.copyWith(color: AppColors.deepBlack, fontWeight: FontWeight.bold))
-                                    : order.deliveryDate != null 
-                                      ? LiveCountdown(targetDate: order.deliveryDate!)
-                                      : Text('Processing', style: AppTextStyles.h4.copyWith(color: AppColors.deepBlack)),
+                                    ? Text(Formatters.deliveryCountdown(order.deliveryDate, status: order.status).toUpperCase(), style: AppTextStyles.h3.copyWith(color: AppColors.charcoal, fontWeight: FontWeight.bold))
+                                    : (order.deliveryDate != null 
+                                      ? LiveCountdown(targetDate: order.deliveryDate!, style: AppTextStyles.h3.copyWith(color: AppColors.charcoal, fontWeight: FontWeight.bold))
+                                      : const SizedBox.shrink()),
                                 ),
                               ],
                             ),
@@ -490,13 +490,13 @@ class _DetailRow extends StatelessWidget {
           Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, color: isBold ? AppColors.royalGold : Colors.white24, size: 16),
+                Icon(icon, color: isBold ? AppColors.royalGold : AppColors.grey, size: 16),
                 const SizedBox(width: 10),
               ],
               Text(
                 label, 
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: isBold ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                  color: isBold ? AppColors.pureWhite : AppColors.offWhite,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
                 )
               ),
@@ -505,7 +505,7 @@ class _DetailRow extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: valueColor ?? (isBold ? AppColors.royalGold : Colors.white),
+              color: valueColor ?? (isBold ? AppColors.royalGold : AppColors.pureWhite),
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.w900 : FontWeight.w600,
               fontFamily: isBold ? null : 'monospace',
@@ -650,7 +650,7 @@ class _CountdownBox extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: AppTextStyles.labelSmall.copyWith(
-              color: AppColors.deepBlack.withValues(alpha: 0.6),
+              color: AppColors.charcoal.withValues(alpha: 0.6),
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
             ),
@@ -668,7 +668,7 @@ class _CountdownBox extends StatelessWidget {
               child: Text(
                 dateString!,
                 style: AppTextStyles.caption.copyWith(
-                  color: AppColors.deepBlack,
+                  color: AppColors.charcoal,
                   fontWeight: FontWeight.bold,
                 ),
               ),
