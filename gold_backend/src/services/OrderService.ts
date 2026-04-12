@@ -96,10 +96,7 @@ class OrderService {
   /**
    * Complete the order after payment verification
    */
-  private getIST() {
-    const istOffset = 5.5 * 60 * 60 * 1000;
-    return new Date(Date.now() + istOffset);
-  }
+
 
   /**
    * Complete the order after payment verification
@@ -143,15 +140,22 @@ class OrderService {
     const discountAmount = new Prisma.Decimal(notes.pricingDiscount || "0");
 
     // 3. Create actual Order Record in Database
-    const nowIST = this.getIST();
+    const now = new Date();
     const invoiceNo = `INV-${Date.now()}-${razorpayOrderId.substring(razorpayOrderId.length - 4).toUpperCase()}`;
 
     const result = await prisma.$transaction(async (tx) => {
       // Get delivery settings
       const deliveryDaysSetting = await tx.setting.findUnique({ where: { key: "delivery_days" } });
       const deliveryDays = deliveryDaysSetting ? parseInt(deliveryDaysSetting.value) : 7;
-      const deliveryDate = new Date(nowIST);
+      const deliveryDate = new Date(now);
       deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+      
+      // Snap to IST Midnight (which is 18:30:00 UTC of the PREVIOUS calendar day)
+      // This ensures the countdown shows "6 days and XX minutes" when ordered late at night.
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const targetIST = new Date(deliveryDate.getTime() + istOffset);
+      targetIST.setUTCHours(0, 0, 0, 0);
+      const deliveryDateFinal = new Date(targetIST.getTime() - istOffset);
 
       // Create Order
       const newOrder = await tx.order.create({
@@ -167,7 +171,7 @@ class OrderService {
           paymentStatus: "SUCCESS",
           status: "ORDER_CONFIRMED" as any,
           invoiceNo: invoiceNo,
-          deliveryDate: deliveryDate,
+          deliveryDate: deliveryDateFinal,
           goldPriceAtPurchase: livePrice,
           marketPrice,
           makingCharges,
@@ -175,12 +179,12 @@ class OrderService {
           goldGst,
           discountAmount,
           referralCode: referralCode || null,
-          createdAt: nowIST,
+          createdAt: now,
           statusHistory: {
             createMany: {
               data: [
-                { status: "PAYMENT_SUCCESSFUL" as any, notes: "Verified Payment Successfully.", createdAt: nowIST },
-                { status: "ORDER_CONFIRMED" as any, notes: "Order confirmed and fulfillment initiated.", createdAt: nowIST }
+                { status: "PAYMENT_SUCCESSFUL" as any, notes: "Verified Payment Successfully.", createdAt: now },
+                { status: "ORDER_CONFIRMED" as any, notes: "Order confirmed and fulfillment initiated.", createdAt: now }
               ]
             }
           }
@@ -215,7 +219,7 @@ class OrderService {
           description: `Gold Collection - ${(newOrder as any).product.name} (Qty: ${quantity})`,
           status: "COMPLETED",
           invoiceNo: invoiceNo,
-          createdAt: nowIST,
+          createdAt: now,
         }
       });
 
@@ -230,7 +234,8 @@ class OrderService {
            // Fetch buyer name to personalize the reward log
            const buyer = await tx.user.findUnique({ where: { id: userId }, select: { name: true } });
            const buyerName = buyer?.name || "A Friend";
-           const formattedDate = nowIST.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+           const istDate = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+           const formattedDate = istDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
            const rewardSetting = await tx.setting.findUnique({ where: { key: "referral_reward" } });
            const rewardRate = rewardSetting ? Number(rewardSetting.value) : 500;
@@ -251,7 +256,7 @@ class OrderService {
                amount: new Prisma.Decimal(finalRewardAmount),
                description: `Reward for ${buyerName}'s purchase on ${formattedDate} (${totalGrams}g @ ₹${rewardRate}/g)`,
                status: "COMPLETED",
-               createdAt: nowIST,
+               createdAt: now,
              }
            });
         }
@@ -263,7 +268,7 @@ class OrderService {
           userId,
           action: "ORDER_PURCHASED",
           details: { orderId: newOrder.id, total, quantity },
-          createdAt: nowIST,
+          createdAt: now,
         },
       });
 
@@ -357,7 +362,7 @@ class OrderService {
    * Update order status (Admin only)
    */
   async updateOrderStatus(orderId: string, status: string) {
-    const nowIST = this.getIST();
+    const now = new Date();
 
     const order = await prisma.order.update({
       where: { id: orderId },
@@ -368,7 +373,7 @@ class OrderService {
           create: {
             status: status.toUpperCase() as any,
             notes: `Status updated by administrator.`,
-            createdAt: nowIST,
+            createdAt: now,
           }
         }
       },
