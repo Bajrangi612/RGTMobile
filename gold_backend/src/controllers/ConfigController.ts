@@ -35,7 +35,7 @@ export class ConfigController {
       const settings = await prisma.setting.findMany({
         where: {
           key: {
-            in: ["referral_reward", "min_withdrawal", "gst_rate", "delivery_days"]
+            in: ["referral_reward", "min_withdrawal", "gst_rate", "delivery_days", "global_discount_percent"]
           }
         }
       });
