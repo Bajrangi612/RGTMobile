@@ -19,6 +19,12 @@ if (serviceAccountEnv) {
     }
     
     const serviceAccount = JSON.parse(jsonStr);
+
+    // FIX: Handle double-escaped newlines in private_key (common in Docker/Env vars)
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
