@@ -8,7 +8,10 @@ echo "🚀 Starting Royal Gold Backend Recovery..."
 
 # 1. Apply Database Migrations (Idempotent)
 echo "📂 Applying database migrations..."
-npx prisma migrate deploy
+npx prisma migrate deploy || {
+  echo "⚠️  [Prisma] Migration deploy failed. This often happens if the database was not baselined."
+  echo "⚠️  [Prisma] Attempting to continue anyway..."
+}
 
 # 2. Seed Global Settings & Admin
 echo "🌱 Seeding global configurations..."
