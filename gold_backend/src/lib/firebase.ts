@@ -4,7 +4,7 @@ import fs from 'fs';
 
 // Look for service account in Environment Variables first (best for CI/CD like Coolify)
 // Otherwise, fallback to local file
-const serviceAccountEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+const serviceAccountEnv = process.env.FIREBASE_CONFIG_B64;
 const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.json');
 
 if (serviceAccountEnv) {
