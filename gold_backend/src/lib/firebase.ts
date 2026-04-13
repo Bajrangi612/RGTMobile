@@ -14,7 +14,8 @@ if (serviceAccountEnv) {
     // Check if it's base64 encoded (doesn't start with '{')
     if (!jsonStr.startsWith('{')) {
       console.log('📦 [FIREBASE] Decoding Base64 service account...');
-      jsonStr = Buffer.from(jsonStr, 'base64').toString('utf8');
+      // Double decode handles escaped newlines that some environments inject
+      jsonStr = Buffer.from(jsonStr, 'base64').toString('utf8').replace(/\\n/g, '\n');
     }
     
     const serviceAccount = JSON.parse(jsonStr);
