@@ -10,18 +10,33 @@ const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.js
 if (serviceAccountEnv) {
   try {
     let jsonStr = serviceAccountEnv.trim();
-    
+
     // Check if it's base64 encoded (doesn't start with '{')
     if (!jsonStr.startsWith('{')) {
       console.log('📦 [FIREBASE] Decoding Base64 service account...');
-      jsonStr = Buffer.from(jsonStr, 'base64').toString('utf8');
+      // Remove any hidden whitespace or control characters from the B64 string itself
+      const cleanB64 = serviceAccountEnv.replace(/[\s\n\r]/g, '');
+      jsonStr = Buffer.from(cleanB64, 'base64').toString('utf8');
     }
     
-    const serviceAccount = JSON.parse(jsonStr);
+    // Final safety check: remove any real control characters except for real newlines
+    const sanitizedJson = jsonStr.replace(/[\x00-\x09\x0B-\x1F\x7F-\x9F]/g, "");
+    
+    const serviceAccount = JSON.parse(sanitizedJson);
 
-    // FIX: Handle double-escaped newlines in private_key (common in Docker/Env vars)
+    // FIX: PEM formatting is extremely sensitive
     if (serviceAccount.private_key) {
-      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      serviceAccount.private_key = serviceAccount.private_key
+        .replace(/\\n/g, '\n') // Convert escaped \n to real newlines
+        .replace(/\r/g, '')     // Remove carriage returns
+        .trim();                 // Remove surrounding whitespace
+
+      // Re-ensure headers are on their own lines
+      if (!serviceAccount.private_key.includes('\n') && serviceAccount.private_key.includes('-----')) {
+         serviceAccount.private_key = serviceAccount.private_key
+           .replace('-----BEGIN PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----\n')
+           .replace('-----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----');
+      }
     }
 
     admin.initializeApp({
