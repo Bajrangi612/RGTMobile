@@ -9,13 +9,21 @@ const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.js
 
 if (serviceAccountEnv) {
   try {
-    const serviceAccount = JSON.parse(serviceAccountEnv);
+    let jsonStr = serviceAccountEnv.trim();
+    
+    // Check if it's base64 encoded (doesn't start with '{')
+    if (!jsonStr.startsWith('{')) {
+      console.log('📦 [FIREBASE] Decoding Base64 service account...');
+      jsonStr = Buffer.from(jsonStr, 'base64').toString('utf8');
+    }
+    
+    const serviceAccount = JSON.parse(jsonStr);
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
     console.log('🔥 [FIREBASE] Admin SDK initialized successfully via Environment Variable');
   } catch (error) {
-    console.error('❌ [FIREBASE] Failed to parse FIREBASE_SERVICE_ACCOUNT env var:', error);
+    console.error('❌ [FIREBASE] Failed to initialize Firebase from env var:', error);
   }
 } else if (fs.existsSync(serviceAccountPath)) {
   admin.initializeApp({
