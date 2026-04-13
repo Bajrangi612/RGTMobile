@@ -3,6 +3,7 @@ import { prisma } from "../lib/prisma";
 import { successResponse, errorResponse } from "../utils/response";
 import { Prisma } from "@prisma/client";
 import PriceSyncService from "../services/PriceSyncService";
+import DailyNotificationJob from "../services/DailyNotificationJob";
 
 export class AdminController {
   /**

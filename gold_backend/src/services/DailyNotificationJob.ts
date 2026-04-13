@@ -73,6 +73,44 @@ class DailyNotificationJob {
     console.log('🧪 [DailyJob] Manual test trigger initiated...');
     await this.sendDailyRateNotification();
   }
+
+  /**
+   * Send a system startup notification with market vs member price comparison
+   */
+  async sendSystemStartupNotification() {
+    try {
+      console.log('🚀 [DailyJob] Sending system startup notification...');
+
+      // 1. Get Market Price
+      const price = await PriceSyncService.performSync();
+      const marketPrice = parseFloat(price.sellPrice.toString());
+
+      // 2. Get Discount %
+      const discountSetting = await prisma.setting.findUnique({ where: { key: 'global_discount_percent' } });
+      const discountPercent = discountSetting ? parseFloat(discountSetting.value) : 0.0;
+
+      // 3. Calculate Member Price
+      const discountAmount = marketPrice * (discountPercent / 100);
+      const memberPrice = marketPrice - discountAmount;
+
+      const title = "🚀 System Online: Live Gold Rates";
+      const body = `Market: ₹${marketPrice.toLocaleString('en-IN')}/gm | Member Price: ₹${memberPrice.toLocaleString('en-IN')}/gm. Start your investment journey now!`;
+
+      // 4. Send to all registered users
+      const users = await prisma.user.findMany({
+        where: { fcmToken: { not: null } },
+        select: { id: true }
+      });
+
+      for (const user of users) {
+        await NotificationService.sendPushNotification(user.id, title, body, 'SYSTEM_STARTUP');
+      }
+
+      console.log(`✅ [DailyJob] Startup notification sent to ${users.length} devices.`);
+    } catch (error) {
+      console.error('❌ [DailyJob] Failed to send startup notification:', error);
+    }
+  }
 }
 
 export default new DailyNotificationJob();

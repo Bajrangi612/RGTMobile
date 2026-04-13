@@ -21,7 +21,7 @@ class OfferPopup extends ConsumerWidget {
     final homeState = ref.watch(homeProvider);
     final settings = ref.watch(settingsProvider);
     
-    final marketPrice = homeState.buyPrice; // Base market price
+    final marketPrice = homeState.goldPrice; // Sell Price (Market Rate)
     final discountPercent = settings.globalDiscount;
     final offerPrice = marketPrice * (1 - (discountPercent / 100));
     
