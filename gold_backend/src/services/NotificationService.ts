@@ -29,7 +29,7 @@ class NotificationService {
             notification: { 
               title, 
               body,
-              image: imageUrl, // Standard image support
+              imageUrl: imageUrl, // Fixed: Node.js SDK uses imageUrl
             },
             data: { 
               ...data, 
