@@ -3,6 +3,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import '../network/api_service.dart';
 
 class NotificationService {
@@ -56,11 +59,22 @@ class NotificationService {
 
   static void _setupMessageHandlers() {
     // Handle foreground messages
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       RemoteNotification? notification = message.notification;
       AndroidNotification? android = message.notification?.android;
+      
+      // Extract imageUrl from payload
+      String? imageUrl = message.data['imageUrl'] ?? message.notification?.android?.imageUrl;
 
-      if (notification != null && android != null) {
+      if (notification != null) {
+        String? largeIconPath;
+        String? bigPicturePath;
+
+        // Download image if available for Big Picture style
+        if (imageUrl != null && imageUrl.isNotEmpty) {
+          bigPicturePath = await _downloadAndSaveFile(imageUrl, 'bigPicture.png');
+        }
+
         _localNotifications.show(
           notification.hashCode,
           notification.title,
@@ -71,7 +85,15 @@ class NotificationService {
               'High Importance Notifications',
               importance: Importance.max,
               priority: Priority.high,
-              icon: android.smallIcon,
+              styleInformation: bigPicturePath != null 
+                ? BigPictureStyleInformation(
+                    FilePathAndroidBitmap(bigPicturePath),
+                    hideExpandedLargeIcon: true,
+                    contentTitle: notification.title,
+                    summaryText: notification.body,
+                  )
+                : null,
+              icon: android?.smallIcon ?? '@mipmap/ic_launcher',
             ),
           ),
         );
@@ -82,6 +104,13 @@ class NotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint('User clicked notification and opened app');
     });
+  }
+
+  static Future<String> _downloadAndSaveFile(String url, String fileName) async {
+    final Directory directory = await getApplicationDocumentsDirectory();
+    final String filePath = '${directory.path}/$fileName';
+    await Dio().download(url, filePath);
+    return filePath;
   }
 
   static Future<void> _updateTokenOnBackend(String token) async {
