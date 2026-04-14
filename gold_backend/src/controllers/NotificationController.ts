@@ -85,7 +85,7 @@ export class NotificationController {
         await NotificationService.sendPushNotification(
           userId,
           `Welcome to Royal Gold, ${userBefore?.name?.split(' ')[0] || 'User'}!`,
-          "Start your gold investment journey today with premium quality coins.",
+          "Start your gold savings journey today with premium quality coins.",
           "WELCOME"
         );
       }

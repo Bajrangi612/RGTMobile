@@ -7,7 +7,7 @@ async function main() {
   const categories = [
     { name: 'Coins', slug: 'coins' },
     { name: 'Bars', slug: 'bars' },
-    { name: 'Investment', slug: 'investment' },
+    { name: 'Bullion', slug: 'bullion' },
     { name: 'Gifting', slug: 'gifting' },
     { name: 'Custom', slug: 'custom' },
     { name: 'Zodiac', slug: 'zodiac' },
@@ -54,7 +54,7 @@ async function main() {
       },
       {
         name: 'Royal Gold 10g Bar',
-        description: 'Investment Grade Gold Bar',
+        description: 'Premium Grade Gold Bar',
         weight: 10.0,
         purity: '24K',
         stock: 10,
