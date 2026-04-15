@@ -122,7 +122,7 @@ class ProductService {
     const price = await prisma.goldPrice.findFirst({
       orderBy: { timestamp: "desc" },
     });
-    
+
     if (price) return price;
 
     // AUTO-INITIALIZE: If DB is empty, fetch and save immediately
@@ -170,7 +170,7 @@ class ProductService {
 
       // 3. Indian Market Math: Calculate Institutional Base Price Per Gram
       const basePricePerGramINR = (goldPriceUSDPerOunce / TROY_OUNCE_TO_GRAMS) * usdToInr;
-      const sellPricePerGram = basePricePerGramINR * IMPORT_DUTY_MULTIPLIER * GST_MULTIPLIER;
+      const sellPricePerGram = basePricePerGramINR * IMPORT_DUTY_MULTIPLIER;
 
       // 4. Fetch Buyback Margin from Settings
       const marginSetting = await prisma.setting.findUnique({ where: { key: "buyback_margin" } });
@@ -216,7 +216,7 @@ class ProductService {
     let gstOnMaking: number = 0;
     let goldGst: number = 0;
     let discountAmount: number = 0;
-    
+
     if (fixedPrice > 0) {
       goldValue = fixedPrice;
       discountedGoldValue = fixedPrice;
@@ -225,17 +225,17 @@ class ProductService {
       // 2. Discounted Value: Market Value - Discount %
       discountAmount = marketValue * GLOBAL_DISCOUNT_RATE;
       discountedGoldValue = marketValue - discountAmount;
-      
+
       // 3. GST (IGST & CGST): % of Discounted gold value
       goldGst = discountedGoldValue * GOLD_GST_RATE;
-      
+
       // 4. Making Charge: % of Market Gold Value
       makingChargeValue = marketValue * MAKING_CHARGE_RATE;
-      
+
       // 5. GST on Making: % of Making Charge
       gstOnMaking = makingChargeValue * MAKING_GST_RATE;
     }
-    
+
     // 6. Final Payable Amount
     const total = discountedGoldValue + goldGst + makingChargeValue + gstOnMaking;
 
