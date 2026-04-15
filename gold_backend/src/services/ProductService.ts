@@ -18,15 +18,15 @@ class ProductService {
         where,
         skip,
         take: limit,
-      include: {
-        category: true,
-        _count: {
-          select: {
-            orders: {
-              where: { status: 'ORDER_CONFIRMED' }
+        include: {
+          category: true,
+          _count: {
+            select: {
+              orders: {
+                where: { status: 'ORDER_CONFIRMED' }
+              }
             }
           }
-        }
         }
       }),
       prisma.product.count({ where })
@@ -147,7 +147,7 @@ class ProductService {
     const EXCHANGE_RATE_URL = "https://api.exchangerate-api.com/v4/latest/USD";
     const TROY_OUNCE_TO_GRAMS = 31.1035;
     const IMPORT_DUTY_MULTIPLIER = 1.06;
-    const GST_MULTIPLIER = 1.03;
+    const Margin = 250;
 
     try {
       // 1. Fetch Global Spot (Troy Ounce) from Binance (PAXG is 1:1 with Gold Ounce)
@@ -157,7 +157,7 @@ class ProductService {
       const goldPriceUSDPerOunce = parseFloat(priceData.price);
 
       // 2. Fetch USD to INR rate
-      let usdToInr = 83.5;
+      let usdToInr = 0;
       try {
         const exRes = await fetch(EXCHANGE_RATE_URL);
         if (exRes.ok) {
@@ -170,7 +170,7 @@ class ProductService {
 
       // 3. Indian Market Math: Calculate Institutional Base Price Per Gram
       const basePricePerGramINR = (goldPriceUSDPerOunce / TROY_OUNCE_TO_GRAMS) * usdToInr;
-      const sellPricePerGram = basePricePerGramINR * IMPORT_DUTY_MULTIPLIER;
+      const sellPricePerGram = (basePricePerGramINR * IMPORT_DUTY_MULTIPLIER) + Margin;
 
       // 4. Fetch Buyback Margin from Settings
       const marginSetting = await prisma.setting.findUnique({ where: { key: "buyback_margin" } });
