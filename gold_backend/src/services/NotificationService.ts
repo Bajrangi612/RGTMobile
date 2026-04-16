@@ -59,9 +59,18 @@ class NotificationService {
             }
           });
           console.log(`✅ [FCM] Sent professional notification to user ${userId}`);
-        } catch (fcmError) {
+        } catch (fcmError: any) {
           console.error(`❌ [FCM] Failed to send to token:`, fcmError);
-          // Optional: clear invalid token if it's expired
+          
+          // Clear invalid token if it's expired or unregistered
+          if (fcmError.code === 'messaging/registration-token-not-registered' || 
+              fcmError.code === 'messaging/invalid-registration-token') {
+            await prisma.user.update({
+              where: { id: userId },
+              data: { fcmToken: null }
+            });
+            console.log(`🧹 [FCM] Cleared invalid token for user ${userId}`);
+          }
         }
       } else {
         console.log(`ℹ️ [FCM] No dispatch: ${!user?.fcmToken ? 'No token' : 'Admin SDK not initialized'}`);

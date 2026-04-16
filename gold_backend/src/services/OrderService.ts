@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import invoiceService from "./InvoiceService";
 import NotificationService from "./NotificationService";
 import { normalizeMobile } from "../utils/phone";
+import { calculateISTDeliveryDate, getFormattedIST } from "../utils/dateUtils";
 
 class OrderService {
   /**
@@ -147,15 +148,7 @@ class OrderService {
       // Get delivery settings
       const deliveryDaysSetting = await tx.setting.findUnique({ where: { key: "delivery_days" } });
       const deliveryDays = deliveryDaysSetting ? parseInt(deliveryDaysSetting.value) : 7;
-      const deliveryDate = new Date(now);
-      deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
-      
-      // Snap to IST Midnight (which is 18:30:00 UTC of the PREVIOUS calendar day)
-      // This ensures the countdown shows "6 days and XX minutes" when ordered late at night.
-      const istOffset = 5.5 * 60 * 60 * 1000;
-      const targetIST = new Date(deliveryDate.getTime() + istOffset);
-      targetIST.setUTCHours(0, 0, 0, 0);
-      const deliveryDateFinal = new Date(targetIST.getTime() - istOffset);
+      const deliveryDateFinal = calculateISTDeliveryDate(now, deliveryDays);
 
       // Create Order
       const newOrder = await tx.order.create({
@@ -372,7 +365,7 @@ class OrderService {
         statusHistory: {
           create: {
             status: status.toUpperCase() as any,
-            notes: `Status updated by administrator.`,
+            notes: `Status updated by administrator at ${getFormattedIST(now)}.`,
             createdAt: now,
           }
         }
@@ -385,7 +378,8 @@ class OrderService {
       order.userId,
       'Order Status Update',
       `Your order #${orderId.substring(0, 8)} is now ${status.replace(/_/g, ' ')}.`,
-      'ORDER_STATUS'
+      'ORDER_STATUS',
+      { orderId }
     );
 
     // If status is ORDER_CONFIRMED, generate/sync invoice

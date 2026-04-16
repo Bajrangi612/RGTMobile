@@ -9,6 +9,8 @@ class SettingsState {
   final double makingCharge;
   final double makingGst;
   final int deliveryDays;
+  final String latestVersion;
+  final String minVersion;
   final bool isLoading;
   final String? error;
 
@@ -20,6 +22,8 @@ class SettingsState {
     this.makingCharge = 0.0,
     this.makingGst = 0.0,
     this.deliveryDays = 7,
+    this.latestVersion = '1.0.0',
+    this.minVersion = '1.0.0',
     this.isLoading = false,
     this.error,
   });
@@ -32,6 +36,8 @@ class SettingsState {
     double? makingCharge,
     double? makingGst,
     int? deliveryDays,
+    String? latestVersion,
+    String? minVersion,
     bool? isLoading,
     String? error,
   }) {
@@ -43,6 +49,8 @@ class SettingsState {
       makingCharge: makingCharge ?? this.makingCharge,
       makingGst: makingGst ?? this.makingGst,
       deliveryDays: deliveryDays ?? this.deliveryDays,
+      latestVersion: latestVersion ?? this.latestVersion,
+      minVersion: minVersion ?? this.minVersion,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -68,6 +76,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         makingCharge: _toDouble(data['making_charge_percent'], 0.0),
         makingGst: _toDouble(data['gst_on_making_percent'], 0.0),
         deliveryDays: (data['delivery_days'] as num?)?.toInt() ?? 7,
+        latestVersion: data['app_latest_version']?.toString() ?? '1.0.0',
+        minVersion: data['app_min_version']?.toString() ?? '1.0.0',
         isLoading: false,
       );
     } catch (e) {

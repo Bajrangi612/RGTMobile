@@ -17,11 +17,14 @@ class InvoiceService {
 
   static final Map<String, pw.MemoryImage> _imageCache = {};
 
-  static Future<pw.Document> _buildInvoiceDoc(OrderModel order, UserModel? user) async {
+  static Future<pw.Document> _buildInvoiceDoc(
+    OrderModel order,
+    UserModel? user,
+  ) async {
     final font = await PdfGoogleFonts.notoSansRegular();
     final fontBold = await PdfGoogleFonts.notoSansBold();
     final fontHindi = await PdfGoogleFonts.notoSansDevanagariRegular();
-    
+
     final pdf = pw.Document(
       theme: pw.ThemeData.withFont(
         base: font,
@@ -66,7 +69,7 @@ class InvoiceService {
                     _buildMainItemTable(order),
                     _buildSummaryTripleBlock(order),
                     _buildFinePrint(fontHindi),
-                   _buildBankDetailsGrid(),
+                    _buildBankDetailsGrid(),
                     _buildFooterArea(stampLogo),
                   ],
                 ),
@@ -79,7 +82,11 @@ class InvoiceService {
     return pdf;
   }
 
-  static pw.Widget _buildMainHeader(pw.MemoryImage? bis, pw.MemoryImage? iso, pw.MemoryImage? brand) {
+  static pw.Widget _buildMainHeader(
+    pw.MemoryImage? bis,
+    pw.MemoryImage? iso,
+    pw.MemoryImage? brand,
+  ) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(12),
       child: pw.Row(
@@ -88,7 +95,13 @@ class InvoiceService {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('RGT GOLD', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              pw.Text(
+                'Royal Gold Traders',
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
             ],
           ),
           pw.Row(
@@ -106,7 +119,12 @@ class InvoiceService {
 
   static pw.Widget _buildMetaInfoGrid(OrderModel order) {
     return pw.Container(
-      decoration: const pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(width: 0.5), bottom: pw.BorderSide(width: 0.5))),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(width: 0.5),
+          bottom: pw.BorderSide(width: 0.5),
+        ),
+      ),
       padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -128,9 +146,21 @@ class InvoiceService {
             children: [
               _gridRow('BIS Cert.', 'HM/C-5390544515'),
               _gridRow('PAN / पैन', 'ADJPI8137N'),
-              _gridRow('Bill No. / बिल सं.', order.id.substring(0, 8).toUpperCase(), bold: true),
-              _gridRow('Bill Date / दिनांक', DateFormat('dd/MM/yyyy h:mm a').format(order.createdAt)),
-              _gridRow('Due Date / नियत तिथि', DateFormat('dd/MM/yyyy').format(order.createdAt.add(const Duration(days: 15)))),
+              _gridRow(
+                'Bill No. / बिल सं.',
+                order.id.substring(0, 8).toUpperCase(),
+                bold: true,
+              ),
+              _gridRow(
+                'Bill Date / दिनांक',
+                DateFormat('dd/MM/yyyy h:mm a').format(order.createdAt),
+              ),
+              _gridRow(
+                'Due Date / नियत तिथि',
+                DateFormat(
+                  'dd/MM/yyyy',
+                ).format(order.createdAt.add(const Duration(days: 15))),
+              ),
             ],
           ),
         ],
@@ -144,8 +174,18 @@ class InvoiceService {
       child: pw.Row(
         mainAxisSize: pw.MainAxisSize.min,
         children: [
-          if (label.isNotEmpty) pw.Text('$label : ', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-          pw.Text(value, style: pw.TextStyle(fontSize: 7, fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+          if (label.isNotEmpty)
+            pw.Text(
+              '$label : ',
+              style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold),
+            ),
+          pw.Text(
+            value,
+            style: pw.TextStyle(
+              fontSize: 7,
+              fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+            ),
+          ),
         ],
       ),
     );
@@ -159,11 +199,22 @@ class InvoiceService {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Row(children: [
-            _diamondBullet(),
-            pw.Text('CUSTOMER TRANSACTIONS', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
-          ]),
-          pw.Text('• ORIGINAL FOR RECIPIENT', style: const pw.TextStyle(fontSize: 6, color: PdfColors.grey700)),
+          pw.Row(
+            children: [
+              _diamondBullet(),
+              pw.Text(
+                'CUSTOMER TRANSACTIONS',
+                style: pw.TextStyle(
+                  fontSize: 8,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          pw.Text(
+            '• ORIGINAL FOR RECIPIENT',
+            style: const pw.TextStyle(fontSize: 6, color: PdfColors.grey700),
+          ),
         ],
       ),
     );
@@ -180,10 +231,19 @@ class InvoiceService {
             children: [
               _custRow('Name / नाम', user?.name ?? 'Nidhi Kumari Ray'),
               _custRow('Mobile / मोबाइल', user?.phone ?? '9142345733'),
-              _custRow('Address / पता', user?.address ?? 'Piparakothi, Motihaari'),
+              _custRow(
+                'Address / पता',
+                user?.address ?? 'Piparakothi, Motihaari',
+              ),
               _custRow('Place of Supply / आपूर्ति स्थान', 'BIHAR'),
-              _custRow('Ref No. / संदर्भ संख्या', order.id.substring(0, 6).toUpperCase()),
-              _custRow('Rate/gram / दर/ग्राम', '${Formatters.currency(order.price / order.quantity)} (24 CT)'),
+              _custRow(
+                'Ref No. / संदर्भ संख्या',
+                order.id.substring(0, 6).toUpperCase(),
+              ),
+              _custRow(
+                'Rate/gram / दर/ग्राम',
+                '${Formatters.currency(order.price / order.quantity)} (24 CT)',
+              ),
               _custRow('Attended By / परिचारक', 'NA'),
               _custRow('Contact No. / संपर्क नंबर', 'NA'),
             ],
@@ -211,7 +271,13 @@ class InvoiceService {
       padding: const pw.EdgeInsets.only(bottom: 2),
       child: pw.Row(
         children: [
-          pw.SizedBox(width: 130, child: pw.Text('$label :', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold))),
+          pw.SizedBox(
+            width: 130,
+            child: pw.Text(
+              '$label :',
+              style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
           pw.Text(value, style: const pw.TextStyle(fontSize: 7)),
         ],
       ),
@@ -221,13 +287,21 @@ class InvoiceService {
   static pw.Widget _buildMainItemTable(OrderModel order) {
     final subtotal = order.price;
     return pw.Container(
-      decoration: const pw.BoxDecoration(border: pw.Border(top: pw.BorderSide(width: 0.5), bottom: pw.BorderSide(width: 0.5))),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(width: 0.5),
+          bottom: pw.BorderSide(width: 0.5),
+        ),
+      ),
       child: pw.Table(
-        border: const pw.TableBorder(verticalInside: pw.BorderSide(width: 0.5), bottom: pw.BorderSide(width: 0.5)),
+        border: const pw.TableBorder(
+          verticalInside: pw.BorderSide(width: 0.5),
+          bottom: pw.BorderSide(width: 0.5),
+        ),
         columnWidths: {
           0: const pw.FixedColumnWidth(25), // sl
           1: const pw.FixedColumnWidth(40), // HSN
-          2: const pw.FlexColumnWidth(),   // Desc
+          2: const pw.FlexColumnWidth(), // Desc
           3: const pw.FixedColumnWidth(25), // Qty
           4: const pw.FixedColumnWidth(35), // GrossWt
           5: const pw.FixedColumnWidth(60), // Stone/Other
@@ -265,7 +339,10 @@ class InvoiceService {
               _dataCell(order.weight.toStringAsFixed(3)),
               _dataCell(order.discountedValue.toStringAsFixed(2)),
               _dataCell('6.00'),
-              _dataCell((order.discountedValue + order.makingChargesValue).toStringAsFixed(2)),
+              _dataCell(
+                (order.discountedValue + order.makingChargesValue)
+                    .toStringAsFixed(2),
+              ),
             ],
           ),
           // Total Row
@@ -280,7 +357,11 @@ class InvoiceService {
               _dataCell(order.weight.toStringAsFixed(3), bold: true),
               _dataCell(order.discountedValue.toStringAsFixed(2), bold: true),
               _dataCell(''),
-              _dataCell((order.discountedValue + order.makingChargesValue).toStringAsFixed(2), bold: true),
+              _dataCell(
+                (order.discountedValue + order.makingChargesValue)
+                    .toStringAsFixed(2),
+                bold: true,
+              ),
             ],
           ),
         ],
@@ -291,14 +372,30 @@ class InvoiceService {
   static pw.Widget _headerCell(String text) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(2),
-      child: pw.Center(child: pw.Text(text, style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold, color: PdfColors.white))),
+      child: pw.Center(
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(
+            fontSize: 6.5,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.white,
+          ),
+        ),
+      ),
     );
   }
 
   static pw.Widget _dataCell(String text, {bool bold = false}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.all(3),
-      child: pw.Text(text, style: pw.TextStyle(fontSize: 7, fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal), textAlign: pw.TextAlign.center),
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: 7,
+          fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+        ),
+        textAlign: pw.TextAlign.center,
+      ),
     );
   }
 
@@ -345,7 +442,12 @@ class InvoiceService {
     );
   }
 
-  static pw.Widget _summaryTable(String title, List<List<String>> rows, {bool highlightLast = false, bool showBlue = false}) {
+  static pw.Widget _summaryTable(
+    String title,
+    List<List<String>> rows, {
+    bool highlightLast = false,
+    bool showBlue = false,
+  }) {
     return pw.Table(
       border: pw.TableBorder.all(width: 0.5, color: PdfColors.grey),
       children: [
@@ -354,7 +456,15 @@ class InvoiceService {
           children: [
             pw.Padding(
               padding: const pw.EdgeInsets.all(2),
-              child: pw.Center(child: pw.Text(title, style: pw.TextStyle(fontSize: 6, fontWeight: pw.FontWeight.bold))),
+              child: pw.Center(
+                child: pw.Text(
+                  title,
+                  style: pw.TextStyle(
+                    fontSize: 6,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
             pw.SizedBox(),
           ],
@@ -366,11 +476,26 @@ class InvoiceService {
             children: [
               pw.Padding(
                 padding: const pw.EdgeInsets.all(2),
-                child: pw.Text(row[0], style: pw.TextStyle(fontSize: 6, color: isBlue ? PdfColors.blue : PdfColors.black)),
+                child: pw.Text(
+                  row[0],
+                  style: pw.TextStyle(
+                    fontSize: 6,
+                    color: isBlue ? PdfColors.blue : PdfColors.black,
+                  ),
+                ),
               ),
               pw.Padding(
                 padding: const pw.EdgeInsets.all(2),
-                child: pw.Text(row[1], style: pw.TextStyle(fontSize: 6, fontWeight: isLast ? pw.FontWeight.bold : pw.FontWeight.normal), textAlign: pw.TextAlign.right),
+                child: pw.Text(
+                  row[1],
+                  style: pw.TextStyle(
+                    fontSize: 6,
+                    fontWeight: isLast
+                        ? pw.FontWeight.bold
+                        : pw.FontWeight.normal,
+                  ),
+                  textAlign: pw.TextAlign.right,
+                ),
               ),
             ],
           );
@@ -392,19 +517,38 @@ class InvoiceService {
             child: pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text('Amount in words (शब्दों में राशि): Only Rupees Example...', style: pw.TextStyle(fontSize: 7, fontFallback: [fontHindi])),
-                pw.Text('Total : ---', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  'Amount in words (शब्दों में राशि): Only Rupees Example...',
+                  style: pw.TextStyle(fontSize: 7, fontFallback: [fontHindi]),
+                ),
+                pw.Text(
+                  'Total : ---',
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
           pw.SizedBox(height: 4),
-          pw.Text('Effective value addition(MC) after discount : 6.00%', style: const pw.TextStyle(fontSize: 5.5)),
-          pw.Text('Except for 999 Gold items & ornaments below 2 grams, Price inclusive of Hallmarking Charges at Rs 45/- per piece.', style: const pw.TextStyle(fontSize: 5.5)),
+          pw.Text(
+            'Effective value addition(MC) after discount : 6.00%',
+            style: const pw.TextStyle(fontSize: 5.5),
+          ),
+          pw.Text(
+            'Except for 999 Gold items & ornaments below 2 grams, Price inclusive of Hallmarking Charges at Rs 45/- per piece.',
+            style: const pw.TextStyle(fontSize: 5.5),
+          ),
           pw.SizedBox(height: 4),
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Container(width: 8, height: 8, decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.5))),
+              pw.Container(
+                width: 8,
+                height: 8,
+                decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.5)),
+              ),
               pw.SizedBox(width: 4),
               pw.Expanded(
                 child: pw.Column(
@@ -416,7 +560,10 @@ class InvoiceService {
                     ),
                     pw.Text(
                       'मैं इसके द्वारा इस चालान में दिए गए मोबाइल नंबर पर व्हाट्सएप, एसएमएस या अन्य सोशल मीडिया प्लेटफॉर्म के माध्यम से संदेश और कॉल प्राप्त करने की सहमति देता हूं।',
-                      style: pw.TextStyle(fontSize: 5.5, fontFallback: [fontHindi]),
+                      style: pw.TextStyle(
+                        fontSize: 5.5,
+                        fontFallback: [fontHindi],
+                      ),
                     ),
                   ],
                 ),
@@ -438,10 +585,18 @@ class InvoiceService {
             width: double.infinity,
             color: PdfColor.fromInt(0x1AC8992A),
             padding: const pw.EdgeInsets.all(2),
-            child: pw.Row(children: [
-              _diamondBullet(),
-              pw.Text('BANK & PAYMENT DETAILS / बैंक और भुगतान विवरण', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
-            ]),
+            child: pw.Row(
+              children: [
+                _diamondBullet(),
+                pw.Text(
+                  'BANK & PAYMENT DETAILS / बैंक और भुगतान विवरण',
+                  style: pw.TextStyle(
+                    fontSize: 7,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
           pw.Padding(
             padding: const pw.EdgeInsets.all(4),
@@ -451,7 +606,7 @@ class InvoiceService {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      _bankRow('Account Name', 'RGT GOLD'),
+                      _bankRow('Account Name', 'Royal Gold Traders'),
                       _bankRow('Account No.', '00000045030556376'),
                       _bankRow('MICR Code', '800002020'),
                     ],
@@ -478,7 +633,13 @@ class InvoiceService {
   static pw.Widget _bankRow(String label, String value) {
     return pw.Row(
       children: [
-        pw.SizedBox(width: 70, child: pw.Text('$label :', style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold))),
+        pw.SizedBox(
+          width: 70,
+          child: pw.Text(
+            '$label :',
+            style: pw.TextStyle(fontSize: 6.5, fontWeight: pw.FontWeight.bold),
+          ),
+        ),
         pw.Text(value, style: const pw.TextStyle(fontSize: 6.5)),
       ],
     );
@@ -496,14 +657,34 @@ class InvoiceService {
             child: pw.Transform.rotate(
               angle: -0.1,
               child: pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const pw.EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColor.fromInt(0xFF800080), width: 1.5),
+                  border: pw.Border.all(
+                    color: PdfColor.fromInt(0xFF800080),
+                    width: 1.5,
+                  ),
                 ),
                 child: pw.Column(
                   children: [
-                    pw.Text('ITEM BOOKED', style: pw.TextStyle(color: PdfColor.fromInt(0xFF800080), fontWeight: pw.FontWeight.bold, fontSize: 8)),
-                    pw.Text('DELIVER IN 15 DAYS', style: pw.TextStyle(color: PdfColor.fromInt(0xFF800080), fontWeight: pw.FontWeight.bold, fontSize: 8)),
+                    pw.Text(
+                      'ITEM BOOKED',
+                      style: pw.TextStyle(
+                        color: PdfColor.fromInt(0xFF800080),
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 8,
+                      ),
+                    ),
+                    pw.Text(
+                      'DELIVER IN 15 DAYS',
+                      style: pw.TextStyle(
+                        color: PdfColor.fromInt(0xFF800080),
+                        fontWeight: pw.FontWeight.bold,
+                        fontSize: 8,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -516,8 +697,14 @@ class InvoiceService {
               pw.Column(
                 children: [
                   pw.SizedBox(height: 30),
-                  pw.Text('Customer Signature', style: const pw.TextStyle(fontSize: 7)),
-                  pw.Text('ग्राहक के हस्ताक्षर', style: const pw.TextStyle(fontSize: 6)),
+                  pw.Text(
+                    'Customer Signature',
+                    style: const pw.TextStyle(fontSize: 7),
+                  ),
+                  pw.Text(
+                    'ग्राहक के हस्ताक्षर',
+                    style: const pw.TextStyle(fontSize: 6),
+                  ),
                 ],
               ),
               pw.Column(
@@ -525,8 +712,17 @@ class InvoiceService {
                 children: [
                   if (brandStamp != null) pw.Image(brandStamp, width: 60),
                   pw.SizedBox(height: 4),
-                  pw.Text('Authorised Signatory', style: const pw.TextStyle(fontSize: 7)),
-                  pw.Text('for RGT GOLD', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(
+                    'Authorised Signatory',
+                    style: const pw.TextStyle(fontSize: 7),
+                  ),
+                  pw.Text(
+                    'for Royal Gold Traders',
+                    style: pw.TextStyle(
+                      fontSize: 7,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -545,25 +741,37 @@ class InvoiceService {
         color: goldColor,
         shape: pw.BoxShape.rectangle,
       ),
-      child: pw.Transform.rotate(angle: 0.785, child: pw.SizedBox()), // 45 degrees
+      child: pw.Transform.rotate(
+        angle: 0.785,
+        child: pw.SizedBox(),
+      ), // 45 degrees
     );
   }
 
-  static Future<void> generateAndPreviewInvoice(OrderModel order, {UserModel? user}) async {
+  static Future<void> generateAndPreviewInvoice(
+    OrderModel order, {
+    UserModel? user,
+  }) async {
     final pdf = await _buildInvoiceDoc(order, user);
-    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save(), name: 'Invoice_${order.id}.pdf');
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+      name: 'Invoice_${order.id}.pdf',
+    );
   }
 
-  static Future<void> downloadInvoice(OrderModel order, {UserModel? user}) async {
+  static Future<void> downloadInvoice(
+    OrderModel order, {
+    UserModel? user,
+  }) async {
     final pdf = await _buildInvoiceDoc(order, user);
     final bytes = await pdf.save();
     final fileName = 'Invoice_${order.id}.pdf';
-    
+
     if (kIsWeb) {
-      // Trigger a direct browser download without the share dialog
-      await Printing.sharePdf(
-        bytes: bytes, 
-        filename: fileName,
+      // Direct download without share dialog
+      await Printing.layoutPdf(
+        onLayout: (PdfPageFormat format) async => bytes,
+        name: fileName,
       );
     } else {
       final dir = await getApplicationDocumentsDirectory();
@@ -583,10 +791,7 @@ class InvoiceService {
 
   static pw.Widget _buildLogoWatermark(pw.MemoryImage logo) {
     return pw.Center(
-      child: pw.Opacity(
-        opacity: 0.15,
-        child: pw.Image(logo, width: 450),
-      ),
+      child: pw.Opacity(opacity: 0.15, child: pw.Image(logo, width: 450)),
     );
   }
 
@@ -597,7 +802,11 @@ class InvoiceService {
         angle: -0.5,
         child: pw.Text(
           status.toUpperCase(),
-          style: pw.TextStyle(fontSize: 80, fontWeight: pw.FontWeight.bold, color: PdfColor.fromInt(0x33BBBBBB)),
+          style: pw.TextStyle(
+            fontSize: 80,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColor.fromInt(0x33BBBBBB),
+          ),
         ),
       ),
     );

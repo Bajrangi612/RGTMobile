@@ -3,6 +3,7 @@ import QRCode from 'qrcode';
 import { PrismaClient } from '@prisma/client';
 import r2Service from './R2Service';
 import { format } from 'date-fns';
+import { getFormattedIST, formatToIST } from '../utils/dateUtils';
 import path from 'path';
 
 const prisma = new PrismaClient();
@@ -116,8 +117,8 @@ class InvoiceService {
       doc.text(`Bill Detail / बिल की जानकारी : 5191044315`, 400, 100, { align: 'right' });
       doc.text(`PAN / पैन सं : ADJPI8137N`, 400, 112, { align: 'right' });
       doc.text(`Bill No. / बिल सं : ${order.invoiceNo || 'N/A'}`, 400, 124, { align: 'right' });
-      doc.text(`Bill Date / बिल तिथि : ${format(new Date(order.createdAt), 'dd/MM/yyyy h:mm a')}`, 400, 136, { align: 'right' });
-      const deliveryDate = order.deliveryDate ? format(new Date(order.deliveryDate), 'dd/MM/yyyy') : 'N/A';
+      doc.text(`Bill Date / बिल तिथि : ${getFormattedIST(order.createdAt)}`, 400, 136, { align: 'right' });
+      const deliveryDate = order.deliveryDate ? formatToIST(order.deliveryDate, { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A';
       doc.text(`Due Date / अतिंम तिथि : ${deliveryDate}`, 400, 148, { align: 'right' });
 
       // --- CUSTOMER SECTION ---
@@ -224,11 +225,7 @@ class InvoiceService {
       doc.text('GSTIN         : 10ADJPI8137N1ZE', 160, bankY + 40);
 
       // --- SIGNATURE & STAMP ---
-      try {
-        doc.image(this.logoStamp, 100, 620, { width: 100 });
-        doc.fillColor('#AA0000').fontSize(10).font('Helvetica-Bold').text('ITEM BOOKED', 110, 640, { width: 80, align: 'center' });
-        doc.fontSize(8).text('DELIVER IN 15 DAYS', 110, 655, { width: 80, align: 'center' });
-      } catch (e) {}
+      // Removed as per customer request
 
       doc.fillColor(headerColor).font('Noto').fontSize(8).text('Customer Signature', 40, 720);
       doc.text('ग्राहक के हस्ताक्षर', 40, 730);

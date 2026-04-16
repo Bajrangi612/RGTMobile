@@ -431,7 +431,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                                 );
                               }
                             } else {
-                              InvoiceService.generateAndPreviewInvoice(
+                              InvoiceService.downloadInvoice(
                                 order,
                                 user: ref.read(authProvider).user,
                               );

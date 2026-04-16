@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  /* 
   console.log('Seeding categories...');
   
   const categories = [
@@ -68,6 +69,7 @@ async function main() {
       });
     }
   }
+  */
 
   console.log('Seeding Gold Price...');
   await prisma.goldPrice.create({
@@ -103,7 +105,9 @@ async function main() {
     { key: 'min_withdrawal', value: '1000', description: 'Minimum balance required to request withdrawal' },
     { key: 'buyback_margin', value: '3.0', description: 'Profit margin % subtracted from spot price for customer sell-back' },
     { key: 'making_charge_percent', value: '7.0', description: 'Global making charges % added to market gold price' },
-    { key: 'global_discount_percent', value: '2.0', description: 'Standard discount % applied to all gold products' }
+    { key: 'global_discount_percent', value: '2.0', description: 'Standard discount % applied to all gold products' },
+    { key: 'app_latest_version', value: '1.0.0', description: 'Latest version available in store' },
+    { key: 'app_min_version', value: '1.0.0', description: 'Minimum required version to use the app' }
   ];
 
   for (const s of settings) {

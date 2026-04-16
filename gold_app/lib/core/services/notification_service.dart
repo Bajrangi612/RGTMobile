@@ -7,6 +7,9 @@ import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../network/api_service.dart';
+import '../../main.dart'; // To access navigatorKey
+import '../../features/order/screens/order_redirect_screen.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
@@ -53,6 +56,16 @@ class NotificationService {
       initializationSettings,
       onDidReceiveNotificationResponse: (details) {
         // Handle notification click while app is open
+        if (details.payload != null && details.payload!.startsWith('ORDER_ID:')) {
+          final orderId = details.payload!.replaceFirst('ORDER_ID:', '');
+          if (navigatorKey.currentState != null) {
+            navigatorKey.currentState!.push(
+              MaterialPageRoute(
+                builder: (_) => OrderRedirectScreen(orderId: orderId),
+              ),
+            );
+          }
+        }
       },
     );
   }
@@ -75,6 +88,8 @@ class NotificationService {
           bigPicturePath = await _downloadAndSaveFile(imageUrl, 'bigPicture.png');
         }
 
+        final orderId = message.data['orderId'];
+
         _localNotifications.show(
           notification.hashCode,
           notification.title,
@@ -96,14 +111,31 @@ class NotificationService {
               icon: android?.smallIcon ?? '@mipmap/ic_launcher',
             ),
           ),
+          payload: orderId != null ? 'ORDER_ID:$orderId' : null,
         );
       }
     });
 
     // Handle background/terminated state messages
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('User clicked notification and opened app');
-    });
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
+
+    // Handle message that opened the app from a terminated state
+    _messaging.getInitialMessage().then(_handleMessage);
+  }
+
+  static void _handleMessage(RemoteMessage? message) {
+    if (message == null) return;
+    debugPrint('Notification Action: ${message.data}');
+    
+    final orderId = message.data['orderId'];
+    if (orderId != null && navigatorKey.currentState != null) {
+      // Navigate to the loading/redirect screen
+      navigatorKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (_) => OrderRedirectScreen(orderId: orderId),
+        ),
+      );
+    }
   }
 
   static Future<String> _downloadAndSaveFile(String url, String fileName) async {

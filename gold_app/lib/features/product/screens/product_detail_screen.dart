@@ -217,8 +217,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       Formatters.currency(pricing.marketPrice),
                                       style: AppTextStyles.caption.copyWith(
                                         decoration: TextDecoration.lineThrough,
-                                        fontSize: 16,
-                                        color: AppColors.grey.withOpacity(0.4),
+                                        fontSize: 18,
+                                        color: AppColors.grey.withOpacity(0.8),
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],

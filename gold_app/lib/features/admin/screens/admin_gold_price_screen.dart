@@ -214,7 +214,11 @@ class _RateRow extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   '₹${value.toStringAsFixed(2)}',
-                  style: AppTextStyles.h3.copyWith(color: AppColors.pureWhite, fontWeight: FontWeight.bold),
+                  style: AppTextStyles.h3.copyWith(
+                    color: AppColors.pureWhite, 
+                    fontWeight: FontWeight.w900,
+                    fontSize: 28,
+                  ),
                 ),
               ],
             ),

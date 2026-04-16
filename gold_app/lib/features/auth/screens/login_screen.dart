@@ -169,21 +169,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                       /// 🏆 Title
                       Text(
-                        'Welcome to RGT',
-                        style: AppTextStyles.h2.copyWith(color: AppColors.royalGold),
+                        'Welcome to',
+                        style: AppTextStyles.h2.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.w300),
                       ).animate().fadeIn(delay: 200.ms),
 
                       Text(
-                        'RGT',
+                        'ROYAL GOLD',
                         style: AppTextStyles.goldTitle.copyWith(
-                          fontSize: 28,
-                          letterSpacing: 2,
+                          fontSize: 32,
+                          letterSpacing: 4,
+                          fontWeight: FontWeight.w900,
                         ),
                       ).animate().fadeIn(delay: 300.ms),
 
                       const SizedBox(height: 12),
 
-                      Text('RGT', style: AppTextStyles.h1.copyWith(color: AppColors.royalGold, letterSpacing: 8)),
+                      Text('TRADERS', style: AppTextStyles.h1.copyWith(color: AppColors.royalGold, letterSpacing: 12, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Text('PRECISION QUALITY', style: AppTextStyles.labelMedium.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3), letterSpacing: 2)),
 

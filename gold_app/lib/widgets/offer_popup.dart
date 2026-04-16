@@ -155,6 +155,7 @@ class OfferPopup extends ConsumerWidget {
                         _PriceRow(
                           label: 'Base Market Rate (1g)',
                           value: Formatters.currency(marketPrice),
+                          isHighlighted: true,
                         ),
                         _PriceRow(
                           label: 'Member Discount',
@@ -285,8 +286,9 @@ class _PriceRow extends StatelessWidget {
             value,
             style: AppTextStyles.labelLarge.copyWith(
               color: valueColor ?? AppColors.pureWhite,
-              fontWeight: isHighlighted ? FontWeight.w900 : FontWeight.w500,
-              fontSize: isHighlighted ? 15 : 14,
+              fontWeight: isHighlighted ? FontWeight.w900 : FontWeight.bold,
+              fontSize: isHighlighted ? 18 : 14,
+              letterSpacing: isHighlighted ? 0.5 : null,
             ),
           ),
         ],

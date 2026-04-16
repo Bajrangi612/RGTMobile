@@ -8,6 +8,9 @@ import 'features/auth/screens/splash_screen.dart';
 import 'package:gold_app/core/services/notification_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+// Global Key for Navigation (Static so it can be used in services)
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -51,6 +54,7 @@ class RoyalGoldApp extends ConsumerWidget {
     AppColors.updatePalette(palette);
 
     return MaterialApp(
+      navigatorKey: navigatorKey, // Set global navigator key
       title: 'RGT',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

@@ -378,12 +378,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_pickedImage == null && _imageUrlController.text.isEmpty && widget.product == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload an image or provide a URL')),
-      );
-      return;
-    }
+    // Image is now optional
 
     setState(() => _isSaving = true);
     
@@ -406,7 +401,7 @@ class _ProductFormState extends ConsumerState<_ProductForm> {
         'weight': double.tryParse(_weightController.text) ?? 1.0,
         'purity': _purity,
         'stock': int.tryParse(_stockController.text) ?? 0,
-        'imageUrl': imageUrl,
+        'imageUrl': imageUrl.isEmpty ? null : imageUrl,
         'categoryId': _selectedCategoryId,
         'isPremium': _isPremium,
         'isActive': _isActive,

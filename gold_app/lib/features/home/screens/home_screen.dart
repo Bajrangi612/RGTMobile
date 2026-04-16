@@ -927,9 +927,9 @@ class _GoldPriceCard extends StatelessWidget {
                     Formatters.currency(price),
                     style: AppTextStyles.bodyLarge.copyWith(
                       decoration: TextDecoration.lineThrough,
-                      color: AppColors.grey.withValues(alpha: 0.6),
-                      fontWeight: FontWeight.w500,
-                      fontSize: 18,
+                      color: AppColors.grey.withValues(alpha: 0.9),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 20,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -1352,7 +1352,8 @@ class _BannerCarouselState extends State<_BannerCarousel> {
   Timer? _timer;
 
   final List<String> _banners = [
-    'assets/images/banner_1.webp',
+    'assets/images/banner_0_making.png',
+    'assets/images/banner_1.png',
     'assets/images/banner_2.webp',
     'assets/images/banner_3.webp',
     'assets/images/banner_4.webp',
