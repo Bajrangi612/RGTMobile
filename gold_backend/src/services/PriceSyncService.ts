@@ -30,7 +30,6 @@ class PriceSyncService {
     this.syncJob = cron.schedule(cronSchedule, () => {
       this.performSync().catch(err => console.error("❌ [PriceSync] Scheduled cron sync failed:", err));
     }, {
-      scheduled: true,
       timezone: "Asia/Kolkata"
     });
     

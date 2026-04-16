@@ -24,7 +24,6 @@ class DailyNotificationJob {
       console.log('🔔 [DailyJob] Triggering Gold Rate Alert...');
       await this.sendDailyRateNotification();
     }, {
-      scheduled: true,
       timezone: "Asia/Kolkata"
     });
   }
