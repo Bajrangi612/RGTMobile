@@ -263,18 +263,18 @@ class ApiService {
 
   // ─── Wallet & Transactions ──────────────────────────────────────────────
 
-  Future<Response> getWalletDetails() async {
+  Future<Response> getCreditDetails() async {
     return await _dio.get('/wallet/details');
   }
 
-  Future<Response> requestWithdrawal(double amount, String type) async {
+  Future<Response> requestRefund(double amount, String type) async {
     return await _dio.post(
       '/wallet/withdraw',
       data: {'amount': amount, 'type': type},
     );
   }
 
-  Future<Response> getMyWithdrawals({int page = 1, int limit = 50}) async {
+  Future<Response> getMyRefunds({int page = 1, int limit = 50}) async {
     return await _dio.get('/wallet/my-withdrawals', queryParameters: {'page': page, 'limit': limit});
   }  /**
    * Cancel buyback request

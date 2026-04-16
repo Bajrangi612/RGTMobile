@@ -7,7 +7,7 @@ class EnvConfig {
   static const String _defaultUrl = 'http://localhost:4000/api';
   
   /// Official production URL
-  static const String _prodUrl = 'http://o1qp4x36ni2pggogwxgzntcz.91.108.111.194.sslip.io/api';
+  static const String _prodUrl = 'https://o1qp4x36ni2pggogwxgzntcz.91.108.111.194.sslip.io/api';
 
   static String get baseUrl {
     // Check if a URL was passed via --dart-define=API_URL=...

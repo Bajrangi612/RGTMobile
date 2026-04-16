@@ -177,7 +177,7 @@ class _TransactionCardState extends State<_TransactionCard> {
                   _DetailRow(label: 'Customer Name', value: user['name'] ?? 'N/A'),
                   _DetailRow(label: 'Customer Phone', value: user['phone'] ?? 'N/A'),
                   _DetailRow(label: 'Transaction Type', value: widget.txn['type']?.toString().toUpperCase() ?? 'N/A'),
-                  _DetailRow(label: 'Payment Mode', value: widget.txn['provider']?.toString().toUpperCase() ?? 'WALLET'),
+                  _DetailRow(label: 'Payment Mode', value: widget.txn['provider']?.toString().toUpperCase() ?? 'CREDITS'),
                   _DetailRow(label: 'Precise Timestamp', value: widget.txn['createdAt'] != null ? Formatters.dateTime(widget.txn['createdAt']) : 'N/A'),
                 ],
               ],
@@ -194,8 +194,7 @@ class _TransactionCardState extends State<_TransactionCard> {
       case 'referral': return Icons.card_giftcard_rounded;
       case 'refund': return Icons.replay_rounded;
       case 'deposit': return Icons.add_circle_outline;
-      case 'withdrawal': return Icons.remove_circle_outline;
-      default: return Icons.account_balance_wallet_rounded;
+      default: return Icons.account_balance;
     }
   }
 
@@ -205,7 +204,6 @@ class _TransactionCardState extends State<_TransactionCard> {
       case 'referral': return AppColors.royalGold;
       case 'refund': return AppColors.error;
       case 'deposit': return AppColors.success;
-      case 'withdrawal': return AppColors.warning;
       default: return AppColors.grey;
     }
   }
@@ -268,7 +266,7 @@ class _EmptyTransactions extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.history_rounded, size: 64, color: AppColors.grey.withValues(alpha: 0.2)),
+          Icon(Icons.account_balance, size: 64, color: AppColors.royalGold.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           Text('No transactions yet in the system.', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey)),
         ],

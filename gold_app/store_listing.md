@@ -1,37 +1,36 @@
-# Google Play Store Listing - Royal Gold Traders
+# Google Play Store Listing - RGT
 
 ### 📱 Short Description (80 characters)
-Invest in 24K Gold Coins. Buy, Sell & Build your Royal Gold Portfolio today!
+Shop Premium 24K Gold Coins. Secure, Authentic, and Physical.
 
 ---
 
 ### 📄 Full Description (4000 characters)
-**Welcome to Royal Gold Traders – The King of Gold Investment!** 👑✨
+**Welcome to RGT – Your Premium 24K Gold Coin Store!** 👑✨
 
-Experience a new era of gold trading with Royal Gold Traders (RGT), your premium portal for buying, selling, and managing physical 24K gold investment coins. Whether you are a first-time investor or a luxury collector, RGT provides a secure, transparent, and elite platform for gold asset management.
+Experience the luxury of owning tangible 24K gold with RGT, the elite destination for shopping physical gold coins. Whether you are a first-time shopper or a seasoned luxury collector, RGT provides a secure, transparent, and premium platform for your authentic gold coin needs.
 
-**Why Choose Royal Gold Traders?**
-💎 **Authentic 24K Gold**: We deal exclusively in 99.9% pure gold coins, certified for quality and weight.
-💸 **Real-Time Pricing**: Stay ahead with live gold market rates and transparent billing—no hidden costs.
-🔄 **Seamless Buy & Sell**: Liquidate your assets or expand your collection with one tap. Fast payments and instant updates.
-🛡️ **Digital Security**: Your investments are protected by a state-of-the-art encrypted platform and secure KYC verification.
+**Why Choose RGT?**
+💎 **Authentic 24K Gold**: We offer exclusively 99.9% pure gold coins, certified for impeccable quality and weight.
+💸 **Transparent Pricing**: Shop with confidence using live market-linked retail rates and clear billing—no hidden costs.
+🔄 **Seamless Selection**: Browse our elite catalog and expand your physical collection with ease. Fast processing and instant account updates.
+🛡️ **Premium Security**: Your account and data are protected by a state-of-the-art encrypted platform and secure identity verification.
 
 **App Features:**
-🚀 **Professional Catalog**: Browse elegant gold coins with detailed weights and pricing breakdowns.
-🤝 **Elite Referral Program**: Share the Royal experience with friends and earn exclusive gold rewards directly in your secure wallet.
-📊 **Order Management**: Track every gram with detailed digital invoices and historical records.
-✅ **Secure KYC**: Quick and easy Bank and ID verification to ensure a safe and compliant trading environment.
+🚀 **Elite Catalog**: Browse a curated selection of elegant gold coins with detailed specifications and weight options.
+🤝 **Patron Rewards**: Share the RGT experience with friends and earn exclusive shopping credits directly in your account.
+📊 **Order Tracking**: Manage your inventory with detailed digital invoices and secure order histories.
+✅ **Secure Verification**: Quick and easy identity verification to ensure a safe and compliant shopping environment for all patrons.
 
-**How to Start:**
+**How to Start Shopping:**
 1. Download the RGT App.
 2. Sign up with your mobile number.
-3. Complete your KYC (Aadhaar & Bank) for secure transactions.
-4. Start investing and building your royal legacy!
+3. Complete your Identity Verification for secure store pickup and payments.
+4. Visit an **RGT Office** for physical pickup of your coins.
 
-Join thousands of elite investors. Download **Royal Gold Traders** now and take the first step toward a more secure, more golden future!
+Join an elite community of gold patrons. Download **RGT** now and take the first step toward a more secure, more golden future!
 
 ---
 
-### 🔒 Privacy Policy Template
-**URL**: `https://royalgoldtraders.com/privacy`
-*(If you need me to host a temporary one for you, let me know!)*
+### 🔒 Privacy Policy
+**URL**: `https://royalgoldtraders.com/legal/privacy`

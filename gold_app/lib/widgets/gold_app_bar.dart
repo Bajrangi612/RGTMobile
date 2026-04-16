@@ -11,7 +11,7 @@ class GoldAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool centerTitle;
   final double elevation;
 
-   GoldAppBar({
+  const GoldAppBar({
     super.key,
     this.title,
     this.showBack = true,
@@ -19,7 +19,7 @@ class GoldAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.centerTitle = true,
     this.elevation = 0,
-  }) ;
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -33,28 +33,24 @@ class GoldAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       leading: showBack
           ? (leading ??
-              IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.glassWhite,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.glassBorder),
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.glassWhite,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.glassBorder),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back_ios_new,
+                      color: AppColors.royalGold,
+                      size: 16,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.arrow_back_ios_new,
-                    color: AppColors.royalGold,
-                    size: 16,
-                  ),
-                ),
-                onPressed: () => Navigator.of(context).pop(),
-              )) : leading,
-      title: title != null
-          ? Text(
-              title!,
-              style: AppTextStyles.h4,
-            )
-          : null,
+                  onPressed: () => Navigator.of(context).pop(),
+                ))
+          : leading,
+      title: title != null ? Text(title!, style: AppTextStyles.h4) : null,
       actions: actions,
     );
   }

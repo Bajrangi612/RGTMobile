@@ -1,4 +1,7 @@
+import 'dart:convert';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/storage_service.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../product/data/models/product_model.dart';
 
 class HomeRepository {
@@ -7,15 +10,34 @@ class HomeRepository {
       final response = await ApiService().getGoldPrice();
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        return {
+        final prices = {
           'sellPrice': double.tryParse(data['livePrice']?.toString() ?? '0') ?? 0.0,
           'buyPrice': double.tryParse(data['buyPrice']?.toString() ?? '0') ?? 0.0,
         };
+
+        // Cache the latest prices
+        await StorageService.write(AppConstants.priceDataKey, jsonEncode(prices));
+
+        return prices;
       }
-      return {'sellPrice': 0.0, 'buyPrice': 0.0};
+      return await _getCachedPrices();
     } catch (e) {
-      return {'sellPrice': 0.0, 'buyPrice': 0.0};
+      return await _getCachedPrices();
     }
+  }
+
+  Future<Map<String, double>> _getCachedPrices() async {
+    try {
+      final cached = await StorageService.read(AppConstants.priceDataKey);
+      if (cached != null) {
+        final decoded = jsonDecode(cached) as Map<String, dynamic>;
+        return {
+          'sellPrice': (decoded['sellPrice'] ?? 0.0).toDouble(),
+          'buyPrice': (decoded['buyPrice'] ?? 0.0).toDouble(),
+        };
+      }
+    } catch (_) {}
+    return {'sellPrice': 0.0, 'buyPrice': 0.0};
   }
 
   Future<List<double>> getGoldPriceHistory() async {
@@ -33,12 +55,15 @@ class HomeRepository {
 
   Future<double> getGoldPriceChange() async {
     try {
-      final response = await ApiService().getGoldPriceHistory(limit: 2);
+      // Sync happens every 2 hours, so 12 records = 24 hours
+      final response = await ApiService().getGoldPriceHistory(limit: 12);
       if (response.statusCode == 200) {
         final List history = response.data['data']['history'];
         if (history.length >= 2) {
+          // history is chronological: [oldest, ..., newest]
           final latest = double.tryParse(history.last['price'].toString()) ?? 0.0;
           final previous = double.tryParse(history.first['price'].toString()) ?? 0.0;
+          
           if (previous == 0) return 0.0;
           return ((latest - previous) / previous) * 100;
         }

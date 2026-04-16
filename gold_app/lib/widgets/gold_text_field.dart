@@ -17,7 +17,7 @@ class GoldTextField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final int maxLines;
 
-  GoldTextField({
+  const GoldTextField({
     super.key,
     this.controller,
     required this.label,
@@ -32,7 +32,7 @@ class GoldTextField extends StatelessWidget {
     this.onChanged,
     this.textCapitalization = TextCapitalization.none,
     this.maxLines = 1,
-  }) ;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +46,7 @@ class GoldTextField extends StatelessWidget {
       onChanged: onChanged,
       textCapitalization: textCapitalization,
       maxLines: maxLines,
-      style: TextStyle(
-        color: AppColors.pureWhite,
-        fontSize: 16,
-      ),
+      style: TextStyle(color: AppColors.pureWhite, fontSize: 16),
       cursorColor: AppColors.royalGold,
       decoration: AppDecorations.inputDecoration(
         label: label,

@@ -121,10 +121,10 @@ class _UserCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.account_balance_wallet_outlined, size: 12, color: AppColors.grey),
+                  Icon(Icons.account_balance, size: 12, color: AppColors.grey),
                   const SizedBox(width: 4),
                   Text(
-                    'Balance: ₹${balance.toStringAsFixed(2)} | ${goldBalance.toStringAsFixed(3)}g',
+                    'Credits: ₹${balance.toStringAsFixed(2)} | ${goldBalance.toStringAsFixed(3)}g',
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.royalGold,
                       fontWeight: FontWeight.bold,

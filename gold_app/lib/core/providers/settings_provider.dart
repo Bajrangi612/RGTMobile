@@ -3,18 +3,22 @@ import '../network/api_service.dart';
 
 class SettingsState {
   final double referralReward;
-  final double minWithdrawal;
+  final double minRefund;
   final double gstRate;
   final double globalDiscount;
+  final double makingCharge;
+  final double makingGst;
   final int deliveryDays;
   final bool isLoading;
   final String? error;
 
   SettingsState({
     this.referralReward = 500.0,
-    this.minWithdrawal = 1000.0,
+    this.minRefund = 1000.0,
     this.gstRate = 3.0,
     this.globalDiscount = 0.0,
+    this.makingCharge = 0.0,
+    this.makingGst = 0.0,
     this.deliveryDays = 7,
     this.isLoading = false,
     this.error,
@@ -22,18 +26,22 @@ class SettingsState {
 
   SettingsState copyWith({
     double? referralReward,
-    double? minWithdrawal,
+    double? minRefund,
     double? gstRate,
     double? globalDiscount,
+    double? makingCharge,
+    double? makingGst,
     int? deliveryDays,
     bool? isLoading,
     String? error,
   }) {
     return SettingsState(
       referralReward: referralReward ?? this.referralReward,
-      minWithdrawal: minWithdrawal ?? this.minWithdrawal,
+      minRefund: minRefund ?? this.minRefund,
       gstRate: gstRate ?? this.gstRate,
       globalDiscount: globalDiscount ?? this.globalDiscount,
+      makingCharge: makingCharge ?? this.makingCharge,
+      makingGst: makingGst ?? this.makingGst,
       deliveryDays: deliveryDays ?? this.deliveryDays,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -54,9 +62,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       
       state = state.copyWith(
         referralReward: _toDouble(data['referral_reward'], 500.0),
-        minWithdrawal: _toDouble(data['min_withdrawal'], 1000.0),
+        minRefund: _toDouble(data['min_withdrawal'], 1000.0),
         gstRate: _toDouble(data['gst_rate'], 3.0),
         globalDiscount: _toDouble(data['global_discount_percent'], 0.0),
+        makingCharge: _toDouble(data['making_charge_percent'], 0.0),
+        makingGst: _toDouble(data['gst_on_making_percent'], 0.0),
         deliveryDays: (data['delivery_days'] as num?)?.toInt() ?? 7,
         isLoading: false,
       );

@@ -8,7 +8,7 @@ import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/shimmer_loader.dart';
 import '../../../widgets/gold_button.dart';
-import '../../wallet/providers/wallet_provider.dart';
+import '../../credits/providers/credits_provider.dart';
 
 class TransactionsScreen extends ConsumerStatefulWidget {
   const TransactionsScreen({super.key});
@@ -22,7 +22,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(walletProvider.notifier).loadWalletDetails();
+      ref.read(creditsProvider.notifier).loadCreditDetails();
     });
   }
 
@@ -36,8 +36,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         return Icons.sell_rounded;
       case 'refund':
         return Icons.replay_rounded;
-      case 'withdrawal':
-        return Icons.account_balance_rounded;
       default:
         return Icons.receipt_long;
     }
@@ -53,8 +51,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
         return AppColors.success;
       case 'refund':
         return AppColors.warning;
-      case 'withdrawal':
-        return AppColors.error;
       default:
         return AppColors.grey;
     }
@@ -62,9 +58,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final walletState = ref.watch(walletProvider);
-    final transactions = walletState.transactions;
-    final isLoading = walletState.isLoading;
+    final creditsState = ref.watch(creditsProvider);
+    final transactions = creditsState.transactions;
+    final isLoading = creditsState.isLoading;
 
     return Scaffold(
       backgroundColor: AppColors.deepBlack,
@@ -80,7 +76,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                   child: ShimmerLoader.orderCard(),
                 ),
               ) 
-            : walletState.error != null
+            : creditsState.error != null
                 ? Center(
                     child: Padding(
                       padding: const EdgeInsets.all(32.0),
@@ -95,14 +91,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            walletState.error!,
+                            creditsState.error!,
                             textAlign: TextAlign.center,
                             style: AppTextStyles.caption.copyWith(color: AppColors.grey),
                           ),
                           const SizedBox(height: 24),
                           GoldButton(
                             text: 'RETRY',
-                            onPressed: () => ref.read(walletProvider.notifier).loadWalletDetails(),
+                            onPressed: () => ref.read(creditsProvider.notifier).loadCreditDetails(),
                           ),
                         ],
                       ),
@@ -122,7 +118,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
                     ),
                   )
                 : RefreshIndicator(
-                    onRefresh: () => ref.read(walletProvider.notifier).loadWalletDetails(),
+                    onRefresh: () => ref.read(creditsProvider.notifier).loadCreditDetails(),
                     color: AppColors.royalGold,
                     backgroundColor: AppColors.cardDark,
                     child: ListView.builder(

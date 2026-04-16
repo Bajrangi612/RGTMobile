@@ -16,7 +16,7 @@ class UserModel {
   final String? aadharNo;
   final String? panNo;
   final String? dob;
-  final WalletModel? wallet;
+  final CreditsModel? credits;
 
   final String? bankAccountNo;
   final String? bankHolderName;
@@ -45,7 +45,7 @@ class UserModel {
     this.aadharNo,
     this.panNo,
     this.dob,
-    this.wallet,
+    this.credits,
     this.bankAccountNo,
     this.bankHolderName,
     this.bankIfsc,
@@ -75,7 +75,7 @@ class UserModel {
       aadharNo: json['aadharNo'],
       panNo: json['panNo'],
       dob: json['dob']?.toString(),
-      wallet: json['wallet'] != null ? WalletModel.fromJson(json['wallet']) : null,
+      credits: json['wallet'] != null ? CreditsModel.fromJson(json['wallet']) : null,
       bankAccountNo: json['bankAccountNo'],
       bankHolderName: json['bankHolderName'],
       bankIfsc: json['bankIfsc'],
@@ -105,7 +105,7 @@ class UserModel {
         'aadharNo': aadharNo,
         'panNo': panNo,
         'dob': dob,
-        'wallet': wallet?.toJson(),
+        'wallet': credits?.toJson(),
         'bankAccountNo': bankAccountNo,
         'bankHolderName': bankHolderName,
         'bankIfsc': bankIfsc,
@@ -134,7 +134,7 @@ class UserModel {
     String? aadharNo,
     String? panNo,
     String? dob,
-    WalletModel? wallet,
+    CreditsModel? credits,
     String? bankAccountNo,
     String? bankHolderName,
     String? bankIfsc,
@@ -161,7 +161,7 @@ class UserModel {
       aadharNo: aadharNo ?? this.aadharNo,
       panNo: panNo ?? this.panNo,
       dob: dob ?? this.dob,
-      wallet: wallet ?? this.wallet,
+      credits: credits ?? this.credits,
       bankAccountNo: bankAccountNo ?? this.bankAccountNo,
       bankHolderName: bankHolderName ?? this.bankHolderName,
       bankIfsc: bankIfsc ?? this.bankIfsc,
@@ -181,15 +181,15 @@ class UserModel {
 
 }
 
-class WalletModel {
+class CreditsModel {
   final double balance;
 
-  WalletModel({
+  CreditsModel({
     required this.balance,
   });
 
-  factory WalletModel.fromJson(Map<String, dynamic> json) {
-    return WalletModel(
+  factory CreditsModel.fromJson(Map<String, dynamic> json) {
+    return CreditsModel(
       balance: _toDouble(json['balance']),
     );
   }

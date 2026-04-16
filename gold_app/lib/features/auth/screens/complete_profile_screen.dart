@@ -107,7 +107,7 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
                 
                 Center(
                   child: Text(
-                    'Please tell us your name to personalize\nyour Royal Gold experience.',
+                    'Please tell us your name to personalize\nyour RGT experience.',
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyMedium.copyWith(color: AppColors.grey),
                   ),

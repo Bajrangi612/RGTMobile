@@ -14,7 +14,7 @@ import '../../../widgets/bottom_nav_bar.dart';
 import '../../auth/screens/login_screen.dart';
 import '../providers/home_provider.dart';
 import '../../order/providers/order_provider.dart';
-import '../../wallet/providers/wallet_provider.dart';
+import '../../credits/providers/credits_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../product/screens/product_detail_screen.dart';
 import '../../product/screens/catalog_screen.dart';
@@ -27,9 +27,12 @@ import '../../notifications/screens/transactions_screen.dart';
 import '../../notifications/screens/notification_screen.dart';
 import '../../notifications/presentation/providers/notification_provider.dart';
 import '../../order/screens/sell_back_screen.dart';
-import '../../wallet/screens/wallet_screen.dart';
+import '../../credits/screens/credits_screen.dart';
+import '../../../widgets/offer_popup.dart';
+import '../../../widgets/live_countdown.dart';
+import '../../../core/providers/settings_provider.dart';
 import '../../admin/screens/admin_gold_price_screen.dart';
-import '../../admin/screens/admin_withdrawal_manager_screen.dart';
+import '../../admin/screens/admin_refund_manager_screen.dart';
 import '../../admin/screens/admin_buyback_manager_screen.dart';
 import '../../../core/providers/navigation_provider.dart';
 import '../../../widgets/offer_popup.dart';
@@ -62,7 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref.read(homeProvider.notifier).loadDashboard();
       
       if (!_hasShownOffer) {
-        Future.delayed(const Duration(seconds: 1), () {
+        Future.delayed(const Duration(seconds: 10), () {
           if (mounted) {
             showDialog(
               context: context,
@@ -85,8 +88,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ref.read(orderProvider.notifier).loadOrders();
         break;
       case 2:
-        ref.read(walletProvider.notifier).loadWalletDetails();
-        ref.read(walletProvider.notifier).loadWithdrawalHistory();
+        ref.read(creditsProvider.notifier).loadCreditDetails();
+        ref.read(creditsProvider.notifier).loadRefundHistory();
         ref.read(authProvider.notifier).getCurrentUser();
         break;
       case 3:
@@ -175,11 +178,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Text('ADMINISTRATIVE CONTROL', style: AppTextStyles.caption.copyWith(color: AppColors.royalGold, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
               ),
               ListTile(
-                leading: Icon(Icons.account_balance_wallet_rounded, color: AppColors.royalGold),
-                title: Text('Withdrawal Requests', style: AppTextStyles.bodyMedium),
+                title: Text('Refund Requests', style: AppTextStyles.bodyMedium),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminWithdrawalManagerScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminRefundManagerScreen()));
                 },
               ),
               ListTile(
@@ -397,14 +399,20 @@ class _HomeDashboard extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: _GoldPriceCard(
-                    price: homeState.goldPrice,
-                    change: homeState.priceChange,
-                    history: homeState.priceHistory,
-                    isLoading: homeState.isLoading,
-                    isAdmin: authState.user?.isAdmin ?? false,
-                    onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
-                  ),
+                  child: Consumer(
+                  builder: (context, ref, _) {
+                    final settings = ref.watch(settingsProvider);
+                    return _GoldPriceCard(
+                      price: homeState.goldPrice,
+                      change: homeState.priceChange,
+                      history: homeState.priceHistory,
+                      isLoading: homeState.isLoading,
+                      discount: settings.globalDiscount,
+                      isAdmin: authState.user?.isAdmin ?? false,
+                      onRefresh: () => ref.read(homeProvider.notifier).refreshPrice(),
+                    );
+                  },
+                ),
                 ),
               ),
   
@@ -563,13 +571,13 @@ class _HomeDashboard extends ConsumerWidget {
 }
 }
 
-// Portfolio/Balance Card Widget
-class _PortfolioCard extends StatelessWidget {
+// Account Credits/Collection Card Widget
+class _AccountOverviewCard extends StatelessWidget {
   final double holdings;
   final double value;
   final bool isLoading;
 
-  const _PortfolioCard({
+  const _AccountOverviewCard({
     required this.holdings,
     required this.value,
     required this.isLoading,
@@ -681,8 +689,8 @@ class _PortfolioCard extends StatelessWidget {
 
 
 
-// Asset Allocation Card (Modern Donul)
-class _AssetAllocationCard extends ConsumerWidget {
+// Collection Summary Card (Modern Donul)
+class _CollectionSummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
@@ -699,7 +707,7 @@ class _AssetAllocationCard extends ConsumerWidget {
             children: [
               Icon(Icons.pie_chart_outline_rounded, color: AppColors.royalGold, size: 16),
               const SizedBox(width: 8),
-              Text('Asset Allocation', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey, fontWeight: FontWeight.bold)),
+              Text('Collection Summary', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 20),
@@ -730,13 +738,13 @@ class _AssetAllocationCard extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           _AllocationLabel(
-            label: 'Physical Holdings', 
+            label: 'My Collection', 
             value: total > 0 ? '70%' : '0%', 
             color: AppColors.royalGold
           ),
           const SizedBox(height: 8),
           _AllocationLabel(
-            label: 'Vault Reserves', 
+            label: 'Stored Items', 
             value: total > 0 ? '30%' : '0%', 
             color: AppColors.royalGold.withValues(alpha: 0.3)
           ),
@@ -771,6 +779,7 @@ class _AllocationLabel extends StatelessWidget {
 class _GoldPriceCard extends StatelessWidget {
   final double price;
   final double change;
+  final double discount;
   final List<double> history;
   final bool isLoading;
   final bool isAdmin;
@@ -779,6 +788,7 @@ class _GoldPriceCard extends StatelessWidget {
   const _GoldPriceCard({
     required this.price,
     required this.change,
+    required this.discount,
     required this.history,
     required this.isLoading,
     this.isAdmin = false,
@@ -788,13 +798,15 @@ class _GoldPriceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUp = change >= 0;
+    final ourPrice = price * (1 - (discount / 100));
+    
     return GoldCard(
       isVibrant: false,
-      blurSigma: 30,
+      blurSigma: 20,
       gradient: LinearGradient(
         colors: [
-          AppColors.surface,
-          (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.05),
+          AppColors.surface.withValues(alpha: 0.7),
+          AppColors.deepBlack.withValues(alpha: 0.9),
         ],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -807,52 +819,179 @@ class _GoldPriceCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(Icons.query_stats_rounded, color: AppColors.royalGold, size: 16),
-                  const SizedBox(width: 8),
-                  Text('Market Statistics', style: AppTextStyles.labelMedium.copyWith(color: AppColors.grey, fontWeight: FontWeight.bold)),
-                ],
-              ),
+              // Premium Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: AppColors.goldGradient,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(color: AppColors.royalGold.withValues(alpha: 0.2), blurRadius: 8),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    Icon(isUp ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded, color: isUp ? AppColors.success : AppColors.error, size: 12),
+                    Icon(Icons.stars_rounded, color: AppColors.deepBlack, size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      'EXCLUSIVE MEMBER SAVINGS',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.deepBlack, 
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Market Change
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(isUp ? Icons.trending_up_rounded : Icons.trending_down_rounded, 
+                      color: isUp ? AppColors.success : AppColors.error, size: 12),
                     const SizedBox(width: 4),
                     Text(
                       '${isUp ? '+' : ''}${change.toStringAsFixed(1)}%',
-                      style: AppTextStyles.caption.copyWith(color: isUp ? AppColors.success : AppColors.error, fontWeight: FontWeight.bold),
+                      style: AppTextStyles.caption.copyWith(
+                        color: isUp ? AppColors.success : AppColors.error, 
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Text(
-            Formatters.currency(price),
-            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w900, color: AppColors.pureWhite, fontSize: 32),
-          ),
-          Text(
-            'Live Per Gram Rate (24K)',
-            style: AppTextStyles.caption.copyWith(color: AppColors.grey, letterSpacing: 1),
-          ),
+          
           const SizedBox(height: 28),
-          // Sparkline Placeholder
-          SizedBox(
-            height: 50,
-            width: double.infinity,
-            child: CustomPaint(
-              painter: _SparklinePainter(
-                data: history,
-                color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.3),
+          
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Our Price (Main Focus)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'YOUR BUY PRICE',
+                      style: AppTextStyles.labelSmall.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold, letterSpacing: 1),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          Formatters.currency(ourPrice),
+                          style: AppTextStyles.h2.copyWith(
+                            fontWeight: FontWeight.w900, 
+                            color: AppColors.pureWhite, 
+                            fontSize: 34,
+                            letterSpacing: -1,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(Incl. GST)',
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.royalGold.withValues(alpha: 0.6), 
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+              
+              // Market Price Comparison
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'MARKET RATE',
+                    style: AppTextStyles.labelSmall.copyWith(color: AppColors.grey, letterSpacing: 1),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    Formatters.currency(price),
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      decoration: TextDecoration.lineThrough,
+                      color: AppColors.grey.withValues(alpha: 0.6),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'SAVE ${discount.toStringAsFixed(1)}%',
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.success, 
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Subtle Live Indicator
+          Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: AppColors.success,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(color: AppColors.success.withValues(alpha: 0.5), blurRadius: 4),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'LIVE 24K MARKET UPDATE',
+                style: AppTextStyles.caption.copyWith(
+                  fontSize: 9, 
+                  fontWeight: FontWeight.bold, 
+                  color: AppColors.grey.withValues(alpha: 0.7),
+                  letterSpacing: 1,
+                ),
+              ),
+              const Spacer(),
+              // Mini Sparkline
+              SizedBox(
+                width: 80,
+                height: 20,
+                child: CustomPaint(
+                  painter: _SparklinePainter(
+                    data: history,
+                    color: (isUp ? AppColors.success : AppColors.error).withValues(alpha: 0.5),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -1043,18 +1182,58 @@ class _ProductCard extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (product.pricing != null)
-                            Text(
-                              Formatters.currency(product.pricing!.marketPrice),
-                              style: AppTextStyles.caption.copyWith(
-                                decoration: TextDecoration.lineThrough,
-                                fontSize: 10,
-                                color: AppColors.grey.withValues(alpha: 0.5),
-                              ),
+                          if (product.pricing != null) ...[
+                            Row(
+                              children: [
+                                Text(
+                                  Formatters.currency(product.pricing!.marketPrice),
+                                  style: AppTextStyles.caption.copyWith(
+                                    decoration: TextDecoration.lineThrough,
+                                    fontSize: 9,
+                                    color: AppColors.grey.withValues(alpha: 0.4),
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '-${product.pricing!.discountPercent.toStringAsFixed(0)}%',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.success, 
+                                      fontSize: 7, 
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          Text(
-                            Formatters.currency(product.price),
-                            style: AppTextStyles.priceTag.copyWith(fontSize: 16),
+                            const SizedBox(height: 2),
+                          ],
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                Formatters.currency(product.price),
+                                style: AppTextStyles.priceTag.copyWith(
+                                  fontSize: 16,
+                                  color: AppColors.royalGold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Incl. Tax',
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: 8,
+                                  color: AppColors.grey.withValues(alpha: 0.5),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -1111,15 +1290,28 @@ class _PromoBanner extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(
-                    'FESTIVE OFFER',
-                    style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.timer_outlined, color: Colors.white, size: 12),
+                      const SizedBox(width: 4),
+                      LiveCountdown(
+                        targetDate: DateTime.now().add(const Duration(days: 2)),
+                        style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 8),
-                Text(
-                  '0% Making\nCharges',
-                  style: AppTextStyles.h2.copyWith(height: 1.1),
+                const SizedBox(height: 8),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final settings = ref.watch(settingsProvider);
+                    final makingCharge = settings.makingCharge;
+                    return Text(
+                      '${makingCharge == 0 ? 'FREE' : '${makingCharge.toStringAsFixed(0)}%'} Making\nCharges',
+                      style: AppTextStyles.h2.copyWith(height: 1.1),
+                    );
+                  }
                 ),
               ],
             ),
@@ -1536,10 +1728,42 @@ class _EliteProductCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      Formatters.currency(product.price),
-                      style: AppTextStyles.labelLarge.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (product.pricing != null)
+                          Text(
+                            Formatters.currency(product.pricing!.marketPrice),
+                            style: AppTextStyles.caption.copyWith(
+                              decoration: TextDecoration.lineThrough,
+                              color: AppColors.grey.withValues(alpha: 0.5),
+                              fontSize: 10,
+                            ),
+                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                             Text(
+                              Formatters.currency(product.price),
+                              style: AppTextStyles.labelLarge.copyWith(
+                                color: AppColors.royalGold, 
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Incl. Tax',
+                              style: AppTextStyles.caption.copyWith(
+                                fontSize: 8,
+                                color: AppColors.grey.withValues(alpha: 0.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),

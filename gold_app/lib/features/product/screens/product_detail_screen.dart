@@ -228,9 +228,24 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                   children: [
                                     Text('Special Offer', style: AppTextStyles.labelSmall.copyWith(color: AppColors.success)),
                                     const SizedBox(height: 4),
-                                    Text(
-                                      Formatters.currency(pricing.discountedGoldValue),
-                                      style: AppTextStyles.priceTag.copyWith(fontSize: 32),
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text(
+                                          Formatters.currency(pricing.discountedGoldValue),
+                                          style: AppTextStyles.priceTag.copyWith(fontSize: 32),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Incl. Tax',
+                                          style: AppTextStyles.caption.copyWith(
+                                            color: AppColors.grey.withValues(alpha: 0.5),
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -316,7 +331,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('Total Payable', style: AppTextStyles.h4),
+                              Text('Total Payable (Incl. Tax)', style: AppTextStyles.h4),
                               Text(
                                 Formatters.currency(totalAmount),
                                 style: AppTextStyles.goldPrice.copyWith(fontSize: 28),
@@ -451,8 +466,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                       height: 36,
                                       onPressed: () {
                                         Share.share(
-                                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: ${currentUser.referralCode} to earn ${Formatters.currency(ref.read(settingsProvider).referralReward)} cashback per gram on your first order. Download now!',
-                                          subject: 'Royal Gold Store Invitation',
+                                          'Join RGT and start buying 24K pure gold! Use my referral code: ${currentUser.referralCode} to earn ${Formatters.currency(ref.read(settingsProvider).referralReward)} cashback per gram on your first order. Download now!',
+                                          subject: 'RGT Invitation',
                                         );
                                       },
                                     ),

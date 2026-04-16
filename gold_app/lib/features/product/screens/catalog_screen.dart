@@ -422,18 +422,58 @@ class _CatalogProductCard extends ConsumerWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (pricing != null)
-                            Text(
-                              Formatters.currency(pricing.marketPrice),
-                              style: AppTextStyles.caption.copyWith(
-                                decoration: TextDecoration.lineThrough,
-                                color: Colors.white24,
-                                fontSize: 10,
-                              ),
+                          if (pricing != null) ...[
+                            Row(
+                              children: [
+                                Text(
+                                  Formatters.currency(pricing.marketPrice),
+                                  style: AppTextStyles.caption.copyWith(
+                                    decoration: TextDecoration.lineThrough,
+                                    color: Colors.white24,
+                                    fontSize: 9,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '-${pricing.discountPercent.toStringAsFixed(0)}%',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.success, 
+                                      fontSize: 7, 
+                                      fontWeight: FontWeight.bold
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          Text(
-                            Formatters.currency(pricing?.total ?? 0),
-                            style: AppTextStyles.priceTag.copyWith(fontSize: 16),
+                            const SizedBox(height: 2),
+                          ],
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                Formatters.currency(pricing?.total ?? 0),
+                                style: AppTextStyles.priceTag.copyWith(
+                                  fontSize: 16,
+                                  color: AppColors.royalGold,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Incl. Tax',
+                                style: AppTextStyles.caption.copyWith(
+                                  fontSize: 8,
+                                  color: AppColors.grey.withValues(alpha: 0.5),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),

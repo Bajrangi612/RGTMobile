@@ -68,7 +68,4 @@ app.listen(port, () => {
 
   // Start daily morning notifications (09:00 AM IST)
   DailyNotificationJob.start();
-
-  // Send system startup notification
-  DailyNotificationJob.sendSystemStartupNotification();
 });

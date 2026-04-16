@@ -45,35 +45,35 @@ class LegalPolicyScreen extends StatelessWidget {
 
   static const String termsContent = '''
 1. Acceptance of Terms
-By accessing and using Royal Gold, you agree to be bound by these Terms of Service. These terms govern your use of our platform, including gold purchases, storage, and re-selling services.
+By accessing RGT, you agree to these Patron Terms of Use. These terms govern your retail purchase and pickup of physical 24K gold coins through our official platform.
 
-2. Account Registration
-You must be at least 18 years old to create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
+2. User Verification
+To ensure a secure shopping environment, patrons must complete account verification using valid identity documents. RGT reserves the right to authenticate accounts before facilitating high-value retail purchases.
 
-3. Gold Transactions
-All gold prices on our platform are live and based on prevailing market rates. Once a transaction is confirmed, it cannot be cancelled due to the high volatility of the commodity market.
+3. Retail Purchases
+All gold prices on the platform are live retail rates. Given the dynamic nature of physical gold markets, confirmed retail orders are final. Purchases are for physical assets only and does not constitute any form of financial instrument or investment.
 
-4. KYC Requirements
-Under regulatory compliance, users must complete Aadhaar KYC and link a valid bank account for transactions exceeding certain limits. We reserve the right to suspend accounts that fail verification.
+4. Fulfillment & Pickup
+RGT operates on a "Store Pickup" model. All purchased coins must be collected personally from an authorized RGT Office. Patrons must present a valid ID and purchase confirmation at the time of pickup.
 
-5. Compliance
-Royal Gold complies with local financial regulations and tax laws. Any fraudulent activity or misuse of the platform will result in immediate account termination and legal action.
+5. Platform Compliance
+RGT complies with retail commerce regulations and local tax laws (GST). Any attempt to misuse the platform for unauthorized purposes will result in immediate account termination.
 ''';
 
   static const String privacyContent = '''
-1. Data Collection
-We collect personal information such as your name, phone number, and KYC details (Aadhaar/PAN) to facilitate gold trading and comply with regulatory requirements.
+1. Identity Stewardship
+We collect personal information such as your name, phone number, and identity documentation solely to verify patrons and fulfill physical retail orders at our RGT Offices.
 
-2. Use of Information
-Your data is used to verify your identity, process transactions, prevent fraud, and provide customer support. We do not sell your personal data to third parties.
+2. Data Usage
+Your information is used to authenticate your account, prevent retail fraud, and generate digital invoices. We do not sell or lease your identity information to third parties.
 
-3. Data Security
-We implement industry-standard encryption and security protocols (SSL/TLS) to protect your sensitive information from unauthorized access or disclosure.
+3. Security Protocol
+We implement industry-standard AES-256 encryption to protect your identity documents. Sensitive data is stored in isolated environments strictly for record-keeping and auditing purposes.
 
-4. Biometric Data
-If you enable Passkey, your biometric data (FaceID/Fingerprint) stays securely on your device and is never uploaded to our servers.
+4. Biometric Protection
+If you enable biometric login, your data (FaceID/Fingerprint) stays exclusively on your secure device hardware. RGT never transmits, stores, or accesses your biometric data on its servers.
 
-5. Third Party Services
-We may share necessary data with banking partners and payment gateways to process your payments securely.
+5. Verified Partners
+We share necessary information with PCI-DSS compliant payment processing partners (Razorpay/Cashfree) to facilitate secure retail transactions.
 ''';
 }

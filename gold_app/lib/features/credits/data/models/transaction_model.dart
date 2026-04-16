@@ -3,7 +3,7 @@ import 'package:gold_app/core/utils/formatters.dart';
 class TransactionModel {
   final String id;
   final String userId;
-  final String type; // 'PURCHASE', 'REFERRAL', 'resell', 'refund', 'WITHDRAWAL'
+  final String type; // 'PURCHASE', 'REFERRAL', 'resell', 'refund'
   final double amount;
   final String status;
   final String description;

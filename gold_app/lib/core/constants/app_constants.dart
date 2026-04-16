@@ -1,8 +1,9 @@
 class AppConstants {
   static const String tokenKey = 'auth_token';
   static const String userDataKey = 'user_data';
+  static const String priceDataKey = 'gold_price_data';
   static const String currencySymbol = '₹';
-  static const String appName = 'Royal Gold';
+  static const String appName = 'RGT';
   
   // Auth Config
   static const int otpResendSeconds = 30;

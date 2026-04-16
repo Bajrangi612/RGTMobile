@@ -10,7 +10,7 @@ import '../../../core/utils/extensions.dart';
 import '../../../widgets/gold_button.dart';
 import '../../../widgets/gold_card.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../wallet/providers/wallet_provider.dart';
+import '../../credits/providers/credits_provider.dart';
 import '../../../widgets/shimmer_loader.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -21,12 +21,12 @@ class ReferralScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authProvider).user;
-    final walletState = ref.watch(walletProvider);
+    final creditsState = ref.watch(creditsProvider);
     final settings = ref.watch(settingsProvider);
     final referralCode = user?.referralCode ?? '----';
 
     // Filter for referral transactions
-    final referralTransactions = walletState.transactions
+    final referralTransactions = creditsState.refundRequests
         .where(
           (t) =>
               t.type.toLowerCase() == 'referral' ||
@@ -151,8 +151,8 @@ class ReferralScreen extends ConsumerWidget {
                       text: 'Share via WhatsApp',
                       onPressed: () {
                         Share.share(
-                          'Join Royal Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ${Formatters.currency(settings.referralReward)} cashback per gram on your first order. Download now!',
-                          subject: 'Royal Gold Store Invitation',
+                          'Join RGT Gold and start buying 24K pure gold! Use my referral code: $referralCode to earn ${Formatters.currency(settings.referralReward)} credits per gram on your first order. Download now!',
+                          subject: 'RGT Gold Store Invitation',
                         );
                       },
                       icon: Icons.share,
@@ -172,8 +172,8 @@ class ReferralScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Text(
-                            (user?.wallet?.balance ?? 0.0) > 0
-                                ? (user!.wallet!.balance / 500)
+                            (user?.credits?.balance ?? 0.0) > 0
+                                ? (user!.credits!.balance / 500)
                                       .toInt()
                                       .toString()
                                 : '0',
@@ -194,13 +194,13 @@ class ReferralScreen extends ConsumerWidget {
                       child: Column(
                         children: [
                           Text(
-                            Formatters.currency(user?.wallet?.balance ?? 0.0),
+                            Formatters.currency(user?.credits?.balance ?? 0.0),
                             style: AppTextStyles.h2.copyWith(
                               color: AppColors.success,
                             ),
                           ),
                           SizedBox(height: 4),
-                          Text('Account Balance', style: AppTextStyles.caption),
+                          Text('Account Credits', style: AppTextStyles.caption),
                         ],
                       ),
                     ),
@@ -210,16 +210,16 @@ class ReferralScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              // Withdrawal Action
+              // Refund Action
               GoldButton(
-                text: 'Withdraw Rewards',
+                text: 'Refund Credits',
                 isOutlined: true,
                 icon: Icons.payments_rounded,
-                onPressed: () => _showWithdrawDialog(
+                onPressed: () => _showRefundDialog(
                   context,
                   ref,
-                  user?.wallet?.balance ?? 0.0,
-                  settings.minWithdrawal,
+                  user?.credits?.balance ?? 0.0,
+                  settings.minRefund,
                 ),
               ).animate(delay: 450.ms).fadeIn(),
 
@@ -240,7 +240,7 @@ class ReferralScreen extends ConsumerWidget {
                 ...referralTransactions.map((txn) => _RewardTile(txn: txn)),
               ],
 
-              if (walletState.withdrawalRequests.isNotEmpty) ...[
+              if (creditsState.refundRequests.isNotEmpty) ...[
                 const SizedBox(height: 32),
                 Row(
                   children: [
@@ -250,12 +250,12 @@ class ReferralScreen extends ConsumerWidget {
                       size: 18,
                     ),
                     const SizedBox(width: 8),
-                    Text('Withdrawal History', style: AppTextStyles.labelLarge),
+                    Text('Refund History', style: AppTextStyles.labelLarge),
                   ],
                 ),
                 const SizedBox(height: 16),
-                ...walletState.withdrawalRequests.map(
-                  (req) => _WithdrawalTile(req: req),
+                ...creditsState.refundRequests.map(
+                  (req) => _RefundTile(req: req),
                 ),
               ],
 
@@ -283,7 +283,7 @@ class ReferralScreen extends ConsumerWidget {
                     ),
                     _HowItWorksStep(
                       number: '4',
-                      text: 'Withdraw your rewards to bank account anytime',
+                      text: 'Refund your credits to bank account anytime',
                       isLast: true,
                     ),
                   ],
@@ -299,7 +299,7 @@ class ReferralScreen extends ConsumerWidget {
     );
   }
 
-  void _showWithdrawDialog(
+  void _showRefundDialog(
     BuildContext context,
     WidgetRef ref,
     double balance,
@@ -314,13 +314,13 @@ class ReferralScreen extends ConsumerWidget {
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
         ),
-        title: Text('Withdraw Rewards', style: AppTextStyles.h4),
+        title: Text('Refund Request', style: AppTextStyles.h4),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Available Reward: ${Formatters.currency(balance)}',
+              'Available: ${Formatters.currency(balance)}',
               style: AppTextStyles.caption.copyWith(color: AppColors.royalGold),
             ),
             const SizedBox(height: 16),
@@ -336,7 +336,7 @@ class ReferralScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Minimum withdrawal: ${Formatters.currency(minAmount)}',
+              'Minimum refund: ${Formatters.currency(minAmount)}',
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.grey,
                 fontSize: 10,
@@ -357,7 +357,7 @@ class ReferralScreen extends ConsumerWidget {
               final amount = double.tryParse(amountStr) ?? 0.0;
               if (amount < minAmount) {
                 context.showErrorSnackBar(
-                  'Minimum withdrawal is ${Formatters.currency(minAmount)}',
+                  'Minimum refund is ${Formatters.currency(minAmount)}',
                 );
                 return;
               }
@@ -367,13 +367,13 @@ class ReferralScreen extends ConsumerWidget {
               }
 
               final success = await ref
-                  .read(walletProvider.notifier)
-                  .requestWithdrawal(amount);
+                  .read(creditsProvider.notifier)
+                  .requestRefund(amount);
               if (context.mounted) {
                 Navigator.pop(context);
                 if (success) {
                   context.showSuccessSnackBar(
-                    'Withdrawal request submitted successfully!',
+                    'Refund request submitted successfully!',
                   );
                 }
               }
@@ -437,9 +437,9 @@ class _HowItWorksStep extends StatelessWidget {
   }
 }
 
-class _WithdrawalTile extends StatelessWidget {
+class _RefundTile extends StatelessWidget {
   final dynamic req;
-  const _WithdrawalTile({required this.req});
+  const _RefundTile({required this.req});
 
   @override
   Widget build(BuildContext context) {
@@ -465,7 +465,7 @@ class _WithdrawalTile extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons.account_balance_wallet_rounded,
+              Icons.receipt_long_outlined,
               color: color,
               size: 20,
             ),
@@ -475,7 +475,7 @@ class _WithdrawalTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Withdrawal Request', style: AppTextStyles.bodyMedium),
+                Text('Refund Request', style: AppTextStyles.bodyMedium),
                 const SizedBox(height: 2),
                 Text(
                   Formatters.relativeTime(

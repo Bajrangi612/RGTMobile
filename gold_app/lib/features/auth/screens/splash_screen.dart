@@ -100,22 +100,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 
                 // Shimmering Title Text
                 Text(
-                  'ROYAL GOLD',
-                  style: AppTextStyles.h1.copyWith(
-                    color: AppColors.royalGold,
-                    letterSpacing: 10,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 1000.ms)
-                .slideY(begin: 0.1, end: 0)
-                .shimmer(
-                  delay: 1500.ms,
-                  duration: 3000.ms,
-                  color: Colors.white24,
+                'RGT',
+                style: AppTextStyles.h1.copyWith(
+                  color: AppColors.royalGold,
+                  fontSize: 48,
+                  letterSpacing: 8,
                 ),
+              ).animate().fadeIn(duration: 800.ms).slideY(begin: 0.2),
+              const SizedBox(height: 8),
+              Text(
+                'PRECISION QUALITY',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.pureWhite.withValues(alpha: 0.4),
+                  letterSpacing: 4,
+                ),
+              ).animate(delay: 400.ms).fadeIn(),
                 
                 const SizedBox(height: 50),
                 

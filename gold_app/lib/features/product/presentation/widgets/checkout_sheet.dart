@@ -185,7 +185,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
         var options = {
           'key': AppConstants.razorpayKeyId,
           'amount': (purchaseData['amount'] * 100).round(), // amount in paise
-          'name': 'Royal Gold',
+          'name': 'RGT Gold',
           'description': '${_quantity}x ${widget.product.name}',
           'order_id': purchaseData['razorpayOrderId'], // Provide Razorpay Order ID from backend
           'prefill': {
@@ -375,7 +375,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
                 
                 _PriceDetail(
                   icon: Icons.local_offer_rounded,
-                  label: 'Portfolio Discount', 
+                  label: 'Collection Discount', 
                   value: '- ${Formatters.currency(pricing.discountAmount * _quantity)}',
                   valueColor: Colors.greenAccent,
                   helperText: 'Special Reward: ${pricing.discountPercent}% OFF',
@@ -409,7 +409,7 @@ class _CheckoutSheetState extends ConsumerState<CheckoutSheet> {
 
                 _PriceDetail(
                   icon: Icons.payments_rounded,
-                  label: 'Final Total Payable', 
+                  label: 'Final Total Payable (Incl. Tax)', 
                   value: Formatters.currency(totalAmount), 
                   isTotal: true,
                 ).animate().fadeIn(delay: 1000.ms).shimmer(duration: 2.seconds, color: Colors.white24),

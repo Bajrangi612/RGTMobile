@@ -65,7 +65,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
                 widget.onlyEligible 
-                  ? 'Select an item to sell back to Royal Gold'
+                  ? 'Select an item to sell back to RGT'
                   : 'Track and manage your gold orders',
                 style: AppTextStyles.bodySmall,
               ),

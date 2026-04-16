@@ -22,13 +22,21 @@ import 'package:path_provider/path_provider.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class OrderDetailScreen extends ConsumerWidget {
+class OrderDetailScreen extends ConsumerStatefulWidget {
   final OrderModel order;
 
-  OrderDetailScreen({super.key, required this.order});
+  const OrderDetailScreen({super.key, required this.order});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
+  bool _showBillDetails = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final order = widget.order;
     return Scaffold(
       backgroundColor: AppColors.deepBlack,
       appBar: GoldAppBar(title: 'Order Details'),
@@ -42,82 +50,137 @@ class OrderDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Order Header
+                    // Redesigned Order Header (Total Centric)
                     GoldCard(
                       hasGoldBorder: true,
+                      hasGlow: true,
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.03),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                            ),
-                            child: Column(
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                     Column(
-                                       crossAxisAlignment: CrossAxisAlignment.start,
-                                       children: [
-                                         Text(
-                                           'PRICING BREAKDOWN', 
-                                           style: AppTextStyles.labelMedium.copyWith(
-                                             color: AppColors.royalGold,
-                                             letterSpacing: 1.5,
-                                             fontWeight: FontWeight.bold,
-                                           )
-                                         ),
-                                         const SizedBox(height: 4),
-                                         Text('Precision Audit Values', style: AppTextStyles.caption.copyWith(fontSize: 10, color: AppColors.grey)),
-                                       ],
-                                     ),
-                                     StatusBadge(status: order.statusType),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                                _DetailRow(
-                                  label: 'Market Gold Value', 
-                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingMarket'] ?? '0') ?? 0),
-                                  icon: Icons.show_chart_rounded,
-                                ),
-                                _DetailRow(
-                                  label: 'Portfolio Discount', 
-                                  value: '- ${Formatters.currency(double.tryParse(order.pricingNotes['pricingDiscount'] ?? '0') ?? 0)}',
-                                  icon: Icons.local_offer_rounded,
-                                  valueColor: Colors.greenAccent,
-                                ),
-                                _DetailRow(
-                                  label: 'Gold GST (IGST/CGST)', 
-                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingGoldGst'] ?? '0') ?? 0),
-                                  icon: Icons.account_balance_rounded,
-                                ),
-                                _DetailRow(
-                                  label: 'Making Charge', 
-                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingMaking'] ?? '0') ?? 0),
-                                  icon: Icons.architecture_rounded,
-                                ),
-                                _DetailRow(
-                                  label: 'GST on Making', 
-                                  value: Formatters.currency(double.tryParse(order.pricingNotes['pricingMakingGst'] ?? '0') ?? 0),
-                                  icon: Icons.receipt_long_rounded,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                  child: Divider(color: AppColors.grey.withValues(alpha: 0.2), height: 1),
-                                ),
-                                _DetailRow(
-                                  label: 'Final Payable Total', 
-                                  value: Formatters.currency(order.totalPrice), 
-                                  isBold: true,
-                                  icon: Icons.payments_rounded,
+                                StatusBadge(status: order.statusType),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'TOTAL PAID AMOUNT',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.grey,
+                              letterSpacing: 2,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            Formatters.currency(order.totalPrice),
+                            style: AppTextStyles.goldPrice.copyWith(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              shadows: [
+                                Shadow(
+                                  color: AppColors.royalGold.withValues(alpha: 0.3),
+                                  blurRadius: 20,
                                 ),
                               ],
                             ),
-                          ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Inclusive of all taxes & charges',
+                            style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 24),
+                          
+                          // Toggle Breakdown Button
+                          InkWell(
+                            onTap: () => setState(() => _showBillDetails = ! _showBillDetails),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: AppColors.royalGold.withValues(alpha: 0.05),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: AppColors.royalGold.withValues(alpha: 0.2)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _showBillDetails ? 'Hide Bill Details' : 'View Bill Details',
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: AppColors.royalGold,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    _showBillDetails ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
+                                    color: AppColors.royalGold,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          if (_showBillDetails) ...[
+                            const SizedBox(height: 24),
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.02),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                              ),
+                              child: Column(
+                                children: [
+                                  _DetailRow(
+                                    label: 'Market Gold Value', 
+                                    value: Formatters.currency(order.marketPrice ?? 0),
+                                    icon: Icons.show_chart_rounded,
+                                  ),
+                                  _DetailRow(
+                                    label: 'Collection Discount', 
+                                    value: '- ${Formatters.currency(order.discountAmountAudit ?? 0)}',
+                                    icon: Icons.local_offer_rounded,
+                                    valueColor: Colors.greenAccent,
+                                  ),
+                                  _DetailRow(
+                                    label: 'Gold GST (3%)', 
+                                    value: Formatters.currency(order.goldGst ?? 0),
+                                    icon: Icons.account_balance_rounded,
+                                  ),
+                                  _DetailRow(
+                                    label: 'Making Charge', 
+                                    value: Formatters.currency(order.makingCharges ?? 0),
+                                    icon: Icons.architecture_rounded,
+                                  ),
+                                  _DetailRow(
+                                    label: 'GST on Making', 
+                                    value: Formatters.currency(order.makingGst ?? 0),
+                                    icon: Icons.receipt_long_rounded,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    child: Divider(color: Colors.white10, height: 1),
+                                  ),
+                                  _DetailRow(
+                                    label: 'Final Amount', 
+                                    value: Formatters.currency(order.totalPrice), 
+                                    isBold: true,
+                                    icon: Icons.payments_rounded,
+                                  ),
+                                ],
+                              ),
+                            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05),
+                          ],
+                        ],
+                      ),
+                    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.05),
                           const SizedBox(height: 24),
                           
                           // Technical Specs
@@ -126,9 +189,6 @@ class OrderDetailScreen extends ConsumerWidget {
                           _DetailRow(label: 'Transaction Date', value: DateFormat('dd MMM yyyy • HH:mm').format(order.createdAt), icon: Icons.calendar_today_rounded),
                           if (order.referralCode != null && order.referralCode!.isNotEmpty)
                             _DetailRow(label: 'Referral', value: order.referralCode!),
-                        ],
-                      ),
-                    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.05),
 
                     SizedBox(height: 16),
 
@@ -270,7 +330,7 @@ class OrderDetailScreen extends ConsumerWidget {
                               backgroundColor: AppColors.cardDark,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                               title: Text('Cancel Buyback?', style: AppTextStyles.h4),
-                              content: const Text('Do you want to cancel your sell-back request and keep your gold?'),
+                              content: const Text('Do you want to cancel your buyback request and keep your gold?'),
                               actions: [
                                 TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('NO')),
                                 GoldButton(text: 'YES, CANCEL', height: 36, onPressed: () => Navigator.pop(ctx, true)),
@@ -291,7 +351,7 @@ class OrderDetailScreen extends ConsumerWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: GoldButton(
-                        text: 'Sell Back Gold',
+                        text: 'RGT Buyback',
                         onPressed: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) =>  SellBackScreen(order: order),
@@ -320,7 +380,7 @@ class OrderDetailScreen extends ConsumerWidget {
                                   ),
                                   title: Text('Cancel Order?', style: AppTextStyles.h4),
                                   content: Text(
-                                    'This action cannot be undone. You will receive a full refund in your wallet.',
+                                    'This action cannot be undone. You will receive a full refund in your account credits.',
                                     style: AppTextStyles.bodyMedium,
                                   ),
                                   actions: [
@@ -392,13 +452,13 @@ class OrderDetailScreen extends ConsumerWidget {
   }
 
   List<_ProgressStepData> _getProgressSteps() {
-    final status = order.status.toUpperCase();
+    final status = widget.order.status.toUpperCase();
     final steps = <_ProgressStepData>[];
 
     // Always starts with Confirmed
     steps.add(_ProgressStepData(
       title: 'Confirmed',
-      subtitle: Formatters.date(order.createdAt.toIso8601String()),
+      subtitle: Formatters.date(widget.order.createdAt.toIso8601String()),
       isCompleted: true,
     ));
 

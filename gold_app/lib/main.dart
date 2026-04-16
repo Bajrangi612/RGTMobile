@@ -51,7 +51,7 @@ class RoyalGoldApp extends ConsumerWidget {
     AppColors.updatePalette(palette);
 
     return MaterialApp(
-      title: 'Royal Gold',
+      title: 'RGT',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       themeMode: ThemeMode.light,

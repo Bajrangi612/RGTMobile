@@ -23,6 +23,9 @@ class DailyNotificationJob {
     this.job = cron.schedule(schedule, async () => {
       console.log('🔔 [DailyJob] Triggering Gold Rate Alert...');
       await this.sendDailyRateNotification();
+    }, {
+      scheduled: true,
+      timezone: "Asia/Kolkata"
     });
   }
 

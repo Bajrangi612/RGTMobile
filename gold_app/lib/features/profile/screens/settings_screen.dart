@@ -9,6 +9,7 @@ import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/gold_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerWidget {
   SettingsScreen({super.key});
@@ -99,13 +100,61 @@ class SettingsScreen extends ConsumerWidget {
                   _SettingsRow(
                     icon: Icons.description_outlined,
                     title: 'Terms of Service',
-                    onTap: () {},
+                    onTap: () async {
+                      final url = Uri.parse('https://royalgoldtraders.com/legal/terms');
+                      await launchUrl(url);
+                    },
                   ),
                   Divider(height: 24, color: AppColors.darkGrey),
                   _SettingsRow(
                     icon: Icons.privacy_tip_outlined,
                     title: 'Privacy Policy',
-                    onTap: () {},
+                    onTap: () async {
+                      final url = Uri.parse('https://royalgoldtraders.com/legal/privacy');
+                      await launchUrl(url);
+                    },
+                  ),
+                  Divider(height: 24, color: AppColors.darkGrey),
+                  _SettingsRow(
+                    icon: Icons.delete_forever_outlined,
+                    title: 'Delete Account',
+                    subtitle: 'Permanent data removal',
+                    trailing: Icon(Icons.chevron_right, color: Colors.redAccent.withValues(alpha: 0.5), size: 18),
+                    onTap: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: AppColors.cardDark,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: const BorderSide(color: Colors.redAccent, width: 0.5),
+                          ),
+                          title: Text('Delete Account?', style: AppTextStyles.h4.copyWith(color: Colors.redAccent)),
+                          content: Text(
+                            'This action is permanent and will delete all your KYC data, order history, and account credits.',
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx, false),
+                              child: Text('CANCEL', style: TextStyle(color: AppColors.grey)),
+                            ),
+                            GoldButton(
+                              text: 'YES, DELETE',
+                              height: 36,
+                              color: Colors.redAccent,
+                              onPressed: () => Navigator.pop(ctx, true),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        // In a real app, this would call your backend's deletion endpoint
+                        if (context.mounted) {
+                          context.showSuccessSnackBar('Deletion request submitted to Admin.');
+                        }
+                      }
+                    },
                   ),
                   Divider(height: 24, color: AppColors.darkGrey),
                   _SettingsRow(

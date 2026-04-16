@@ -32,7 +32,7 @@ class InvoiceService {
 
     final bisLogo = await _loadAssetImage('assets/images/BIS.webp');
     final isoLogo = await _loadAssetImage('assets/images/ISO.webp');
-    final brandLogo = await _loadAssetImage('assets/images/Royal_Gold_Traders.webp');
+    final brandLogo = await _loadAssetImage('assets/images/RGT_Gold.webp');
     final stampLogo = await _loadAssetImage('assets/images/stamps_logo.webp');
 
     pdf.addPage(
@@ -88,8 +88,7 @@ class InvoiceService {
           pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Text('ROYAL GOLD', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-              pw.Text('TRADERS', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+              pw.Text('RGT GOLD', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
             ],
           ),
           pw.Row(
@@ -196,7 +195,7 @@ class InvoiceService {
             child: pw.Center(
               child: pw.BarcodeWidget(
                 barcode: pw.Barcode.qrCode(),
-                data: 'https://royalgold.app/verify/${order.id}',
+                data: 'https://rgtgold.app/verify/${order.id}',
                 width: 60,
                 height: 60,
               ),
@@ -452,7 +451,7 @@ class InvoiceService {
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      _bankRow('Account Name', 'ROYAL GOLD TRADERS'),
+                      _bankRow('Account Name', 'RGT GOLD'),
                       _bankRow('Account No.', '00000045030556376'),
                       _bankRow('MICR Code', '800002020'),
                     ],
@@ -527,7 +526,7 @@ class InvoiceService {
                   if (brandStamp != null) pw.Image(brandStamp, width: 60),
                   pw.SizedBox(height: 4),
                   pw.Text('Authorised Signatory', style: const pw.TextStyle(fontSize: 7)),
-                  pw.Text('for ROYAL GOLD TRADERS', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                  pw.Text('for RGT GOLD', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
                 ],
               ),
             ],

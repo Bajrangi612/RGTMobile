@@ -16,7 +16,7 @@ import 'admin_settings_screen.dart';
 import 'admin_reports_screen.dart';
 import 'admin_gold_price_screen.dart';
 import 'admin_transactions_screen.dart';
-import 'admin_withdrawal_manager_screen.dart';
+import 'admin_refund_manager_screen.dart';
 import 'admin_buyback_manager_screen.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../auth/screens/login_screen.dart';
@@ -168,7 +168,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                                     _EliteStatCard(
                                       label: 'GROSS REVENUE',
                                       value: Formatters.currency(adminState.totalRevenue),
-                                      icon: Icons.account_balance_wallet_outlined,
+                                      icon: Icons.account_balance,
                                       color: AppColors.royalGold,
                                       sparkData: _generateRelativeSpark(adminState.totalRevenue),
                                     ),
@@ -244,7 +244,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   child: Icon(Icons.shield_outlined, color: AppColors.royalGold, size: 32),
                 ),
                 const SizedBox(height: 16),
-                Text('ROYAL GOLD', style: AppTextStyles.h4),
+                Text('RGT', style: AppTextStyles.h4),
                 Text('ADMIN TERMINAL', style: AppTextStyles.caption.copyWith(letterSpacing: 2, color: AppColors.pureWhite.withValues(alpha: 0.4))),
               ],
             ),
@@ -259,7 +259,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 _SidebarItem(icon: Icons.category_outlined, label: 'Categories', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminCategoryManager()))),
                 _SidebarItem(icon: Icons.people_outline, label: 'Customers', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminUserManager()))),
                 _SidebarItem(icon: Icons.local_shipping_outlined, label: 'Orders', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminOrderManager()))),
-                _SidebarItem(icon: Icons.account_balance_wallet_outlined, label: 'Transactions', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen()))),
+                _SidebarItem(icon: Icons.receipt_long_outlined, label: 'Transactions', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen()))),
                 _SidebarItem(icon: Icons.settings_outlined, label: 'Settings', onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminSettingsScreen()))),
               ],
             ),
@@ -720,14 +720,14 @@ class _ManagementGrid extends StatelessWidget {
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminSettingsScreen())),
         ),
         _CompactTool(
-          icon: Icons.account_balance_wallet_outlined,
+          icon: Icons.receipt_long_outlined,
           label: 'Transactions',
           onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AdminTransactionsScreen())),
         ),
         _CompactTool(
           icon: Icons.payments_outlined,
-          label: 'Payouts',
-          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminWithdrawalManagerScreen())),
+          label: 'Refunds',
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => AdminRefundManagerScreen())),
         ),
         _CompactTool(
           icon: Icons.assignment_return_outlined,

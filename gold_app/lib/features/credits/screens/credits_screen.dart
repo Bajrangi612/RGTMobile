@@ -9,32 +9,32 @@ import '../../../core/utils/formatters.dart';
 import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_button.dart';
 import '../../auth/providers/auth_provider.dart';
-import '../../wallet/providers/wallet_provider.dart';
+import '../../credits/providers/credits_provider.dart';
 import '../../../widgets/shimmer_loader.dart';
 import '../../../core/providers/settings_provider.dart';
 
-class WalletScreen extends ConsumerStatefulWidget {
-  const WalletScreen({super.key});
+class AccountCreditsScreen extends ConsumerStatefulWidget {
+  const AccountCreditsScreen({super.key});
 
   @override
-  ConsumerState<WalletScreen> createState() => _WalletScreenState();
+  ConsumerState<AccountCreditsScreen> createState() => _AccountCreditsScreenState();
 }
 
-class _WalletScreenState extends ConsumerState<WalletScreen> {
+class _AccountCreditsScreenState extends ConsumerState<AccountCreditsScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(walletProvider.notifier).loadWalletDetails();
+      ref.read(creditsProvider.notifier).loadCreditDetails();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
-    final walletState = ref.watch(walletProvider);
-    final wallet = user?.wallet;
-    final transactions = walletState.transactions.take(5).toList();
+    final creditsState = ref.watch(creditsProvider);
+    final wallet = user?.credits;
+    final transactions = creditsState.refundRequests.take(5).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -43,7 +43,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
         child: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
-            await ref.read(walletProvider.notifier).loadWalletDetails();
+            ref.read(creditsProvider.notifier).loadCreditDetails();
+            ref.read(creditsProvider.notifier).loadRefundHistory();
             await ref.read(authProvider.notifier).getCurrentUser();
           },
           color: AppColors.royalGold,
@@ -63,7 +64,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                 flexibleSpace: FlexibleSpaceBar(
                   centerTitle: true,
                   title: Text(
-                    'ACCOUNT BALANCE',
+                    'ACCOUNT CREDITS',
                     style: AppTextStyles.h4.copyWith(
                       color: AppColors.royalGold,
                       letterSpacing: 2,
@@ -87,7 +88,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       // Stats Header
                       Row(
                         children: [
-                          Icon(Icons.analytics_rounded, color: AppColors.royalGold, size: 20),
+                          Icon(Icons.account_balance, color: AppColors.royalGold),
                           const SizedBox(width: 8),
                           Text('ACCOUNT ACTIVITY', style: AppTextStyles.labelLarge),
                         ],
@@ -110,7 +111,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       const SizedBox(height: 12),
 
                       // Live Transactions or Empty State
-                      walletState.isLoading && transactions.isEmpty
+                      creditsState.isLoading && transactions.isEmpty
                           ? ListView.builder(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
@@ -157,7 +158,7 @@ class _MainBalanceCard extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            'AVAILABLE FUNDS',
+            'AVAILABLE CREDITS',
             style: AppTextStyles.labelSmall.copyWith(color: Colors.black.withValues(alpha: 0.5), fontWeight: FontWeight.bold, letterSpacing: 1),
           ),
           const SizedBox(height: 12),
@@ -171,9 +172,9 @@ class _MainBalanceCard extends ConsumerWidget {
           ),
           const SizedBox(height: 28),
           GoldButton(
-            text: 'Request Payout',
+            text: 'Request Refund',
             icon: Icons.account_balance_rounded,
-            onPressed: () => _showWithdrawDialog(context, ref, balance, ref.read(settingsProvider).minWithdrawal),
+            onPressed: () => _showRefundDialog(context, ref, balance, ref.read(settingsProvider).minRefund),
           ),
           const SizedBox(height: 12),
           GoldButton(
@@ -187,7 +188,7 @@ class _MainBalanceCard extends ConsumerWidget {
     );
   }
 
-  void _showWithdrawDialog(BuildContext context, WidgetRef ref, double balance, double minAmount) {
+  void _showRefundDialog(BuildContext context, WidgetRef ref, double balance, double minAmount) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -197,7 +198,7 @@ class _MainBalanceCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: AppColors.royalGold.withValues(alpha: 0.3)),
         ),
-        title: Text('Withdrawal Request', style: AppTextStyles.h4),
+        title: Text('Refund Request', style: AppTextStyles.h4),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +238,7 @@ class _MainBalanceCard extends ConsumerWidget {
               final amount = double.tryParse(controller.text.trim()) ?? 0;
               if (amount < minAmount) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Minimum withdrawal amount is ${Formatters.currency(minAmount)}')),
+                  SnackBar(content: Text('Minimum refund amount is ${Formatters.currency(minAmount)}')),
                 );
                 return;
               }
@@ -248,12 +249,12 @@ class _MainBalanceCard extends ConsumerWidget {
                 return;
               }
               
-              final success = await ref.read(walletProvider.notifier).requestWithdrawal(amount);
+              final success = await ref.read(creditsProvider.notifier).requestRefund(amount);
               if (context.mounted) {
                 Navigator.pop(context);
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Withdrawal request submitted!')),
+                    const SnackBar(content: Text('Refund request submitted!')),
                   );
                 }
               }
@@ -319,7 +320,7 @@ class _TransactionList extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: transactions.map((txn) {
-        final isCredit = ['referral', 'refund', 'resell', 'deposit', 'profit'].contains(txn['type']?.toString().toLowerCase());
+        final isCredit = ['referral', 'refund', 'resell', 'deposit', 'returns', 'reward', 'bonus'].contains(txn['type']?.toString().toLowerCase());
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: _TransactionTile(

@@ -53,7 +53,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _loginWithBiometrics() async {
     try {
       final didAuth = await _auth.authenticate(
-        localizedReason: 'Sign in to Royal Gold',
+        localizedReason: 'Sign in to RGT',
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: false, // Allows PIN/Pattern as requested
@@ -169,14 +169,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                       /// 🏆 Title
                       Text(
-                        'Welcome to',
-                        style: AppTextStyles.bodyLarge.copyWith(
-                          color: AppColors.grey,
-                        ),
+                        'Welcome to RGT',
+                        style: AppTextStyles.h2.copyWith(color: AppColors.royalGold),
                       ).animate().fadeIn(delay: 200.ms),
 
                       Text(
-                        'Royal Gold Store',
+                        'RGT',
                         style: AppTextStyles.goldTitle.copyWith(
                           fontSize: 28,
                           letterSpacing: 2,
@@ -185,14 +183,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                       const SizedBox(height: 12),
 
-                      Text(
-                        'Buy • Sell Back • Collect Gold Coins',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.pureWhite.withValues(alpha: 0.7),
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ).animate().fadeIn(delay: 400.ms),
+                      Text('RGT', style: AppTextStyles.h1.copyWith(color: AppColors.royalGold, letterSpacing: 8)),
+                      const SizedBox(height: 8),
+                      Text('PRECISION QUALITY', style: AppTextStyles.labelMedium.copyWith(color: AppColors.pureWhite.withValues(alpha: 0.3), letterSpacing: 2)),
 
                       const SizedBox(height: 40),
 

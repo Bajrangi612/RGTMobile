@@ -101,7 +101,7 @@ class _BankFormScreenState extends ConsumerState<BankFormScreen> {
                         validator: Validators.accountNumber,
                         keyboardType: TextInputType.number,
                         maxLength: 18,
-                        prefixIcon: Icon(Icons.account_balance_wallet, color: AppColors.royalGold),
+                        prefixIcon: Icon(Icons.account_balance, color: AppColors.royalGold),
                       ),
                       SizedBox(height: 16),
                       GoldTextField(

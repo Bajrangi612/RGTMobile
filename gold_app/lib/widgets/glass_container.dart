@@ -10,7 +10,7 @@ class GlassContainer extends StatelessWidget {
   final Color? backgroundColor;
   final Border? border;
 
-  GlassContainer({
+  const GlassContainer({
     super.key,
     required this.child,
     this.padding,
@@ -31,11 +31,8 @@ class GlassContainer extends StatelessWidget {
           decoration: BoxDecoration(
             color: backgroundColor ?? AppColors.glassWhite,
             borderRadius: BorderRadius.circular(borderRadius),
-            border: border ??
-                Border.all(
-                  color: AppColors.glassBorder,
-                  width: 1,
-                ),
+            border:
+                border ?? Border.all(color: AppColors.glassBorder, width: 1),
           ),
           child: child,
         ),

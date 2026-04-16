@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/services/storage_service.dart';
@@ -57,9 +58,18 @@ class AuthRepository {
         };
 
 
-        return UserModel.fromJson(mappedUser);
+        final user = UserModel.fromJson(mappedUser);
+        
+        // Cache user data
+        await StorageService.write(
+          AppConstants.userDataKey, 
+          jsonEncode(user.toJson())
+        );
+
+        return user;
       }
     } catch (e) {
+      debugPrint('❌ OTP Verification Error: $e');
       return null;
     }
     return null;
@@ -95,11 +105,33 @@ class AuthRepository {
           'passKeySet': userData['passKeySet'] ?? (userData['pin'] != null),
         };
 
-        return UserModel.fromJson(mappedUser);
+        final user = UserModel.fromJson(mappedUser);
+        
+        // Cache user data
+        await StorageService.write(
+          AppConstants.userDataKey, 
+          jsonEncode(user.toJson())
+        );
+
+        return user;
       }
       throw Exception('Failed to fetch user');
     } catch (e) {
-      // Return empty user on error
+      debugPrint('⚠️ [AuthRepository] API fetch failed, trying cache: $e');
+      
+      // Try to load from cache on error
+      try {
+        final cachedData = await StorageService.read(AppConstants.userDataKey);
+        if (cachedData != null) {
+          final user = UserModel.fromJson(jsonDecode(cachedData));
+          debugPrint('✅ [AuthRepository] Loaded user from cache: ${user.name}');
+          return user;
+        }
+      } catch (cacheErr) {
+        debugPrint('❌ [AuthRepository] Cache read failed: $cacheErr');
+      }
+
+      // Return empty user ONLY if no cache exists
       return UserModel(
         id: '', name: '', phone: '', referralCode: '', kycStatus: '', 
         bankStatus: '', orderCount: 0, totalCollectionValue: 0, 
@@ -150,10 +182,19 @@ class AuthRepository {
           'isAdmin': userData['role'] == 'ADMIN',
           'registerRequired': false,
         };
-        return UserModel.fromJson(mappedUser);
+        final user = UserModel.fromJson(mappedUser);
+        
+        // Cache updated user data
+        await StorageService.write(
+          AppConstants.userDataKey, 
+          jsonEncode(user.toJson())
+        );
+
+        return user;
       }
       return null;
     } catch (e) {
+      debugPrint('❌ Update Profile Error: $e');
       return null;
     }
   }

@@ -17,7 +17,7 @@ class AdminSettingsScreen extends ConsumerStatefulWidget {
 class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   final _referralController = TextEditingController();
   final _gstController = TextEditingController();
-  final _minWithdrawalController = TextEditingController();
+  final _minRefundController = TextEditingController();
   final _deliveryDaysController = TextEditingController();
   final _commissionController = TextEditingController();
   final _intervalController = TextEditingController();
@@ -33,7 +33,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     final state = ref.read(adminProvider);
     _referralController.text = state.referralReward.toStringAsFixed(0);
     _gstController.text = state.gstRate.toStringAsFixed(1);
-    _minWithdrawalController.text = state.minWithdrawal.toStringAsFixed(0);
+    _minRefundController.text = state.minRefund.toStringAsFixed(0);
     _deliveryDaysController.text = state.deliveryTimeDays.toString();
     _commissionController.text = state.commissionRate.toStringAsFixed(1);
     _intervalController.text = state.orderIntervalMinutes.toString();
@@ -48,7 +48,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
   void dispose() {
     _referralController.dispose();
     _gstController.dispose();
-    _minWithdrawalController.dispose();
+    _minRefundController.dispose();
     _deliveryDaysController.dispose();
     _commissionController.dispose();
     _intervalController.dispose();
@@ -64,7 +64,7 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
     await ref.read(adminProvider.notifier).updateConfigs(
       referralReward: double.tryParse(_referralController.text),
       gstRate: double.tryParse(_gstController.text),
-      minWithdrawal: double.tryParse(_minWithdrawalController.text),
+      minRefund: double.tryParse(_minRefundController.text),
       deliveryTimeDays: int.tryParse(_deliveryDaysController.text),
       commissionRate: double.tryParse(_commissionController.text),
       orderIntervalMinutes: int.tryParse(_intervalController.text),
@@ -126,10 +126,10 @@ class _AdminSettingsScreenState extends ConsumerState<AdminSettingsScreen> {
                         ),
                         _Divider(),
                         _ConfigField(
-                          label: 'Min Withdrawal (₹)',
-                          controller: _minWithdrawalController,
-                          icon: Icons.account_balance_wallet_rounded,
-                          helperText: 'Minimum amount required for payout request',
+                          label: 'Min Refund (₹)',
+                          controller: _minRefundController,
+                          icon: Icons.account_balance,
+                          helperText: 'Minimum amount required for refund request',
                         ),
                         _Divider(),
                         _ConfigField(

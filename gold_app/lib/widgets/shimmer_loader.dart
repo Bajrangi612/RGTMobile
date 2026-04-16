@@ -7,7 +7,7 @@ class ShimmerLoader extends StatelessWidget {
   final double height;
   final double borderRadius;
 
-  ShimmerLoader({
+  const ShimmerLoader({
     super.key,
     this.width = double.infinity,
     this.height = 20,

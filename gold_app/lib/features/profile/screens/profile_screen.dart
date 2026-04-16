@@ -9,6 +9,7 @@ import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_app_bar.dart';
 import '../../../widgets/status_badge.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../credits/providers/credits_provider.dart';
 import '../../kyc/screens/aadhaar_kyc_screen.dart';
 import '../../kyc/screens/bank_status_screen.dart';
 import '../../notifications/screens/transactions_screen.dart';

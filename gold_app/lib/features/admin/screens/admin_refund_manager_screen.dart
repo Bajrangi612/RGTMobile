@@ -8,29 +8,29 @@ import '../../../widgets/gold_card.dart';
 import '../../../widgets/gold_button.dart';
 import '../providers/admin_provider.dart';
 
-class AdminWithdrawalManagerScreen extends ConsumerStatefulWidget {
-  const AdminWithdrawalManagerScreen({super.key});
+class AdminRefundManagerScreen extends ConsumerStatefulWidget {
+  const AdminRefundManagerScreen({super.key});
 
   @override
-  ConsumerState<AdminWithdrawalManagerScreen> createState() => _AdminWithdrawalManagerScreenState();
+  ConsumerState<AdminRefundManagerScreen> createState() => _AdminRefundManagerScreenState();
 }
 
-class _AdminWithdrawalManagerScreenState extends ConsumerState<AdminWithdrawalManagerScreen> {
+class _AdminRefundManagerScreenState extends ConsumerState<AdminRefundManagerScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(adminProvider.notifier).fetchWithdrawals());
+    Future.microtask(() => ref.read(adminProvider.notifier).fetchRefunds());
   }
 
   @override
   Widget build(BuildContext context) {
     final adminState = ref.watch(adminProvider);
-    final requests = adminState.withdrawalRequests;
+    final requests = adminState.refundRequests;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('WITHDRAWAL MANAGEMENT', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 2)),
+        title: Text('REFUND MANAGEMENT', style: AppTextStyles.labelLarge.copyWith(letterSpacing: 2)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -41,16 +41,16 @@ class _AdminWithdrawalManagerScreenState extends ConsumerState<AdminWithdrawalMa
         child: adminState.isLoading && requests.isEmpty
             ? Center(child: CircularProgressIndicator(color: AppColors.royalGold))
             : requests.isEmpty
-                ? _EmptyWithdrawals()
+                ? _EmptyRefunds()
                 : RefreshIndicator(
-                    onRefresh: () => ref.read(adminProvider.notifier).fetchWithdrawals(),
+                    onRefresh: () => ref.read(adminProvider.notifier).fetchRefunds(),
                     color: AppColors.royalGold,
                     child: ListView.builder(
                       padding: const EdgeInsets.all(24),
                       itemCount: requests.length,
                       itemBuilder: (context, index) {
                         final req = requests[index];
-                        return _WithdrawalCard(request: req);
+                        return _RefundCard(request: req);
                       },
                     ),
                   ),
@@ -59,9 +59,9 @@ class _AdminWithdrawalManagerScreenState extends ConsumerState<AdminWithdrawalMa
   }
 }
 
-class _WithdrawalCard extends ConsumerWidget {
+class _RefundCard extends ConsumerWidget {
   final dynamic request;
-  const _WithdrawalCard({required this.request});
+  const _RefundCard({required this.request});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -164,7 +164,7 @@ class _WithdrawalCard extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.deepBlack,
-        title: Text('${status == 'COMPLETED' ? 'Approve' : 'Reject'} Withdrawal', style: AppTextStyles.labelLarge),
+        title: Text('${status == 'COMPLETED' ? 'Approve' : 'Reject'} Refund', style: AppTextStyles.labelLarge),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -194,13 +194,13 @@ class _WithdrawalCard extends ConsumerWidget {
     );
 
     if (confirm == true) {
-      final success = await ref.read(adminProvider.notifier).updateWithdrawalStatus(
+      final success = await ref.read(adminProvider.notifier).updateRefundStatus(
         request['id'],
         status,
         notes: notesController.text,
       );
       if (success && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Withdrawal $status successfully')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Refund $status successfully')));
       }
     }
   }
@@ -251,16 +251,16 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
-class _EmptyWithdrawals extends StatelessWidget {
+class _EmptyRefunds extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.account_balance_wallet_outlined, size: 64, color: AppColors.royalGold.withValues(alpha: 0.2)),
+          Icon(Icons.account_balance, size: 64, color: AppColors.royalGold.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
-          Text('No withdrawal requests found', style: AppTextStyles.labelLarge.copyWith(color: Colors.white54)),
+          Text('No refund requests found', style: AppTextStyles.labelLarge.copyWith(color: Colors.white54)),
         ],
       ),
     );

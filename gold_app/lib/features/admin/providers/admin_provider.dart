@@ -24,10 +24,10 @@ class AdminState {
   final String weightFilter;
   final int lowStockThreshold;
   final List<dynamic> allTransactions;
-  final List<dynamic> withdrawalRequests;
+  final List<dynamic> refundRequests;
   final List<dynamic> buybackRequests;
   final double referralReward;
-  final double minWithdrawal;
+  final double minRefund;
   final double buybackMargin;
   final double makingChargePercent;
   final double globalDiscount;
@@ -54,10 +54,10 @@ class AdminState {
     this.orderSearchQuery = '',
     this.weightFilter = 'all',
     this.lowStockThreshold = 10,
-    this.withdrawalRequests = const [],
+    this.refundRequests = const [],
     this.buybackRequests = const [],
     this.referralReward = 500.0,
-    this.minWithdrawal = 1000.0,
+    this.minRefund = 1000.0,
     this.buybackMargin = 3.0,
     this.makingChargePercent = 7.0,
     this.globalDiscount = 0.0,
@@ -85,10 +85,10 @@ class AdminState {
     String? orderSearchQuery,
     String? weightFilter,
     int? lowStockThreshold,
-    List<dynamic>? withdrawalRequests,
+    List<dynamic>? refundRequests,
     List<dynamic>? buybackRequests,
     double? referralReward,
-    double? minWithdrawal,
+    double? minRefund,
     double? buybackMargin,
     double? makingChargePercent,
     double? globalDiscount,
@@ -115,10 +115,10 @@ class AdminState {
       orderSearchQuery: orderSearchQuery ?? this.orderSearchQuery,
       weightFilter: weightFilter ?? this.weightFilter,
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
-      withdrawalRequests: withdrawalRequests ?? this.withdrawalRequests,
+      refundRequests: refundRequests ?? this.refundRequests,
       buybackRequests: buybackRequests ?? this.buybackRequests,
       referralReward: referralReward ?? this.referralReward,
-      minWithdrawal: minWithdrawal ?? this.minWithdrawal,
+      minRefund: minRefund ?? this.minRefund,
       buybackMargin: buybackMargin ?? this.buybackMargin,
       makingChargePercent: makingChargePercent ?? this.makingChargePercent,
       globalDiscount: globalDiscount ?? this.globalDiscount,
@@ -277,7 +277,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
           globalDiscount: _toDouble(config['global_discount_percent'] ?? 0.0),
           gstOnMakingPercent: _toDouble(config['gst_on_making_percent'] ?? 5.0),
           referralReward: _toDouble(config['referral_reward'] ?? 500.0),
-          minWithdrawal: _toDouble(config['min_withdrawal'] ?? 1000.0),
+          minRefund: _toDouble(config['min_withdrawal'] ?? 1000.0),
           deliveryTimeDays: int.tryParse(config['delivery_days']?.toString() ?? '7') ?? 7,
           gstRate: _toDouble(config['gst_rate'] ?? 3.0),
         );
@@ -438,7 +438,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
     double? gstRate,
     int? lowStockThreshold,
     double? referralReward,
-    double? minWithdrawal,
+    double? minRefund,
     double? buybackMargin,
     double? makingChargePercent,
     double? globalDiscount,
@@ -453,8 +453,8 @@ class AdminNotifier extends StateNotifier<AdminState> {
       if (referralReward != null) {
         await ApiService().updateAdminSettings({'referral_reward': referralReward});
       }
-      if (minWithdrawal != null) {
-        await ApiService().updateAdminSettings({'min_withdrawal': minWithdrawal});
+      if (minRefund != null) {
+        await ApiService().updateAdminSettings({'min_withdrawal': minRefund});
       }
       if (gstRate != null) {
         await ApiService().updateAdminSettings({'gst_rate': gstRate});
@@ -480,7 +480,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
         gstRate: gstRate ?? state.gstRate,
         lowStockThreshold: lowStockThreshold ?? state.lowStockThreshold,
         referralReward: referralReward ?? state.referralReward,
-        minWithdrawal: minWithdrawal ?? state.minWithdrawal,
+        minRefund: minRefund ?? state.minRefund,
         buybackMargin: buybackMargin ?? state.buybackMargin,
         makingChargePercent: makingChargePercent ?? state.makingChargePercent,
         globalDiscount: globalDiscount ?? state.globalDiscount,
@@ -515,14 +515,14 @@ class AdminNotifier extends StateNotifier<AdminState> {
     return double.tryParse(value?.toString() ?? '0') ?? 0.0;
   }
 
-  // --- Withdrawal Management ---
+  // --- Refund Management ---
 
-  Future<void> fetchWithdrawals() async {
+  Future<void> fetchRefunds() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await ApiService().get('/admin/withdrawals');
       state = state.copyWith(
-        withdrawalRequests: response.data['data']['requests'],
+        refundRequests: response.data['data']['requests'],
         isLoading: false,
       );
     } catch (e) {
@@ -530,14 +530,14 @@ class AdminNotifier extends StateNotifier<AdminState> {
     }
   }
 
-  Future<bool> updateWithdrawalStatus(String id, String status, {String? notes}) async {
+  Future<bool> updateRefundStatus(String id, String status, {String? notes}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       await ApiService().patch('/admin/withdrawals/$id/status', data: {
         'status': status,
         if (notes != null) 'adminNotes': notes,
       });
-      await fetchWithdrawals(); // Refresh
+      await fetchRefunds(); // Refresh
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

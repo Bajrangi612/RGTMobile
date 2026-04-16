@@ -10,7 +10,7 @@ import 'gold_button.dart';
 import 'gold_image.dart';
 import 'live_countdown.dart';
 import '../features/product/screens/catalog_screen.dart';
-
+import 'glass_container.dart';
 import '../core/providers/settings_provider.dart';
 
 class OfferPopup extends ConsumerWidget {
@@ -24,6 +24,7 @@ class OfferPopup extends ConsumerWidget {
     final marketPrice = homeState.goldPrice; // Sell Price (Market Rate)
     final discountPercent = settings.globalDiscount;
     final offerPrice = marketPrice * (1 - (discountPercent / 100));
+    final savingsPerGram = marketPrice - offerPrice;
     
     // Target date: 2 days from now at 12 AM (Midnight)
     final now = Formatters.nowIST;
@@ -31,23 +32,24 @@ class OfferPopup extends ConsumerWidget {
 
     return Dialog(
       backgroundColor: Colors.transparent,
+      elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-      child: GoldCard(
-        isVibrant: true,
-        hasGoldBorder: true,
-        hasGlow: true,
-        blurSigma: 80,
+      child: GlassContainer(
+        borderRadius: 30,
+        blur: 25,
+        backgroundColor: AppColors.deepBlack.withOpacity(0.85),
         padding: EdgeInsets.zero,
+        border: Border.all(color: AppColors.royalGold.withOpacity(0.2), width: 1.5),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Banner Image Header
+            // Premium Image Header
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
                   child: SizedBox(
-                    height: 200,
+                    height: 220,
                     width: double.infinity,
                     child: GoldImage(
                       imageUrl: 'assets/images/premium_gold_offer.webp', 
@@ -55,158 +57,164 @@ class OfferPopup extends ConsumerWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 24),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-                Positioned(
-                  bottom: -1,
-                  left: 0,
-                  right: 0,
+                // Elegant Gradient Overlay
+                Positioned.fill(
                   child: Container(
-                    height: 80,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Colors.transparent, AppColors.deepBlack.withOpacity(0.9)],
+                        colors: [
+                          Colors.transparent,
+                          AppColors.deepBlack.withOpacity(0.9),
+                        ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                       ),
                     ),
                   ),
                 ),
-              ],
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: IconButton(
+                    icon: Icon(Icons.close_rounded, color: AppColors.offWhite, size: 26),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ),
+                // Festive Badge
+                Positioned(
+                  bottom: 20,
+                  left: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.royalGold.withOpacity(0.15),
+                      gradient: AppColors.goldGradient,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.royalGold.withOpacity(0.3)),
+                      boxShadow: [
+                        BoxShadow(color: AppColors.royalGold.withOpacity(0.3), blurRadius: 10),
+                      ],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.auto_awesome, color: AppColors.royalGold, size: 14),
+                        Icon(Icons.auto_awesome, color: AppColors.deepBlack, size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          'FESTIVE SPECIAL OFFER',
+                          'FESTIVE SPECIAL',
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.royalGold,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
+                            color: AppColors.deepBlack,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
                           ),
                         ),
                       ],
                     ),
-                  ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2),
+                  ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.2),
+                ),
+              ],
+            ),
 
-                  const SizedBox(height: 20),
-
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+              child: Column(
+                children: [
                   Text(
-                    'Special Gold Savings',
-                    style: AppTextStyles.h3.copyWith(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 24),
+                    'Exclusive Gold Savings',
+                    style: AppTextStyles.h3.copyWith(
+                      color: AppColors.pureWhite, 
+                      fontWeight: FontWeight.w900, 
+                      fontSize: 26,
+                      letterSpacing: -0.5,
+                    ),
                     textAlign: TextAlign.center,
-                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1),
+                  ).animate().fadeIn(delay: 300.ms).scale(begin: const Offset(0.95, 0.95)),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
 
                   Text(
-                    'Flat ${discountPercent.toStringAsFixed(1)}% Discount on 24K pure gold at the best rates in India!',
-                    style: const TextStyle(color: Colors.white60, fontSize: 13, height: 1.5),
+                    'Unlock a special ${discountPercent.toStringAsFixed(1)}% collection discount on 24K pure gold today.',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.offWhite, 
+                      height: 1.4,
+                    ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 400.ms),
 
-                  const SizedBox(height: 28),
-
-                  // Pricing Comparison Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Column(
-                        children: [
-                          const Text('Market Price', style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 1)),
-                          const SizedBox(height: 4),
-                          Text(
-                            Formatters.currency(marketPrice),
-                            style: AppTextStyles.h4.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                              color: Colors.white24,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(width: 1, height: 30, color: Colors.white12),
-                      Column(
-                        children: [
-                          Text('Our Special Price', style: AppTextStyles.labelSmall.copyWith(color: AppColors.success)),
-                          const SizedBox(height: 4),
-                          Text(
-                            Formatters.currency(offerPrice),
-                            style: AppTextStyles.goldPrice.copyWith(fontSize: 24),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ).animate().fadeIn(delay: 500.ms).scale(begin: const Offset(0.9, 0.9)),
-
                   const SizedBox(height: 32),
 
-                  // Countdown Timer
+                  // Premium Breakdown Section
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: AppColors.royalGold.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(20),
+                      color: AppColors.cardDark.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: AppColors.royalGold.withOpacity(0.1)),
                     ),
                     child: Column(
                       children: [
-                         Text(
-                          'DEAL ENDS IN',
-                          style: AppTextStyles.labelSmall.copyWith(color: AppColors.grey, letterSpacing: 4),
+                        _PriceRow(
+                          label: 'Base Market Rate (1g)',
+                          value: Formatters.currency(marketPrice),
                         ),
-                        const SizedBox(height: 12),
-                        LiveCountdown(
-                          targetDate: targetDate,
-                          style: AppTextStyles.h2.copyWith(
-                            color: AppColors.royalGold,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2,
-                            shadows: [
-                              Shadow(color: AppColors.royalGold.withOpacity(0.3), blurRadius: 15),
-                            ],
-                          ),
+                        _PriceRow(
+                          label: 'Member Discount',
+                          value: '- ${Formatters.currency(savingsPerGram)}',
+                          valueColor: AppColors.success,
+                          badge: discountPercent > 0 ? '${discountPercent.toStringAsFixed(0)}% OFF' : null,
+                        ),
+                        _PriceRow(
+                          label: 'Making Charges',
+                          value: settings.makingCharge == 0 ? 'FREE' : Formatters.currency(marketPrice * (settings.makingCharge / 100)),
+                          valueColor: settings.makingCharge == 0 ? AppColors.success : null,
+                          isHighlighted: settings.makingCharge == 0,
+                        ),
+                        _PriceRow(
+                          label: 'GST (${settings.gstRate.toStringAsFixed(0)}%)',
+                          value: '+ ${Formatters.currency(offerPrice * (settings.gstRate / 100))}',
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Divider(color: Colors.white10),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'TOTAL MEMBER PRICE (Incl. GST)',
+                              style: AppTextStyles.labelMedium.copyWith(color: AppColors.royalGold, fontWeight: FontWeight.bold, letterSpacing: 1, fontSize: 10),
+                            ),
+                            Text(
+                              Formatters.currency(offerPrice + (offerPrice * (settings.gstRate / 100))),
+                              style: AppTextStyles.h4.copyWith(color: AppColors.royalGold),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
+                  ).animate().fadeIn(delay: 500.ms),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
-                  // Trust Badges
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  // Countdown Section
+                  Column(
                     children: [
-                      Icon(Icons.verified_user_rounded, color: AppColors.success, size: 14),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Guaranteed On-Time Delivery',
-                        style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 10),
+                       Text(
+                        'OFFER EXPIRES IN',
+                        style: AppTextStyles.labelSmall.copyWith(color: AppColors.grey, letterSpacing: 3),
+                      ),
+                      const SizedBox(height: 12),
+                      LiveCountdown(
+                        targetDate: targetDate,
+                        style: AppTextStyles.h3.copyWith(
+                          color: AppColors.royalGold,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ],
-                  ).animate().fadeIn(delay: 650.ms),
+                  ).animate().fadeIn(delay: 700.ms),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
 
                   GoldButton(
                     text: 'BUY GOLD NOW',
@@ -216,14 +224,72 @@ class OfferPopup extends ConsumerWidget {
                         MaterialPageRoute(builder: (_) => const CatalogScreen()),
                       );
                     },
-                  ).animate().fadeIn(delay: 700.ms).shimmer(duration: 2.seconds, color: Colors.white24),
-                  
-                  const SizedBox(height: 8),
+                  ).animate(onPlay: (controller) => controller.repeat())
+                   .shimmer(duration: 3.seconds, delay: 1.seconds, color: Colors.white24)
+                   .animate().fadeIn(delay: 800.ms),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PriceRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final String? badge;
+  final bool isHighlighted;
+
+  const _PriceRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.badge,
+    this.isHighlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.offWhite.withOpacity(0.7)),
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    badge!,
+                    style: AppTextStyles.caption.copyWith(color: AppColors.success, fontWeight: FontWeight.bold, fontSize: 8),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          Text(
+            value,
+            style: AppTextStyles.labelLarge.copyWith(
+              color: valueColor ?? AppColors.pureWhite,
+              fontWeight: isHighlighted ? FontWeight.w900 : FontWeight.w500,
+              fontSize: isHighlighted ? 15 : 14,
+            ),
+          ),
+        ],
       ),
     );
   }
